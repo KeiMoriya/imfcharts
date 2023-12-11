@@ -25,10 +25,15 @@ and provide detailed documentation, examples and latest updates.
 
 ## Guideline Documents
 
-IMF guidelines on charts can be found at
 
-- ???
 
+- IMF guidelines on charts can be found under [here](http://www-intranet.imf.org/fundwide/info/StyleGuide/board-documents/Pages/default.aspx).
+  See also under [Quick Reference Cards, Style Guides, and Other Supporting Documentation](http://www-intranet.imf.org/fundwide/info/StyleGuide/board-documents/Quick%20Reference%20Cards,%20Style%20Guides,%20and%20Other%20Supporting%20Documentation/Pages/default.aspx)
+  for example the [Style Guide for Country Reports](http://dm-edms.imf.org/cyberdocs/opendocument.asp?docnumber=4822110&library=DMSDR1S),
+  and [Guidelines for formatting Excel Charts in the Board document format](http://www-intranet.imf.org/fundwide/info/StyleGuide/board-documents/Quick%20Reference%20Cards,%20Style%20Guides,%20and%20Other%20Supporting%20Documentation/Documents/Board_Document_QRC_for_Excel.pdf).  
+
+- A tutorial on using R at the Fund by Bas Bakker is available at https://bookr.basbakker.us/
+  including how to generate charts and do econometrics.
 
 ## Testing
 

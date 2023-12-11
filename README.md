@@ -23,9 +23,7 @@ This repository at https://github.com/imfgit/imfcharts is only available for tho
 Documentation should be proivded on the IMF intranet at http://www-intranet.imf.org/fundwide/info/IMFCharts/Pages/default.aspx
 and provide detailed documentation, examples and latest updates.
 
-## Guideline Documents
-
-
+## Guidelines, Documents
 
 - IMF guidelines on charts can be found under [here](http://www-intranet.imf.org/fundwide/info/StyleGuide/board-documents/Pages/default.aspx).
   See also under [Quick Reference Cards, Style Guides, and Other Supporting Documentation](http://www-intranet.imf.org/fundwide/info/StyleGuide/board-documents/Quick%20Reference%20Cards,%20Style%20Guides,%20and%20Other%20Supporting%20Documentation/Pages/default.aspx)
@@ -34,6 +32,8 @@ and provide detailed documentation, examples and latest updates.
 
 - A tutorial on using R at the Fund by Bas Bakker is available at https://bookr.basbakker.us/
   including how to generate charts and do econometrics.
+
+- A related tool is the PCF (Panel Chart Facility) developed by the CATS for Excel [here](http://www-intranet.imf.org/departments/ITD/DigitalProducts/DAE/CATS/PCF/Pages/default.aspx), [Quick card](http://www-intranet.imf.org/departments/ITD/DigitalProducts/DAE/CATS/Quick%20Reference%20Cards/PCF.pdf)
 
 - An old repository in Azure DevOps is at https://dev.azure.com/imf/IMF.iLab.Automation/_git/imfstyles (limited access)
 

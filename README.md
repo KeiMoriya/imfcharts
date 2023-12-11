@@ -35,6 +35,8 @@ and provide detailed documentation, examples and latest updates.
 - A tutorial on using R at the Fund by Bas Bakker is available at https://bookr.basbakker.us/
   including how to generate charts and do econometrics.
 
+- An old repository in Azure DevOps is at https://dev.azure.com/imf/IMF.iLab.Automation/_git/imfstyles (limited access)
+
 ## Testing
 
 All code should be tested against actual Article IV and other outputs.

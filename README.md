@@ -42,5 +42,6 @@ and provide detailed documentation, examples and latest updates.
 All code should be tested against actual Article IV and other outputs.
 
 ## Team
-From IMF and WHD, EUR.
 
+The team has submitted this to the [Process Modernization Challenge](https://imf.brightidea.com/Process) hosted by TRM and won first place in Feb 2025.
+The team consists of members from ITD, area departments and functional departments.

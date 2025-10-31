@@ -53,8 +53,8 @@ axes.labelcolor: .15
 axes.labelsize: 18
 # width of lines on frame of axes
 axes.linewidth: 1
-# Color cycle is IMFBLUE, IMFGREEN, IMFGREY, IMFRED, IMFBLACK
-axes.prop_cycle: cycler('color', ['4B82AD', '96BA79', 'A6A8AC', 'C00000', '000000'])
+# Color cycle is IMFBLUE, IMFRED, IMFGREEN, IMFGREY, IMFBLACK
+axes.prop_cycle: cycler('color', ['4B82AD', 'C00000', '96BA79', 'A6A8AC', '000000'])
 axes.titlesize: 18
 
 ## ------------------------------------------------------------------------------------------------------------- ##

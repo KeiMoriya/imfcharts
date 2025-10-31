@@ -68,7 +68,10 @@ class Chart:
                  stack=True, area=False, barwidth=None, bar_right=False,
                  title=None,
                  subtitle = None,
-                 xtitle=None, ytitle=None,
+                 xtitle='', ytitle='',
+                 xtitlesize=14, ytitlesize=14,
+                 xtickfontsize=8, ytickfontsize=8,
+                 xformat='auto',
                  dict_legend=None,
                  dict_xaxis=None,
                  dict_yaxis=None,
@@ -77,7 +80,7 @@ class Chart:
                  # individual look of each column in data
                  dict_attrs=None,
                  xrange=None, yrange=None, ryrange=None,
-                 width=300, height=150,
+                 width=10, height=6,
                  hlines=[], vlines=[], hrects=[], vrects=[],
                  debug=False):
 
@@ -90,6 +93,15 @@ class Chart:
         self.title = title
         self.subtitle = subtitle
 
+        self.xtitle = xtitle
+        self.ytitle = ytitle
+
+        self.xtitlesize = xtitlesize
+        self.ytitlesize = ytitlesize
+
+        self.xtickfontsize = xtickfontsize
+        self.ytickfontsize = ytickfontsize
+        
         # ------------------------------------------------------------------------------
         # Entries, labels for legend
         self.legend_entries = []
@@ -109,20 +121,40 @@ class Chart:
         # Create figure
         self.fig, self.ax = plt.subplots(1, 1, figsize=(self.width, self.height))
         # Initialize self.ax_right to None, only generate as needed
-        self.ax_right = None
+        self.ax_right = self.ax.twinx()
         if debug:
             print('Created self.fig, self.ax')
 
+        # Set color cycler to be common with the left y-axis.
+        # Hack from https://github.com/matplotlib/matplotlib/issues/19479
+        self.ax_right._get_lines = self.ax._get_lines
+
         # Add title, subtitle
         if self.title is not None:
-            self.ax.set_title(str(title))
+            self.ax.set_title(str(title), loc='left', y=1.05,
+                              fontweight='bold', fontname='Segoe UI')
         if self.subtitle is not None:
-            self.ax.text(0.5, 1.05, subtitle,
-                         horizontalalignment='center',
+            font_properties = {
+                'family': 'Segoe UI',
+                'size': 12,
+                'color': '#4B82AD'
+            }
+            
+            self.ax.text(0., 1.03, subtitle,
+                         horizontalalignment='left',
                          verticalalignment='center',
                          transform=self.ax.transAxes,
-                         color='blue',
-                         fontsize=12)
+                         fontdict=font_properties)
+                         # color='#4B82AD',
+                         # fontsize=12)
+
+        # Add x, y title
+        self.set_xtitle(self.xtitle, self.xtitlesize)
+        self.set_ytitle(self.ytitle, self.ytitlesize)
+
+        # Set x, y tick font size
+        self.set_xticks(size=self.xtickfontsize)
+        self.set_yticks(size=self.ytickfontsize)
 
         if linecols is not None:
             linecols = _parse_cols(linecols)
@@ -131,8 +163,6 @@ class Chart:
 
         if rlinecols is not None:
             rlinecols = _parse_cols(rlinecols)
-            # Set up right axis
-            self.ax_right = self.ax.twinx()
             for rlinecol in rlinecols:
                 self.add_line(self.data, rlinecol, axis='right', dict_attrs=dict_attrs, debug=debug)
 
@@ -141,7 +171,7 @@ class Chart:
         
         # Create legend
         ncol_legend = 1
-        fontsize = 14
+        fontsize = 8
         legend_header = ''
         print('self.legend_entries:')
         print(self.legend_entries)
@@ -149,6 +179,7 @@ class Chart:
         print(self.legend_labels)
         self.legend = self.ax.legend(self.legend_entries, self.legend_labels,
                                      loc='upper left',
+                                     labelspacing=1.5,
                                      bbox_transform=self.ax.figure.transFigure,
                                      # bbox_to_anchor=(bottom_left,fig_top_space + 0.015,bottom_right,0.99),
                                      mode='expand', borderaxespad=0,
@@ -197,7 +228,44 @@ class Chart:
         '''
 
         return [yrange[0], yrange[1]]
-    
+
+    def set_xtitle(self, xtitle, xtitlesize=None):
+        self.xtitle = xtitle
+        # If a xtitlesize was specified, save internally
+        if xtitlesize is not None:
+            self.xtitlesize = xtitlesize
+
+        # Set x-axis title
+        self.ax.set_xlabel(xtitle, fontsize=self.xtitlesize)
+
+    def set_ytitle(self, ytitle, ytitlesize=None):
+        self.ytitle = ytitle
+        # If a ytitlesize was specified, save internally
+        if ytitlesize is not None:
+            self.ytitlesize = ytitlesize
+
+        # Set y-axis title
+        self.ax.set_ylabel(ytitle, fontsize=self.ytitlesize)
+
+    def set_xticks(self, size=None):
+        # If size is specified, update internal value
+        if size is not None:
+            self.xtickfontsize = size
+
+        # Set
+        self.ax.tick_params(axis='x', which='major', labelsize=size)
+
+    def set_yticks(self, size=None):
+        # If size is specified, update internal value
+        if size is not None:
+            self.ytickfontsize = size
+
+        # Set
+        self.ax.tick_params(axis='y', which='major', labelsize=size)
+        if self.ax_right:
+            print('setting right y-axis tick labelsize to ' + str(size))
+            self.ax_right.tick_params(axis='y', which='major', labelsize=size)
+        
     def set_xrange(self, xrange):
         '''
         Set x-axis range of fig.

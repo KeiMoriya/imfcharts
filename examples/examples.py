@@ -12,11 +12,12 @@ import pandas as pd
 
 import imfcharts
 import imfcharts.charts
+import imfcharts.mpl
 import importlib
 importlib.reload(imfcharts)
 importlib.reload(imfcharts.charts)
+importlib.reload(imfcharts.mpl)
 from imfcharts import *
-
 
 # Read in data
 infilename = 'imfcharts/data/turkey_page1/fig1_chart2_labor.csv'

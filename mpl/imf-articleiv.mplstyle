@@ -74,6 +74,7 @@ legend.numpoints     : 1           # the number of points in the legend line
 legend.fontsize      : 18
 legend.borderpad     : 0.4         # border whitespace in fontsize units
 legend.markerscale   : 1.0         # the relative size of legend markers vs. original
+legend.labelcolor    : black
 
 # The following dimensions are in axes coords
 legend.labelspacing  : 0.5          # the vertical space between the legend entries in fraction of fontsize
@@ -92,7 +93,7 @@ legend.edgecolor     : inherit      # legend edge color (when 'inherit' uses axe
 ## ------------------------------------------------------------------------------------------------------------- ##
 ##                                                     Lines                                                     ##
 ## ------------------------------------------------------------------------------------------------------------- ##
-lines.linewidth   : 1
+lines.linewidth   : 1.5
 lines.linestyle   : -       # solid line
 lines.color       : b       # has no affect on plot(); see axes.prop_cycle
 lines.marker      : None    # the default marker

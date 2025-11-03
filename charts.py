@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
 def _parse_cols(cols):
     '''
@@ -52,6 +53,28 @@ def _parse_cols(cols):
 
     return use_cols
 
+def guess_freq(df):
+    '''
+    Guess frequency of a series given a DataFrame.
+    Checks differences in days between index and tries go guess.
+    '''
+
+    # Not enough data to check differences.
+    # Return daily freq.
+    if len(df) < 2:
+        return 'D'
+    else:
+        if (df.index[1] - df.index[0]).days < 10:
+            return 'D'
+        elif (df.index[1] - df.index[0]).days < 32:
+            return 'M'
+        elif (df.index[1] - df.index[0]).days < 93:
+            return 'Q'
+        elif (df.index[1] - df.index[0]).days < 370:
+            return 'A'
+        else:
+            return 'D'
+
 class Chart:
     '''
     Class that generates and modifies charts.
@@ -80,6 +103,7 @@ class Chart:
                  # individual look of each column in data
                  dict_attrs=None,
                  xrange=None, yrange=None, ryrange=None,
+                 xmargins='auto',
                  width=10, height=6,
                  hlines=[], vlines=[], hrects=[], vrects=[],
                  debug=False):
@@ -101,6 +125,9 @@ class Chart:
 
         self.xtickfontsize = xtickfontsize
         self.ytickfontsize = ytickfontsize
+
+        self.xformat = xformat
+        self.xmargins = xmargins
         
         # ------------------------------------------------------------------------------
         # Entries, labels for legend
@@ -156,6 +183,15 @@ class Chart:
         self.set_xticks(size=self.xtickfontsize)
         self.set_yticks(size=self.ytickfontsize)
 
+        # Get xrange.
+        # This needs to be done before drawing lines, bars
+        # as data outside of range is excluded from self.data.
+        self.xrange = self._parse_xrange(xrange)
+        if type(self.data) == pd.DataFrame:
+            self.data = self.data.loc[str(self.xrange[0]):str(self.xrange[1]), :]
+
+        # ---------------------------------------------------------------------------------------------------
+        # Draw lines, bars
         if linecols is not None:
             linecols = _parse_cols(linecols)
             for linecol in linecols:
@@ -187,13 +223,15 @@ class Chart:
         )
 
         # Adjust x-axis, y-axis ranges
-        self.xrange = self._parse_xrange(xrange)
         self.yrange = self._parse_yrange(yrange)
         self.ryrange = self._parse_yrange(ryrange)
 
-        self.set_xrange(self.xrange)
+        self.set_xrange(self.xrange, self.xmargins)
         self.set_yrange(self.yrange)
         self.set_ryrange(self.ryrange)
+
+        # Set x-axis formatting
+        self.set_date_format()
                 
     def apply(self, style):
         '''
@@ -266,12 +304,33 @@ class Chart:
             print('setting right y-axis tick labelsize to ' + str(size))
             self.ax_right.tick_params(axis='y', which='major', labelsize=size)
         
-    def set_xrange(self, xrange):
+    def set_xrange(self, xrange, margins='auto'):
         '''
         Set x-axis range of fig.
         '''
 
-        self.ax.set_xlim(xrange[0], xrange[1])
+        # If margins is "auto", try to guess from freq of data
+        if margins == 'auto':
+            freq = guess_freq(self.data)
+            if freq == 'D':
+                margins = 1
+            elif freq == 'M':
+                margins = 10
+            elif freq == 'Q':
+                margins = 30
+            elif freq == 'A':
+                margins = 60
+            else:
+                print('Unknown freq ' + freq)
+                sys.exit()
+        else:
+            if type(margins) == int:
+                pass
+            else:
+                print('set_xrange: margins of type ' + str(type(margins)) + ' not allowed')
+                sys.exit()
+
+        self.ax.set_xlim(xrange[0] - pd.Timedelta(days=margins), xrange[1] + pd.Timedelta(days=margins))
 
     def set_yrange(self, yrange):
         '''
@@ -286,6 +345,83 @@ class Chart:
         '''
 
         self.ax_right.set_ylim(ryrange[0], ryrange[1])
+
+    def set_date_format(self, xformat='auto', debug=False):
+        '''
+        Set formatting for datetime x-axis.
+        `formatter` should be something like a
+        mdates.DateFormatter().
+
+        If default `auto` is chosen, freq of data is used.
+        Specify special options "D", "W", "M", "Q", "A" to set to these frequencies.
+        '''
+
+        if debug:
+            print('Start of set_date_format()')
+
+        # If self.xaxis_type is not "datetime", skip
+        if self.xaxis_type != 'datetime':
+            if debug:
+                print('self.xaxis_type = ' + str(self.xaxis_type) + ', returning')
+            return
+
+        # If default, guess from freq of data
+        if xformat == 'auto':
+             # If length of data is less than 2, cannot calculate difference,
+            # use date
+            if type(self.data) == pd.DataFrame:
+                freq = guess_freq(self.data)
+                if freq == 'D':
+                    formatter = mdates.DateFormatter('%m/%d/%Y')
+                elif freq == 'M':
+                    formatter = mdates.DateFormatter('%b-%y')
+                elif freq == 'Q':
+                    formatter = mdates.DateFormatter('%YQ%q')
+                # Annual
+                elif freq == 'A':
+                    formatter = mdates.DateFormatter('%Y')
+            else:
+                print('Cannot determine formatter for xformat = auto')
+                sys.exit()
+        elif xformat in ['D', 'W']:
+            # IMF default for daily
+            formatter = mdates.DateFormatter('%m/%d/%Y')
+            if debug:
+                print('formatter for D:')
+                print(formatter)
+        elif xformat == 'M':
+            # IMF default for monthly
+            formatter = mdates.DateFormatter('%b-%y')
+            if debug:
+                print('formatter for M:')
+                print(formatter)
+        elif xformat == 'Q':
+            # IMF default for monthly
+            formatter = mdates.DateFormatter('%YQ%q')
+            if debug:
+                print('formatter for Q:')
+                print(formatter)
+        elif xformat == 'A':
+            formatter = mdates.DateFormatter('%Y')
+            if debug:
+                print('formatter for A:')
+                print(formatter)
+        # Otherwise if specified
+        elif type(xformat) == str:
+            try:
+                formatter = mdates.DateFormatter(xformat)
+                if debug:
+                    print('formatter for str:')
+                    print(formatter)
+            except Exception as e:
+                print('Cannot specify mdates.DateFormatter with xformat ="' + xformat + '"')
+                sys.exit()
+        else:
+            print('set_date_format():')
+            print('xformat of "' + str(xformat) + '" of type ' + str(type(xformat)) + ' not allowed')
+            sys.exit()
+        
+        self.ax.xaxis.set_major_formatter(formatter)
         
     def add_line(self, data, colname, axis='left', dict_attrs=None, debug=False):
         '''

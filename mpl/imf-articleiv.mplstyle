@@ -131,8 +131,8 @@ ytick.labelsize: 10
 
 ## -- These are the colors of the tick labels and tick marks.
 ## -- The tick labels need to be turned to black in the plot.
-xtick.color: B3B3B3
-ytick.color: B3B3B3
+xtick.color: 000000
+ytick.color: 000000
 
 xtick.major.pad: 7
 xtick.major.size: 5

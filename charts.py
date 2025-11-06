@@ -12,6 +12,7 @@ import pandas as pd
 
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+from matplotlib.ticker import FuncFormatter
 
 def _parse_cols(cols):
     '''
@@ -223,7 +224,7 @@ class Chart:
             self.set_ryrange(self.ryrange)
 
         # Set x-axis formatting
-        # self.set_date_format(debug=True)
+        self.set_date_format(debug=True)
                 
     def apply(self, style):
         '''
@@ -475,7 +476,7 @@ class Chart:
                 print('self.xaxis_type = ' + str(self.xaxis_type) + ', returning')
             return
 
-        # If default, guess from freq of data
+        # If default, guess from freq of data.
         if xformat == 'auto':
              # If length of data is less than 2, cannot calculate difference,
             # use date
@@ -486,7 +487,13 @@ class Chart:
                 elif freq == 'M':
                     formatter = mdates.DateFormatter('%b-%y')
                 elif freq == 'Q':
-                    formatter = mdates.DateFormatter('%YQ%q')
+                    def quarter_formatter(x, pos):
+                        date = mdates.num2date(x)
+                        quarter = (date.month - 1) // 3 + 1
+                        return f"{date.year}-Q{quarter}"
+                    formatter = FuncFormatter(quarter_formatter)
+                    # Below does not work
+                    # formatter = mdates.DateFormatter('%YQ%q')
                 # Annual
                 elif freq == 'A':
                     formatter = mdates.DateFormatter('%Y')
@@ -506,8 +513,14 @@ class Chart:
                 print('formatter for M:')
                 print(formatter)
         elif xformat == 'Q':
-            # IMF default for monthly
-            formatter = mdates.DateFormatter('%YQ%q')
+            # IMF default for quarterly
+            def quarter_formatter(x, pos):
+                date = mdates.num2date(x)
+                quarter = (date.month - 1) // 3 + 1
+                return f"{date.year}-Q{quarter}"
+            formatter = mdates.FuncFormatter(quarter_formatter)
+            # Below does not work
+            # formatter = mdates.DateFormatter('%YQ%q')
             if debug:
                 print('formatter for Q:')
                 print(formatter)
@@ -532,7 +545,7 @@ class Chart:
             sys.exit()
         
         self.ax.xaxis.set_major_formatter(formatter)
-        
+
     def add_lines(self, data, colname, axis='left', xrange=None, dict_attrs=None, debug=False):
         '''
         Add line to chart
@@ -690,9 +703,10 @@ class Chart:
         if debug:
             print('Calling show')
 
+        # This is necessary to update charts after they have been shown.
         self.fig.canvas.draw()
+        
         self.fig.show()
-    
 
 def main(argv):
     pass

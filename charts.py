@@ -59,6 +59,10 @@ def guess_freq(df):
     Checks differences in days between index and tries go guess.
     '''
 
+    # If df is None, return 'A', just a holder
+    if df is None:
+        return 'A'
+
     # Not enough data to check differences.
     # Return daily freq.
     if len(df) < 2:
@@ -106,6 +110,9 @@ class Chart:
                  xmargins='auto',
                  width=10, height=6,
                  hlines=[], vlines=[], hrects=[], vrects=[],
+                 ncol_legend=2,
+                 legend_fontsize = 8,
+                 legend_header = '',
                  debug=False):
 
         # ------------------------------------------------------------------------------
@@ -128,7 +135,11 @@ class Chart:
 
         self.xformat = xformat
         self.xmargins = xmargins
-        
+
+        self.ncol_legend = ncol_legend
+        self.legend_fontsize = legend_fontsize
+        self.legend_header = legend_header
+
         # ------------------------------------------------------------------------------
         # Entries, labels for legend
         self.legend_entries = []
@@ -157,23 +168,8 @@ class Chart:
         self.ax_right._get_lines = self.ax._get_lines
 
         # Add title, subtitle
-        if self.title is not None:
-            self.ax.set_title(str(title), loc='left', y=1.05,
-                              fontweight='bold', fontname='Segoe UI')
-        if self.subtitle is not None:
-            font_properties = {
-                'family': 'Segoe UI',
-                'size': 12,
-                'color': '#4B82AD'
-            }
-            
-            self.ax.text(0., 1.03, subtitle,
-                         horizontalalignment='left',
-                         verticalalignment='center',
-                         transform=self.ax.transAxes,
-                         fontdict=font_properties)
-                         # color='#4B82AD',
-                         # fontsize=12)
+        self.set_title(self.title)
+        self.set_subtitle(self.subtitle)
 
         # Add x, y title
         self.set_xtitle(self.xtitle, self.xtitlesize)
@@ -183,31 +179,25 @@ class Chart:
         self.set_xticks(size=self.xtickfontsize)
         self.set_yticks(size=self.ytickfontsize)
 
-        # Get xrange.
-        # This needs to be done before drawing lines, bars
-        # as data outside of range is excluded from self.data.
+        # Get xrange and trim data as needed
         self.xrange = self._parse_xrange(xrange)
-        if type(self.data) == pd.DataFrame:
-            self.data = self.data.loc[str(self.xrange[0]):str(self.xrange[1]), :]
+        self._trim_data(self.xrange)
 
         # ---------------------------------------------------------------------------------------------------
         # Draw lines, bars
         if linecols is not None:
             linecols = _parse_cols(linecols)
-            for linecol in linecols:
-                self.add_line(self.data, linecol, dict_attrs=dict_attrs, debug=debug)
+            self.add_lines(self.data, linecols, xrange=self.xrange, dict_attrs=dict_attrs, debug=debug)
 
         if rlinecols is not None:
             rlinecols = _parse_cols(rlinecols)
-            for rlinecol in rlinecols:
-                self.add_line(self.data, rlinecol, axis='right', dict_attrs=dict_attrs, debug=debug)
+            self.add_lines(self.data, rlinecols, axis='right', xrange=self.xrange, dict_attrs=dict_attrs, debug=debug)
 
         if barcols is not None:
-            pass
+            barcols = _parse_cols(barcols)
+            self.add_bars(self.data, barcols, xrange=self.xrange, dict_attrs=dict_attrs, debug=debug)
         
         # Create legend
-        ncol_legend = 1
-        fontsize = 8
         legend_header = ''
         print('self.legend_entries:')
         print(self.legend_entries)
@@ -219,19 +209,21 @@ class Chart:
                                      bbox_transform=self.ax.figure.transFigure,
                                      # bbox_to_anchor=(bottom_left,fig_top_space + 0.015,bottom_right,0.99),
                                      mode='expand', borderaxespad=0,
-                                     ncol=ncol_legend, fontsize=fontsize, frameon=False, title=legend_header, numpoints=1
+                                     ncol=self.ncol_legend, fontsize=self.legend_fontsize, frameon=False, title=self.legend_header, numpoints=1
         )
 
-        # Adjust x-axis, y-axis ranges
+        # Parse y-axis ranges
         self.yrange = self._parse_yrange(yrange)
         self.ryrange = self._parse_yrange(ryrange)
 
-        self.set_xrange(self.xrange, self.xmargins)
-        self.set_yrange(self.yrange)
-        self.set_ryrange(self.ryrange)
+        # Set x-, y-axis ranges
+        if self.data is not None:
+            self.set_xrange(self.xrange, self.xmargins, debug=True)
+            self.set_yrange(self.yrange)
+            self.set_ryrange(self.ryrange)
 
         # Set x-axis formatting
-        self.set_date_format()
+        # self.set_date_format(debug=True)
                 
     def apply(self, style):
         '''
@@ -244,13 +236,25 @@ class Chart:
         '''
         Utility function to parse x-axis range.
         This can either be a date range or a number range.
+        Returns a list of two elements, the elements are one of
+        - a number
+        - a str interpretible as a date
+        - None
         '''
+
+        if xrange is None:
+            return [None, None]
 
         if type(xrange) == str and xrange.find(':') != -1:
             xrange = xrange.split(':', 1)
+            xrange = [x if x != '' else None for x in xrange]
 
         if self.xaxis_type == 'datetime':
-            xrange = [pd.Timestamp(x) for x in xrange]
+            try:
+                xrange = [pd.Timestamp(str(x)) if x is not None else None for x in xrange]
+            except ValueError:
+                print('Could not convert xrange = ' + str(xrange) + ' to pd.Timestamp')
+                sys.exit()
             
         return [xrange[0], xrange[1]]
 
@@ -265,8 +269,51 @@ class Chart:
                       If either is None, this side will default to available value in df.
         '''
 
+        if yrange is None:
+            return [None, None]
+
         return [yrange[0], yrange[1]]
 
+    def _trim_data(self, xrange):
+        '''
+        Trim self.data using xrange.
+        '''
+        
+        if type(self.data) == pd.DataFrame:
+            if self.xrange[0] is None and self.xrange[1] is None:
+                # Don't trim if nothing specified
+                pass
+            elif self.xrange[0] is None:
+                # Trim start only
+                self.data = self.data.loc[:str(self.xrange[1]), :]
+            elif self.xrange[1] is None:
+                # Trim end only
+                self.data = self.data.loc[str(self.xrange[0]):, :]
+            else:
+                # Trim both
+                self.data = self.data.loc[str(self.xrange[0]):str(self.xrange[1]), :]
+
+    def set_title(self, title):
+        if title is not None:
+            self.ax.set_title(str(title), loc='left', y=1.05,
+                              fontweight='bold', fontname='Segoe UI')
+
+    def set_subtitle(self, subtitle):
+        if self.subtitle is not None:
+            font_properties = {
+                'family': 'Segoe UI',
+                'size': 12,
+                'color': '#4B82AD'
+            }
+            
+            self.ax.text(0., 1.03, subtitle,
+                         horizontalalignment='left',
+                         verticalalignment='center',
+                         transform=self.ax.transAxes,
+                         fontdict=font_properties)
+                         # color='#4B82AD',
+                         # fontsize=12)
+        
     def set_xtitle(self, xtitle, xtitlesize=None):
         self.xtitle = xtitle
         # If a xtitlesize was specified, save internally
@@ -304,10 +351,17 @@ class Chart:
             print('setting right y-axis tick labelsize to ' + str(size))
             self.ax_right.tick_params(axis='y', which='major', labelsize=size)
         
-    def set_xrange(self, xrange, margins='auto'):
+    def set_xrange(self, xrange, margins='auto', debug=False):
         '''
         Set x-axis range of fig.
         '''
+
+        if debug:
+            print('start of set_xrange() for xrange = ' + str(xrange))
+        xrange = self._parse_xrange(xrange)
+        if debug:
+            print('xrange after calling _parse_xrange():')
+            print(xrange)
 
         # If margins is "auto", try to guess from freq of data
         if margins == 'auto':
@@ -325,26 +379,82 @@ class Chart:
                 sys.exit()
         else:
             if type(margins) == int:
+                # Use input int as-is
                 pass
             else:
                 print('set_xrange: margins of type ' + str(type(margins)) + ' not allowed')
                 sys.exit()
 
-        self.ax.set_xlim(xrange[0] - pd.Timedelta(days=margins), xrange[1] + pd.Timedelta(days=margins))
+        if xrange[0] is None:
+            xrange[0] = self.data.index.min()
+        if xrange[1] is None:
+            xrange[1] = self.data.index.max()
+            
+        if debug:
+            print('xrange before setting xlim:')
+            print(xrange)
+
+        # Trim the data based on xrange
+        self._trim_data(xrange)
+            
+        # Try to interpret xrange as dates and add margin
+        try:
+            self.ax.set_xlim(pd.Timestamp(xrange[0]) - pd.Timedelta(days=margins), pd.Timestamp(xrange[1]) + pd.Timedelta(days=margins))
+            if debug:
+                print('Set xlim to Timestamps')
+        # If fails, use xrange as-is.
+        except ValueError:
+            self.ax.set_xlim(xrange[0],xrange[1])
+            if debug:
+                print('Set xlim to xrange as-is')
 
     def set_yrange(self, yrange):
         '''
         Set y-axis range of fig.
         '''
 
-        self.ax.set_ylim(yrange[0], yrange[1])
+        # Get values from self.ax
+        ymin, ymax = self.ax.get_ylim()
+
+        if yrange is None:
+            return
+
+        # Set ymin, ymax if they are specified
+        if yrange[0] is not None:
+            ymin = yrange[0]
+            
+        if yrange[1] is not None:
+            ymax = yrange[1]
+
+        try:
+            self.ax.set_ylim(ymin, ymax)
+        except Exception as e:
+            print('Could not apply set_yrange() for yrange = ' + str(yrange))
+            sys.exit()
 
     def set_ryrange(self, ryrange):
         '''
         Set y-axis range of fig.
         '''
 
-        self.ax_right.set_ylim(ryrange[0], ryrange[1])
+        # Get values from self.ax_right
+        ymin, ymax = self.ax_right.get_ylim()
+
+        if ryrange is None:
+            return
+
+        # Set ymin, ymax if they are specified
+        if ryrange[0] is not None:
+            ymin = ryrange[0]
+            
+        if ryrange[1] is not None:
+            ymax = ryrange[1]
+
+        try:
+            self.ax_right.set_ylim(ymin, ymax)
+        except Exception as e:
+            print('Could not apply set_ryrange() for yrange = ' + str(yrange))
+            sys.exit()
 
     def set_date_format(self, xformat='auto', debug=False):
         '''
@@ -423,40 +533,108 @@ class Chart:
         
         self.ax.xaxis.set_major_formatter(formatter)
         
-    def add_line(self, data, colname, axis='left', dict_attrs=None, debug=False):
+    def add_lines(self, data, colname, axis='left', xrange=None, dict_attrs=None, debug=False):
         '''
         Add line to chart
         '''
 
         if debug:
-            print('Calling add_line on "' + colname + '"')
+            print('Calling add_lines on "' + str(colname) + '"')
             
-        if colname not in data.columns:
-            print('"' + colname + '" is not in data')
-            raise ValueError
+        linecols = _parse_cols(colname)
 
-        if axis == 'left':
-            entry = self.ax.plot(data.index, data[colname], label=colname)
-            self.legend_entries.append(entry[0])
-            self.legend_labels.append(colname)
-        elif axis == 'right':
-            entry = self.ax_right.plot(data.index, data[colname], label=colname)
-            self.legend_entries.append(entry[0])
-            self.legend_labels.append(colname)
-        else:
-            print('axis must be left or right, given ' + str(axis))
-            raise VaueError
+        # Set self.data to be input data
+        self.data = data
+        # Set x-axis limits and trim data as needed
+        if xrange is not None:
+            xrange = self._parse_xrange(xrange)
+            self._trim_data(xrange)
         
-        # Merge with self.data
+        for linecol in linecols:
+            if debug:
+                print('adding line for ' + linecol)
+                
+            if linecol not in data.columns:
+                print('"' + linecol + '" is not in data')
+                raise ValueError
 
-    def add_bar(self, data, colname, axis='left', dict_attrs=None, debug=False):
+            if axis == 'left':
+                entry = self.ax.plot(self.data.index, self.data[linecol], label=linecol)
+                self.legend_entries.append(entry[0])
+                self.legend_labels.append(linecol)
+                print(self.legend_labels)
+            elif axis == 'right':
+                entry = self.ax_right.plot(self.data.index, self.data[linecol], label=linecol)
+                self.legend_entries.append(entry[0])
+                self.legend_labels.append(linecol)
+            else:
+                print('axis must be left or right, given ' + str(axis))
+                raise VaueError
+
+        # Re-create legend
+        self.legend = self.ax.legend(self.legend_entries, self.legend_labels,
+                                     loc='upper left',
+                                     labelspacing=1.5,
+                                     bbox_transform=self.ax.figure.transFigure,
+                                     # bbox_to_anchor=(bottom_left,fig_top_space + 0.015,bottom_right,0.99),
+                                     mode='expand', borderaxespad=0,
+                                     ncol=self.ncol_legend, fontsize=self.legend_fontsize, frameon=False, title=self.legend_header, numpoints=1
+        )
+
+        # Set x-axis range if specified
+        if xrange is not None:
+            self.set_xrange(xrange)
+
+    def add_bars(self, data, colname, axis='left', xrange=None, dict_attrs=None, debug=False):
         '''
         Add bar to chart
         '''
 
-        # Merge with self.data
-        pass
+        if debug:
+            print('Calling add_bars on "' + str(colname) + '"')
+            
+        barcols = _parse_cols(colname)
 
+        # Set self.data to be input data
+        self.data = data
+        # Set x-axis limits and trim data as needed
+        if xrange is not None:
+            xrange = self._parse_xrange(xrange)
+            self._trim_data(xrange)
+
+        # Guess freq of data and set bar width
+        freq = guess_freq(self.data)
+        if freq in 'DW':
+            width = 3
+        elif freq == 'M':
+            width = 25
+        elif freq == 'Q':
+            width = 70
+        elif freq == 'A':
+            width =300
+            
+        for barcol in barcols:
+            if barcol not in data.columns:
+                print('"' + barcol + '" is not in data')
+                raise ValueError
+            entry = self.ax.bar(self.data.index, self.data[barcol], label=barcol, width=width)
+            self.legend_entries.append(entry[0])
+            self.legend_labels.append(barcol)
+
+        # Re-create legend
+        self.legend = self.ax.legend(self.legend_entries, self.legend_labels,
+                                     loc='upper left',
+                                     labelspacing=1.5,
+                                     bbox_transform=self.ax.figure.transFigure,
+                                     # bbox_to_anchor=(bottom_left,fig_top_space + 0.015,bottom_right,0.99),
+                                     mode='expand', borderaxespad=0,
+                                     ncol=self.ncol_legend, fontsize=self.legend_fontsize, frameon=False, title=self.legend_header, numpoints=1
+        )
+        
+        # Set x-axis range if specified
+        if xrange is not None:
+            self.set_xrange(xrange)
+        
     def add_scatter(self, data, colname, dict_attrs=None, debug=False):
         '''
         Add scatter to chart
@@ -512,6 +690,7 @@ class Chart:
         if debug:
             print('Calling show')
 
+        self.fig.canvas.draw()
         self.fig.show()
     
 

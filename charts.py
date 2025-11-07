@@ -111,7 +111,7 @@ class Chart:
                  xmargins='auto',
                  width=10, height=6,
                  hlines=[], vlines=[], hrects=[], vrects=[],
-                 ncol_legend=2,
+                 ncol_legend=1,
                  legend_fontsize = 8,
                  legend_header = '',
                  debug=False):
@@ -160,13 +160,9 @@ class Chart:
         # Create figure
         self.fig, self.ax = plt.subplots(1, 1, figsize=(self.width, self.height))
         # Initialize self.ax_right to None, only generate as needed
-        self.ax_right = self.ax.twinx()
+        self.ax_right = None
         if debug:
             print('Created self.fig, self.ax')
-
-        # Set color cycler to be common with the left y-axis.
-        # Hack from https://github.com/matplotlib/matplotlib/issues/19479
-        self.ax_right._get_lines = self.ax._get_lines
 
         # Add title, subtitle
         self.set_title(self.title)
@@ -438,6 +434,9 @@ class Chart:
         Set y-axis range of fig.
         '''
 
+        if self.ax_right is None:
+            return
+
         # Get values from self.ax_right
         ymin, ymax = self.ax_right.get_ylim()
 
@@ -490,7 +489,7 @@ class Chart:
                     def quarter_formatter(x, pos):
                         date = mdates.num2date(x)
                         quarter = (date.month - 1) // 3 + 1
-                        return f"{date.year}-Q{quarter}"
+                        return f"{date.year}Q{quarter}"
                     formatter = FuncFormatter(quarter_formatter)
                     # Below does not work
                     # formatter = mdates.DateFormatter('%YQ%q')
@@ -517,7 +516,7 @@ class Chart:
             def quarter_formatter(x, pos):
                 date = mdates.num2date(x)
                 quarter = (date.month - 1) // 3 + 1
-                return f"{date.year}-Q{quarter}"
+                return f"{date.year}Q{quarter}"
             formatter = mdates.FuncFormatter(quarter_formatter)
             # Below does not work
             # formatter = mdates.DateFormatter('%YQ%q')
@@ -577,6 +576,12 @@ class Chart:
                 self.legend_labels.append(linecol)
                 print(self.legend_labels)
             elif axis == 'right':
+                if self.ax_right is None:
+                    self.ax_right = self.ax.twinx()
+                    # Set color cycler to be common with the left y-axis.
+                    # Hack from https://github.com/matplotlib/matplotlib/issues/19479
+                    self.ax_right._get_lines = self.ax._get_lines
+                
                 entry = self.ax_right.plot(self.data.index, self.data[linecol], label=linecol)
                 self.legend_entries.append(entry[0])
                 self.legend_labels.append(linecol)
@@ -630,7 +635,16 @@ class Chart:
             if barcol not in data.columns:
                 print('"' + barcol + '" is not in data')
                 raise ValueError
-            entry = self.ax.bar(self.data.index, self.data[barcol], label=barcol, width=width)
+            if axis == 'left':
+                entry = self.ax.bar(self.data.index, self.data[barcol], label=barcol, width=width)
+            elif axis == 'right':
+                if self.ax_right is None:
+                    self.ax_right = self.ax.twinx()
+                    # Set color cycler to be common with the left y-axis.
+                    # Hack from https://github.com/matplotlib/matplotlib/issues/19479
+                    self.ax_right._get_lines = self.ax._get_lines
+                entry = self.ax_right.bar(self.data.index, self.data[barcol], label=barcol, width=width)
+
             self.legend_entries.append(entry[0])
             self.legend_labels.append(barcol)
 

@@ -196,10 +196,11 @@ class Chart:
         
         # Create legend
         legend_header = ''
-        print('self.legend_entries:')
-        print(self.legend_entries)
-        print('self.legend_labels:')
-        print(self.legend_labels)
+        if debug:
+            print('self.legend_entries:')
+            print(self.legend_entries)
+            print('self.legend_labels:')
+            print(self.legend_labels)
         self.legend = self.ax.legend(self.legend_entries, self.legend_labels,
                                      loc='upper left',
                                      labelspacing=1.5,
@@ -215,12 +216,12 @@ class Chart:
 
         # Set x-, y-axis ranges
         if self.data is not None:
-            self.set_xrange(self.xrange, self.xmargins, debug=True)
+            self.set_xrange(self.xrange, self.xmargins)
             self.set_yrange(self.yrange)
             self.set_ryrange(self.ryrange)
 
         # Set x-axis formatting
-        self.set_date_format(debug=True)
+        self.set_date_format()
                 
     def apply(self, style):
         '''
@@ -345,7 +346,6 @@ class Chart:
         # Set
         self.ax.tick_params(axis='y', which='major', labelsize=size)
         if self.ax_right:
-            print('setting right y-axis tick labelsize to ' + str(size))
             self.ax_right.tick_params(axis='y', which='major', labelsize=size)
         
     def set_xrange(self, xrange, margins='auto', debug=False):
@@ -574,7 +574,6 @@ class Chart:
                 entry = self.ax.plot(self.data.index, self.data[linecol], label=linecol)
                 self.legend_entries.append(entry[0])
                 self.legend_labels.append(linecol)
-                print(self.legend_labels)
             elif axis == 'right':
                 if self.ax_right is None:
                     self.ax_right = self.ax.twinx()

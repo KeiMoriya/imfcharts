@@ -114,6 +114,8 @@ class Chart:
                  ncol_legend=1,
                  legend_fontsize = 8,
                  legend_header = '',
+                 legend_left=0.04, legend_bottom=0.85, legend_width=0.70, legend_height=0.15,
+                 legend_mode='expand',
                  debug=False):
 
         # ------------------------------------------------------------------------------
@@ -145,6 +147,12 @@ class Chart:
         # Entries, labels for legend
         self.legend_entries = []
         self.legend_labels = []
+
+        self.legend_left = legend_left
+        self.legend_bottom = legend_bottom
+        self.legend_width = legend_width
+        self.legend_height = legend_height
+        self.legend_mode = legend_mode
 
         # Check whether index of data is datetime
         self.xaxis_type = 'datetime'
@@ -182,6 +190,10 @@ class Chart:
 
         # ---------------------------------------------------------------------------------------------------
         # Draw lines, bars
+        if barcols is not None:
+            barcols = _parse_cols(barcols)
+            self.add_bars(self.data, barcols, xrange=self.xrange, dict_attrs=dict_attrs, debug=debug)
+            
         if linecols is not None:
             linecols = _parse_cols(linecols)
             self.add_lines(self.data, linecols, xrange=self.xrange, dict_attrs=dict_attrs, debug=debug)
@@ -189,10 +201,6 @@ class Chart:
         if rlinecols is not None:
             rlinecols = _parse_cols(rlinecols)
             self.add_lines(self.data, rlinecols, axis='right', xrange=self.xrange, dict_attrs=dict_attrs, debug=debug)
-
-        if barcols is not None:
-            barcols = _parse_cols(barcols)
-            self.add_bars(self.data, barcols, xrange=self.xrange, dict_attrs=dict_attrs, debug=debug)
         
         # Create legend
         legend_header = ''
@@ -201,14 +209,7 @@ class Chart:
             print(self.legend_entries)
             print('self.legend_labels:')
             print(self.legend_labels)
-        self.legend = self.ax.legend(self.legend_entries, self.legend_labels,
-                                     loc='upper left',
-                                     labelspacing=1.5,
-                                     bbox_transform=self.ax.figure.transFigure,
-                                     # bbox_to_anchor=(bottom_left,fig_top_space + 0.015,bottom_right,0.99),
-                                     mode='expand', borderaxespad=0,
-                                     ncol=self.ncol_legend, fontsize=self.legend_fontsize, frameon=False, title=self.legend_header, numpoints=1
-        )
+        self.update_legend()
 
         # Parse y-axis ranges
         self.yrange = self._parse_yrange(yrange)
@@ -589,14 +590,7 @@ class Chart:
                 raise VaueError
 
         # Re-create legend
-        self.legend = self.ax.legend(self.legend_entries, self.legend_labels,
-                                     loc='upper left',
-                                     labelspacing=1.5,
-                                     bbox_transform=self.ax.figure.transFigure,
-                                     # bbox_to_anchor=(bottom_left,fig_top_space + 0.015,bottom_right,0.99),
-                                     mode='expand', borderaxespad=0,
-                                     ncol=self.ncol_legend, fontsize=self.legend_fontsize, frameon=False, title=self.legend_header, numpoints=1
-        )
+        self.update_legend()
 
         # Set x-axis range if specified
         if xrange is not None:
@@ -648,14 +642,7 @@ class Chart:
             self.legend_labels.append(barcol)
 
         # Re-create legend
-        self.legend = self.ax.legend(self.legend_entries, self.legend_labels,
-                                     loc='upper left',
-                                     labelspacing=1.5,
-                                     bbox_transform=self.ax.figure.transFigure,
-                                     # bbox_to_anchor=(bottom_left,fig_top_space + 0.015,bottom_right,0.99),
-                                     mode='expand', borderaxespad=0,
-                                     ncol=self.ncol_legend, fontsize=self.legend_fontsize, frameon=False, title=self.legend_header, numpoints=1
-        )
+        self.update_legend()
         
         # Set x-axis range if specified
         if xrange is not None:
@@ -695,7 +682,37 @@ class Chart:
         '''
 
         pass
-    
+
+    def update_legend(self,
+                      ncol_legend=None,
+                      legend_left=None, legend_bottom=None, legend_width=None, legend_height=None, legend_mode=None):
+        '''
+        Update legend of Chart.
+        Some options can be specified as inputs, if they are provided as None the class  attributes are used.
+        '''
+
+        # Use inputs if they are specified, otherwise default to class attributes
+        if ncol_legend is None:
+            ncol_legend = self.ncol_legend
+        if legend_left is None:
+            legend_left = self.legend_left
+        if legend_bottom is None:
+            legend_bottom = self.legend_bottom
+        if legend_width is None:
+            legend_width = self.legend_width
+        if legend_height is None:
+            legend_height = self.legend_height
+        if legend_mode is None:
+            legend_mode = self.legend_mode
+        
+        self.legend = self.ax.legend(self.legend_entries, self.legend_labels,
+                                     loc='upper left',
+                                     labelspacing=1.5,
+                                     bbox_transform=self.ax.transAxes,
+                                     bbox_to_anchor=(legend_left,legend_bottom,legend_width,legend_height),
+                                     mode=legend_mode, borderaxespad=0,
+                                     ncol=ncol_legend, fontsize=self.legend_fontsize, frameon=False, title=self.legend_header, numpoints=1
+        )
 
     def save(self, filename):
         '''

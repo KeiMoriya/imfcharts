@@ -66,6 +66,7 @@ chart2 = Chart(df, linecols=df.columns[0], rlinecols=df.columns[1],
                title='Labor Utilization',
                subtitle='(Percent)',
                xrange='2023-01:2025-08', # yrange=[8, 11], ryrange=[10, 25],
+               yrange=[8, 11],
                )
                # debug=True)
 
@@ -81,11 +82,13 @@ if not os.path.isfile(infilename):
     print('File ' + infilename + ' does not exist')
     sys.exit()
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+df = df[['Industrial Production', 'Retail sales']]
 
 # Create Chart object
 chart3 = Chart(df, linecols=df.columns[0], rlinecols=df.columns[1],
                title='Production Indicators',
                subtitle='(Percent, yoy)',
+               legend_left=0.60, legend_width=0.40,
                xrange='2023-01:', yrange=[-10, 40],
                )
                # debug=True)
@@ -129,7 +132,8 @@ chart5 = Chart(df, linecols=df.columns,
                title='Major Trading Partner GDP Growth',
                subtitle='(Percent q/q, SAAR)',
                ncol_legend=2,
-               xrange='2023Q1:', yrange=[-1, 5],
+               legend_left=0.70, legend_width=0.30,
+               xrange='2023-01:', yrange=[-1, 5],
                ) # debug=True)
 
 # Save

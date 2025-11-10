@@ -714,16 +714,30 @@ class Chart:
                                      ncol=ncol_legend, fontsize=self.legend_fontsize, frameon=False, title=self.legend_header, numpoints=1
         )
 
-    def save(self, filename):
+    def save(self, filename, dpi=250):
         '''
         Save information on chart.
         '''
 
-        # save data
+        # Besides saving chart as file,
+        # would be nice to have options to
+        # - save data
+        # - save style, settings
+        # so that chart can be re-generated.
 
-        # save style, settings
+        # Get dirname and create as necessary
+        dirname = os.path.dirname(filename)
+        if not os.path.isdir(dirname):
+            try:
+                os.makedirs(dirname)
+            except Exception as e:
+                print('Could not create dir ' + dirname + ' for filename ' + filename)
 
-        pass
+        try:
+            self.fig.savefig(filename, dpi=dpi)
+        except Exception as e:
+            print('WARNING: Could not create file ' + filename + ' with exception:')
+            print(e)
 
     def show(self, debug=False):
         '''

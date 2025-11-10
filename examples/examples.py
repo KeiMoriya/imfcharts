@@ -9,9 +9,12 @@ and files are stored in data/turkey_page1/.
 
 import os
 import sys
+import glob
 
 import numpy as np
 import pandas as pd
+
+from PyPDF2 import PdfWriter
 
 import imfcharts
 import imfcharts.charts
@@ -26,6 +29,8 @@ from imfcharts import *
 # plt.ion()
 # Clear all existing figures
 plt.close('all')
+
+outdir = 'pdf'
 
 # ---------------------------------------------------------------------------------------------------------
 # p. 1 Chart 1
@@ -49,7 +54,7 @@ chart1 = Chart(df, linecols=linecol, barcols=barcols,
                # debug=True)
 
 # Save
-chart1.save('gdp')
+chart1.save(outdir + '/gdp.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
 # p. 1 Chart 2
@@ -71,7 +76,7 @@ chart2 = Chart(df, linecols=df.columns[0], rlinecols=df.columns[1],
                # debug=True)
 
 # Save
-chart2.save('labor')
+chart2.save(outdir + '/labor.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
 # p. 1 Chart 3
@@ -85,7 +90,7 @@ df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 df = df[['Industrial Production', 'Retail sales']]
 
 # Create Chart object
-chart3 = Chart(df, linecols=df.columns[0], rlinecols=df.columns[1],
+chart3 = Chart(df, linecols=df.columns,
                title='Production Indicators',
                subtitle='(Percent, yoy)',
                legend_left=0.60, legend_width=0.40,
@@ -94,7 +99,7 @@ chart3 = Chart(df, linecols=df.columns[0], rlinecols=df.columns[1],
                # debug=True)
 
 # Save
-chart3.save('ip')
+chart3.save(outdir + '/ip.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
 # p. 1 Chart 4
@@ -115,7 +120,7 @@ chart4 = Chart(df, linecols=df.columns,
                ) # debug=True)
 
 # Save
-chart4.save('confidence')
+chart4.save(outdir + '/confidence.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
 # p. 1 Chart 5
@@ -137,7 +142,7 @@ chart5 = Chart(df, linecols=df.columns,
                ) # debug=True)
 
 # Save
-chart5.save('partners')
+chart5.save(outdir + '/partners.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
 # p. 1 Chart 6
@@ -157,7 +162,7 @@ chart6 = Chart(df, linecols=df.columns,
                ) # debug=True)
 
 # Save
-chart6.save('trade')
+chart6.save(outdir + '/trade.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
 # Additional commands
@@ -176,3 +181,12 @@ chart2.add_hline(3)
 
 # Show all charts
 # plt.show()
+
+# Merge all files
+merger = PdfWriter()
+filenames = glob.glob(outdir + '/*.pdf')
+for filename in filenames:
+    merger.append(filename)
+outfilename = outdir + '/all.pdf'
+merger.write(outfilename)
+print('Created file ' + outfilename)

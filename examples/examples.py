@@ -47,6 +47,13 @@ barcols = cols[1:]
 
 # Create Chart object
 chart1 = Chart(df, linecols=linecol, barcols=barcols,
+               dict_attrs={linecol : {'linewidth' : 4,
+                                      # 'linestyle' : '--',
+                                      'marker' : 'o',
+                                      'markersize' : 10,
+                                      'markerfacecolor' : 'white',
+                                      'markeredgewidth' : 4,
+                                      'markeredgecolor' : IMFBLUE}},
                title='Contributions to Real GDP Growth',
                subtitle='(Percent, q/q)',
                xrange='2023Q1:', yrange=[-3, 8],
@@ -54,7 +61,7 @@ chart1 = Chart(df, linecols=linecol, barcols=barcols,
                # debug=True)
 
 # Save
-chart1.save(outdir + '/gdp.pdf')
+chart1.save(outdir + '/page1_chart1_gdp.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
 # p. 1 Chart 2
@@ -76,7 +83,7 @@ chart2 = Chart(df, linecols=df.columns[0], rlinecols=df.columns[1],
                # debug=True)
 
 # Save
-chart2.save(outdir + '/labor.pdf')
+chart2.save(outdir + '/page1_chart2_labor.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
 # p. 1 Chart 3
@@ -99,7 +106,7 @@ chart3 = Chart(df, linecols=df.columns,
                # debug=True)
 
 # Save
-chart3.save(outdir + '/ip.pdf')
+chart3.save(outdir + '/page1_chart3_ip.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
 # p. 1 Chart 4
@@ -120,7 +127,7 @@ chart4 = Chart(df, linecols=df.columns,
                ) # debug=True)
 
 # Save
-chart4.save(outdir + '/confidence.pdf')
+chart4.save(outdir + '/page1_chart4_confidence.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
 # p. 1 Chart 5
@@ -142,7 +149,7 @@ chart5 = Chart(df, linecols=df.columns,
                ) # debug=True)
 
 # Save
-chart5.save(outdir + '/partners.pdf')
+chart5.save(outdir + '/page1_chart5_partners.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
 # p. 1 Chart 6
@@ -162,7 +169,7 @@ chart6 = Chart(df, linecols=df.columns,
                ) # debug=True)
 
 # Save
-chart6.save(outdir + '/trade.pdf')
+chart6.save(outdir + '/page1_chart6_trade.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
 # Additional commands
@@ -182,11 +189,15 @@ chart2.add_hline(3)
 # Show all charts
 # plt.show()
 
+# Delete previous merged file
+mergedfilename = outdir + '/all.pdf'
+if os.path.isfile(mergedfilename):
+    os.remove(mergedfilename)
+
 # Merge all files
 merger = PdfWriter()
-filenames = glob.glob(outdir + '/*.pdf')
+filenames = sorted(glob.glob(outdir + '/*.pdf'))
 for filename in filenames:
     merger.append(filename)
-outfilename = outdir + '/all.pdf'
-merger.write(outfilename)
-print('Created file ' + outfilename)
+merger.write(mergedfilename)
+print('Created file ' + mergedfilename)

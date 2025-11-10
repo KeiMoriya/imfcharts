@@ -10,6 +10,7 @@ import sys
 import numpy as np
 import pandas as pd
 
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.ticker import FuncFormatter
@@ -562,17 +563,59 @@ class Chart:
         if xrange is not None:
             xrange = self._parse_xrange(xrange)
             self._trim_data(xrange)
-        
+            
         for linecol in linecols:
             if debug:
-                print('adding line for ' + linecol)
-                
+                print('adding line for "' + linecol + '"')
+
             if linecol not in data.columns:
                 print('"' + linecol + '" is not in data')
                 raise ValueError
 
+            # Get default settings from stylefile
+            marker = matplotlib.rcParams['lines.marker']
+            markersize = matplotlib.rcParams['lines.markersize']
+            markerfacecolor = matplotlib.rcParams['lines.markerfacecolor']
+            markeredgecolor = matplotlib.rcParams['lines.markeredgecolor']
+            markeredgewidth = matplotlib.rcParams['lines.markeredgewidth']
+            linewidth = matplotlib.rcParams['lines.linewidth']
+            linestyle = matplotlib.rcParams['lines.linestyle']
+            
+            # Get any attributes that were assigned to this column
+            if dict_attrs is not None and linecol in dict_attrs:
+                # This should be a dict containing attributes for this column
+                attrs = dict_attrs[linecol]
+                if debug:
+                    print(attrs)
+
+                # If any were specified, overwrite stylefile
+                if 'marker' in attrs:
+                    marker = attrs['marker']
+                    
+                if 'markersize' in attrs:
+                    markersize = attrs['markersize']
+
+                if 'markerfacecolor' in attrs:
+                    markerfacecolor = attrs['markerfacecolor']
+
+                if 'markeredgecolor' in attrs:
+                    markeredgecolor = attrs['markeredgecolor']
+
+                if 'markeredgewidth' in attrs:
+                    markeredgewidth = attrs['markeredgewidth']
+                    
+                if 'linewidth' in attrs:
+                    linewidth = attrs['linewidth']
+
+                if 'linestyle' in attrs:
+                    linestyle = attrs['linestyle']
+                    
             if axis == 'left':
-                entry = self.ax.plot(self.data.index, self.data[linecol], label=linecol)
+                entry = self.ax.plot(self.data.index, self.data[linecol], label=linecol,
+                                     markersize=markersize, marker=marker,
+                                     markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
+                                     markeredgewidth=markeredgewidth,
+                                     linestyle=linestyle, linewidth=linewidth)
                 self.legend_entries.append(entry[0])
                 self.legend_labels.append(linecol)
             elif axis == 'right':
@@ -581,8 +624,12 @@ class Chart:
                     # Set color cycler to be common with the left y-axis.
                     # Hack from https://github.com/matplotlib/matplotlib/issues/19479
                     self.ax_right._get_lines = self.ax._get_lines
-                
-                entry = self.ax_right.plot(self.data.index, self.data[linecol], label=linecol)
+                    
+                entry = self.ax_right.plot(self.data.index, self.data[linecol], label=linecol,
+                                           markersize=markersize, marker=marker,
+                                           markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
+                                           markeredgewidth=markeredgewidth,
+                                           linestyle=linestyle, linewidth=linewidth)
                 self.legend_entries.append(entry[0])
                 self.legend_labels.append(linecol)
             else:

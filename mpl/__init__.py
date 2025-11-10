@@ -12,14 +12,6 @@ import shutil
 import matplotlib.pyplot as plt
 from matplotlib.colors import rgb2hex
 
-# Define IMF colors
-AXISGRAY  = 'B3B3B3'
-IMFBLUE   = '4B82AD'
-IMFGREEN  = '96BA79'
-IMFRED    = 'C00000'
-IMFGREY   = 'A6A8AC'
-IMFBLACK  = '000000'
-
 # Get available styles in this project
 stylefiles = glob.glob(os.path.abspath(os.path.dirname(__file__) + '/*.mplstyle'))
 

@@ -70,7 +70,7 @@ df.columns = ['Sequential inflation']
 df2 = 100 * (calc_pow(df2 / df2.shift(3), 1./3.) - 1.)
 df = df.merge(df2, left_index=True, right_index=True, how='outer')
 
-fig = imfplotly.create_fig(df, linecols='3-month moving average', barcols='Sequential inflation',
+fig = imfplotly.create_fig(df, linecols=df.columns,
                            xrange='2017-01:')
 objects.append(fig)
 df.to_csv(outdir + '/fig2_chart2_sequential_inflation.csv')

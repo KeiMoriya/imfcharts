@@ -145,7 +145,7 @@ for country in _df.index:
     # Calculate deviation from 2023 mean
     _df.loc[country, 'shock'] = 100. * (data.values[-1] / mean - 1.)
         
-fig = imfplotly.create_fig(_df, linecols=_df.columns)
+fig = imfplotly.create_fig(_df, barcols=_df.columns)
 objects.append(fig)
 _df.to_csv(outdir + '/fig5_chart3_terms_of_trade.csv')
 
@@ -186,10 +186,12 @@ for col in cols:
 df_q.drop('gdp_usd', axis=1, inplace=True)
 df_q.dropna(axis=0, how='any', inplace=True)
 
-fig = imfplotly.create_fig(df, linecols=df.columns,
+barcols = [c for c in df_q.columns if c != 'Current Account Balance']
+fig = imfplotly.create_fig(df_q, linecols='Current Account Balance',
+                           barcols=barcols,
                            xrange='2022-01:')
 objects.append(fig)
-df.to_csv(outdir + '/fig5_chart4_current_account_financing.csv')
+df_q.to_csv(outdir + '/fig5_chart4_current_account_financing.csv')
 
 # -----------------------------------------------------
 # 5. Financial Account 2/

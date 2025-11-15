@@ -48,15 +48,26 @@ barcols = cols[1:]
 # Create Chart object
 chart1 = Chart(df, linecols=linecol, barcols=barcols,
                dict_attrs={linecol : {'linewidth' : 4,
+                                      'linecolor' : '#004C97',
                                       # 'linestyle' : '--',
                                       'marker' : 'o',
                                       'markersize' : 10,
                                       'markerfacecolor' : 'white',
                                       'markeredgewidth' : 4,
-                                      'markeredgecolor' : IMFBLUE}},
+                                      'markeredgecolor' : '#004C97'},
+                           'Consumption (private)' : {'barcolor' : '#4B8CAD', 'barhatchcolor' : IMFBLUE, 'barhatch' : '\\\\'},
+                           'Consumption (public)' : {'barcolor' : 'white', 'barhatch' : '\\\\\\', 'barhatchcolor' : IMFBLACK},
+                           'Net exports' : {'barcolor' : IMFGREY},
+                           'Inventories/discrepancy' : {'barcolor' : IMFRED},
+                           'Fixed investment' : {'barcolor' : 'white',
+                                                 'barhatch' : '///',
+                                                 'barhatchcolor' : IMFGREEN,
+                                                 'barhatchwidth' : 10}
+                           },
+               topxaxis='left',
                title='Contributions to Real GDP Growth',
                subtitle='(Percent, q/q)',
-               xrange='2023Q1:', yrange=[-3, 8],
+               xrange='2023Q1:', yrange=[-5, 9.5], ryrange=[-5, 9.5],
                ncol_legend=2)
                # debug=True)
 

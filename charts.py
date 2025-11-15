@@ -94,7 +94,8 @@ class Chart:
                  # plotting options
                  linecols=None, barcols=None, rlinecols=None,
                  # bar options
-                 stack=True, area=False, barwidth=None, bar_right=False,
+                 stack=True, area=False, barwidth=None, baraxis='left',
+                 barlinewidth=None,
                  title=None,
                  subtitle = None,
                  xtitle='', ytitle='',
@@ -111,10 +112,12 @@ class Chart:
                  xrange=None, yrange=None, ryrange=None,
                  xmargins='auto',
                  width=10, height=6,
+                 topxaxis='left',
                  hlines=[], vlines=[], hrects=[], vrects=[],
                  ncol_legend=1,
-                 legend_fontsize = 8,
-                 legend_header = '',
+                 legend_spacing=0.5,
+                 legend_fontsize=14,
+                 legend_header='',
                  legend_left=0.04, legend_bottom=0.85, legend_width=0.70, legend_height=0.15,
                  legend_mode='expand',
                  debug=False):
@@ -144,6 +147,10 @@ class Chart:
         self.legend_fontsize = legend_fontsize
         self.legend_header = legend_header
 
+        # Whether left or right x-axis should be drawn on top.
+        # Use self.set_top_xaxis() to set.
+        self.topxaxis = topxaxis
+
         # ------------------------------------------------------------------------------
         # Entries, labels for legend
         self.legend_entries = []
@@ -154,6 +161,7 @@ class Chart:
         self.legend_width = legend_width
         self.legend_height = legend_height
         self.legend_mode = legend_mode
+        self.legend_spacing = legend_spacing
 
         # Check whether index of data is datetime
         self.xaxis_type = 'datetime'
@@ -193,7 +201,8 @@ class Chart:
         # Draw lines, bars
         if barcols is not None:
             barcols = _parse_cols(barcols)
-            self.add_bars(self.data, barcols, xrange=self.xrange, dict_attrs=dict_attrs, debug=debug)
+            self.add_bars(self.data, barcols, stack=stack, baraxis=baraxis, xrange=self.xrange, barlinewidth=barlinewidth,
+                          dict_attrs=dict_attrs, debug=True)
             
         if linecols is not None:
             linecols = _parse_cols(linecols)
@@ -224,6 +233,9 @@ class Chart:
 
         # Set x-axis formatting
         self.set_date_format()
+
+        # Set which x-axis is drawn on top
+        self.set_top_xaxis(self.topxaxis)
                 
     def apply(self, style):
         '''
@@ -580,6 +592,7 @@ class Chart:
             markeredgewidth = matplotlib.rcParams['lines.markeredgewidth']
             linewidth = matplotlib.rcParams['lines.linewidth']
             linestyle = matplotlib.rcParams['lines.linestyle']
+            linecolor = None
             
             # Get any attributes that were assigned to this column
             if dict_attrs is not None and linecol in dict_attrs:
@@ -609,13 +622,16 @@ class Chart:
 
                 if 'linestyle' in attrs:
                     linestyle = attrs['linestyle']
+
+                if 'linecolor' in attrs:
+                    linecolor = attrs['linecolor']
                     
             if axis == 'left':
                 entry = self.ax.plot(self.data.index, self.data[linecol], label=linecol,
                                      markersize=markersize, marker=marker,
                                      markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
                                      markeredgewidth=markeredgewidth,
-                                     linestyle=linestyle, linewidth=linewidth)
+                                     linestyle=linestyle, linewidth=linewidth, color=linecolor)
                 self.legend_entries.append(entry[0])
                 self.legend_labels.append(linecol)
             elif axis == 'right':
@@ -629,7 +645,7 @@ class Chart:
                                            markersize=markersize, marker=marker,
                                            markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
                                            markeredgewidth=markeredgewidth,
-                                           linestyle=linestyle, linewidth=linewidth)
+                                           linestyle=linestyle, linewidth=linewidth, color=linecolor)
                 self.legend_entries.append(entry[0])
                 self.legend_labels.append(linecol)
             else:
@@ -643,7 +659,7 @@ class Chart:
         if xrange is not None:
             self.set_xrange(xrange)
 
-    def add_bars(self, data, colname, axis='left', xrange=None, dict_attrs=None, debug=False):
+    def add_bars(self, data, colname, baraxis='left', stack=True, barlinewidth=None, xrange=None, dict_attrs=None, debug=False):
         '''
         Add bar to chart
         '''
@@ -653,6 +669,10 @@ class Chart:
             
         barcols = _parse_cols(colname)
 
+        # Line width of bar borders for all bars
+        if barlinewidth is None:
+            barlinewidth = matplotlib.rcParams['patch.linewidth']
+        
         # Set self.data to be input data
         self.data = data
         # Set x-axis limits and trim data as needed
@@ -663,30 +683,184 @@ class Chart:
         # Guess freq of data and set bar width
         freq = guess_freq(self.data)
         if freq in 'DW':
-            width = 3
+            barwidth = 3
         elif freq == 'M':
-            width = 25
+            barwidth = 25
         elif freq == 'Q':
-            width = 70
+            barwidth = 70
         elif freq == 'A':
-            width =300
-            
-        for barcol in barcols:
+            barwidth =300
+
+        # Iterate over barcols and plot each bar.
+        cycle = iter(plt.rcParams['axes.prop_cycle'])
+        used_colors = []
+
+        # Need to keep track of positive and negative offsets if stacked.
+        pos_offset = [0] * len(self.data)
+        neg_offset = [0] * len(self.data)
+        
+        for ibarcol, barcol in enumerate(barcols):
+            if debug:
+                print('-' * 40)
+                print('barcol = "' + barcol + '"')
+                
             if barcol not in data.columns:
                 print('"' + barcol + '" is not in data')
                 raise ValueError
-            if axis == 'left':
-                entry = self.ax.bar(self.data.index, self.data[barcol], label=barcol, width=width)
-            elif axis == 'right':
+
+            # Get default settings from stylefile
+            # The patch.edgecolor is used for both the hatch line color
+            # and the bar edge color.
+            # For IMF charts use this as the hatch line color
+            # and draw bar again with edgecolor set to black.
+            barhatchcolor = matplotlib.rcParams['patch.edgecolor']
+            barhatch = None
+            barhatchwidth = matplotlib.rcParams['hatch.linewidth']
+
+            # Get any attributes that were assigned to this column
+            if dict_attrs is not None and barcol in dict_attrs:
+                # This should be a dict containing attributes for this column
+                attrs = dict_attrs[barcol]
+                if debug:
+                    print(attrs)
+
+                # If any were specified, overwrite stylefile
+
+                # Hatch colors
+                if 'barhatchcolor' in attrs:
+                    barhatchcolor = attrs['barhatchcolor']
+
+                # Hatch pattern in bars
+                if 'barhatch' in attrs:
+                    barhatch = attrs['barhatch']
+
+                # Line width of hatches
+                if 'barhatchwidth' in attrs:
+                    barhatchwidth = attrs['barhatchwidth']
+                    
+            # For barcolor, if it is specified use it,
+            # otherwise get the next color from the color cycle.
+            if dict_attrs is not None and barcol in dict_attrs and 'barcolor' in dict_attrs[barcol]:
+                barcolor = dict_attrs[barcol]['barcolor']
+                used_colors.append(barcolor)
+                if debug:
+                    print('1. setting barcolor for ' + barcol + ' to ' + barcolor)
+            else:
+                barcolor = next(cycle)['color']
+                while 1:
+                    if barcolor in used_colors:
+                        barcolor = next(cycle)['color']
+                    else:
+                        used_colors.append(barcolor)
+                        if debug:
+                            print('2. setting barcolor for ' + barcol + ' to ' + barcolor)
+                        break
+
+            if debug:
+                if dict_attrs is not None and barcol in dict_attrs:
+                    print('dict_attrs:')
+                    print(dict_attrs[barcol])
+                print('barhatch = ' + str(barhatch))
+                print('barlinewidth = ' + str(barlinewidth))
+                print('barhatchcolor = ' + str(barhatchcolor))
+                print('barcolor = ' + str(barcolor))
+
+            # Make copy of positive and negative parts.
+            # Set mask to NA so that they don't show up with lines in the chart,
+            # but when saving to pos_offset and neg_offset, set values to 0.
+            _df_pos = self.data[[barcol]].copy()
+            mask = _df_pos[barcol] < 0
+            _df_pos.loc[mask, barcol] = np.nan
+                
+            _df_neg = self.data[[barcol]].copy()
+            mask = _df_neg[barcol] > 0
+            _df_neg.loc[mask, barcol] = np.nan
+            
+            if baraxis == 'left':
+                # No direct way to set hatch line widths in ax.bar,
+                # need to use plt.rc_context()
+                with plt.rc_context({"hatch.linewidth": barhatchwidth}):
+                    if ibarcol == 0:
+                        # Draw negative first
+                        entry = self.ax.bar(self.data.index, _df_neg[barcol],
+                                            width=barwidth, color=barcolor, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                            zorder=1, label=barcol)
+                        # Draw positive
+                        entry = self.ax.bar(self.data.index, _df_pos[barcol],
+                                            width=barwidth, color=barcolor, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                            zorder=1, label=barcol)
+                    else:
+                        # Draw negative first
+                        entry = self.ax.bar(self.data.index, _df_neg[barcol],
+                                            bottom=neg_offset,
+                                            width=barwidth, color=barcolor, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                            zorder=1, label=barcol)
+                        # Draw positive
+                        entry = self.ax.bar(self.data.index, _df_pos[barcol],
+                                            bottom=pos_offset,
+                                            width=barwidth, color=barcolor, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                            zorder=1, label=barcol)
+                        
+                    # Draw again with black edgecolor
+                    _ = self.ax.bar(self.data.index, _df_pos[barcol],
+                                    width=barwidth, color='none', edgecolor='black', linewidth=barlinewidth,
+                                    bottom=pos_offset,
+                                    zorder=2)
+                    _ = self.ax.bar(self.data.index, _df_neg[barcol],
+                                    bottom=neg_offset,
+                                    width=barwidth, color='none', edgecolor='black', linewidth=barlinewidth,
+                                    zorder=2)
+            # end of baraxis == 'left'
+            elif baraxis == 'right':
                 if self.ax_right is None:
                     self.ax_right = self.ax.twinx()
                     # Set color cycler to be common with the left y-axis.
                     # Hack from https://github.com/matplotlib/matplotlib/issues/19479
                     self.ax_right._get_lines = self.ax._get_lines
-                entry = self.ax_right.bar(self.data.index, self.data[barcol], label=barcol, width=width)
+                    
+                # No direct way to set hatch line widths in ax.bar,
+                # need to use plt.rc_context()
+                with plt.rc_context({"hatch.linewidth": barhatchwidth}):
+                    if ibarcol == 0:
+                        # Draw negative first
+                        entry = self.ax_right.bar(self.data.index, _df_neg[barcol],
+                                                  width=barwidth, color=barcolor, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                                  zorder=1, label=barcol)
+                        # Draw positive
+                        entry = self.ax_right.bar(self.data.index, _df_pos[barcol],
+                                                  width=barwidth, color=barcolor, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                                  zorder=1, label=barcol)
+                    else:
+                        # Draw negative first
+                        entry = self.ax_right.bar(self.data.index, _df_neg[barcol],
+                                                  bottom=neg_offset,
+                                                  width=barwidth, color=barcolor, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                                  zorder=1, label=barcol)
+                        # Draw positive
+                        entry = self.ax_right.bar(self.data.index, _df_pos[barcol],
+                                                  bottom=pos_offset,
+                                                  width=barwidth, color=barcolor, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                                  zorder=1, label=barcol)
+                        
+                    # Draw again with black edgecolor
+                    _ = self.ax_right.bar(self.data.index, _df_pos[barcol],
+                                          width=barwidth, color='none', edgecolor='black', linewidth=barlinewidth,
+                                          bottom=pos_offset,
+                                          zorder=2)
+                    _ = self.ax_right.bar(self.data.index, _df_neg[barcol],
+                                          bottom=neg_offset,
+                                          width=barwidth, color='none', edgecolor='black', linewidth=barlinewidth,
+                                          zorder=2)
+                    
+            # end of baraxis == 'left'
+            
+            # Adjust offsets
+            neg_offset += _df_neg[barcol].replace(np.nan, 0).values
+            pos_offset += _df_pos[barcol].replace(np.nan, 0).values
 
             self.legend_entries.append(entry[0])
             self.legend_labels.append(barcol)
+        # end of loop over barcols
 
         # Re-create legend
         self.update_legend()
@@ -702,6 +876,23 @@ class Chart:
 
         # Merge with self.data
         pass
+
+    def set_top_xaxis(self, topxaxis='left'):
+        '''
+        Set which x-axis is drawn on top.
+        '''
+
+        if topxaxis == 'left':
+            if self.ax_right:
+                self.ax.set_zorder(self.ax_right.get_zorder() + 1)
+                self.ax.patch.set_visible(False)
+        elif topxaxis == 'right':
+            if self.ax_right:
+                self.ax_right.set_zorder(self.ax.get_zorder() + 1)
+                self.ax_right.patch.set_visible(False)
+        else:
+            print('WARNING:')
+            print('Chart.topxaxis must be "left" or "right", given ' + str(topxaxis))
 
     def add_hline(self, y, width=1, color='red', dash='-', opacity=1, text=''):
         '''
@@ -731,7 +922,7 @@ class Chart:
         pass
 
     def update_legend(self,
-                      ncol_legend=None,
+                      ncol_legend=None, legend_spacing=None,
                       legend_left=None, legend_bottom=None, legend_width=None, legend_height=None, legend_mode=None):
         '''
         Update legend of Chart.
@@ -751,10 +942,12 @@ class Chart:
             legend_height = self.legend_height
         if legend_mode is None:
             legend_mode = self.legend_mode
+        if legend_spacing is None:
+            legend_spacing = self.legend_spacing
         
         self.legend = self.ax.legend(self.legend_entries, self.legend_labels,
                                      loc='upper left',
-                                     labelspacing=1.5,
+                                     labelspacing=legend_spacing,
                                      bbox_transform=self.ax.transAxes,
                                      bbox_to_anchor=(legend_left,legend_bottom,legend_width,legend_height),
                                      mode=legend_mode, borderaxespad=0,

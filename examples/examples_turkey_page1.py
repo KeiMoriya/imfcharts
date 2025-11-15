@@ -46,24 +46,27 @@ linecol = cols[0]
 barcols = cols[1:]
 
 # Create Chart object
+
+dict_attrs = {linecol : {'linewidth' : 4,
+                         'linecolor' : '#004C97',
+                         # 'linestyle' : '--',
+                         'marker' : 'o',
+                         'markersize' : 10,
+                         'markerfacecolor' : 'white',
+                         'markeredgewidth' : 4,
+                         'markeredgecolor' : '#004C97'},
+              'Consumption (private)' : {'barcolor' : '#4B8CAD', 'barhatchcolor' : IMFBLUE, 'barhatch' : '\\\\'},
+              'Consumption (public)' : {'barcolor' : 'white', 'barhatch' : '\\\\\\', 'barhatchcolor' : IMFBLACK},
+              'Net exports' : {'barcolor' : IMFGREY},
+              'Inventories/discrepancy' : {'barcolor' : IMFRED},
+              'Fixed investment' : {'barcolor' : 'white',
+                                    'barhatch' : '///',
+                                    'barhatchcolor' : IMFGREEN,
+                                    'barhatchwidth' : 10}
+              }
+
 chart1 = Chart(df, linecols=linecol, barcols=barcols,
-               dict_attrs={linecol : {'linewidth' : 4,
-                                      'linecolor' : '#004C97',
-                                      # 'linestyle' : '--',
-                                      'marker' : 'o',
-                                      'markersize' : 10,
-                                      'markerfacecolor' : 'white',
-                                      'markeredgewidth' : 4,
-                                      'markeredgecolor' : '#004C97'},
-                           'Consumption (private)' : {'barcolor' : '#4B8CAD', 'barhatchcolor' : IMFBLUE, 'barhatch' : '\\\\'},
-                           'Consumption (public)' : {'barcolor' : 'white', 'barhatch' : '\\\\\\', 'barhatchcolor' : IMFBLACK},
-                           'Net exports' : {'barcolor' : IMFGREY},
-                           'Inventories/discrepancy' : {'barcolor' : IMFRED},
-                           'Fixed investment' : {'barcolor' : 'white',
-                                                 'barhatch' : '///',
-                                                 'barhatchcolor' : IMFGREEN,
-                                                 'barhatchwidth' : 10}
-                           },
+               dict_attrs=dict_attrs,
                topxaxis='left',
                title='Contributions to Real GDP Growth',
                subtitle='(Percent, q/q)',

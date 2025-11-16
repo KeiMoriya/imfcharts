@@ -1,10 +1,10 @@
 '''
-2025-10-05
+2025-11-15
 
 Examples of running imfcharts.
 
-Data files are created by get_data_turkey_page1.py
-and files are stored in data/turkey_page1/.
+Data files are created by get_data_turkey_page2.py
+and files are stored in data/turkey_page2/.
 '''
 
 import os
@@ -33,100 +33,81 @@ plt.close('all')
 outdir = 'pdf'
 
 # ---------------------------------------------------------------------------------------------------------
-# p. 1 Chart 1
+# p. 2 Chart 1
 # ---------------------------------------------------------------------------------------------------------
 # Read in data
-infilename = 'data/turkey_page1/fig1_chart1_gdp.csv'
+infilename = 'data/turkey_page2/fig2_chart1_inflation.csv'
 if not os.path.isfile(infilename):
     print('File ' + infilename + ' does not exist')
     sys.exit()
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
-cols = df.columns
-linecol = cols[0]
-barcols = cols[1:]
 
 # Create Chart object
+dict_attrs = {'Inflation' : {'linewidth' : 4, 'color' : IMFBLACK},
+              'Goods' : {'linewidth' : 4, 'color' : IMFBLUE, 'linestyle' : 'imfdash'},
+              'Services' : {'linewidth' : 4, 'color' : IMFRED, 'linestyle' : 'imfdash'}}
 
-dict_attrs = {linecol : {'linewidth' : 4,
-                         'color' : '#004C97',
-                         # 'linestyle' : '--',
-                         'marker' : 'o',
-                         'markersize' : 10,
-                         'markerfacecolor' : 'white',
-                         'markeredgewidth' : 4,
-                         'markeredgecolor' : '#004C97'},
-              'Consumption (private)' : {'color' : '#4B8CAD', 'barhatchcolor' : IMFBLUE, 'barhatch' : '\\\\'},
-              'Consumption (public)' : {'color' : 'white', 'barhatch' : '\\\\\\', 'barhatchcolor' : IMFBLACK},
-              'Net exports' : {'color' : IMFGREY},
-              'Inventories/discrepancy' : {'color' : IMFRED},
-              'Fixed investment' : {'color' : 'white',
-                                    'barhatch' : '///',
-                                    'barhatchcolor' : IMFGREEN,
-                                    'barhatchwidth' : 10}
-              }
-
-chart1 = Chart(df, linecols=linecol, barcols=barcols,
+chart1 = Chart(df, linecols=df.columns,
                dict_attrs=dict_attrs,
-               topxaxis='left',
-               title='Contributions to Real GDP Growth',
-               subtitle='(Percent, q/q)',
-               xrange='2023Q1:', yrange=[-5, 9.5], ryrange=[-5, 9.5],
-               ncol_legend=2)
-               # debug=True)
+               title='Inflation: Goods and Services',
+               subtitle='(Y/y percent change)',
+               xrange='2017-01:', yrange=[0, 120])
 
 # Save
-chart1.save(outdir + '/page1_chart1_gdp.pdf')
+chart1.save(outdir + '/page2_chart1_inflation.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
-# p. 1 Chart 2
+# p. 2 Chart 2
 # ---------------------------------------------------------------------------------------------------------
 # Read in data
-infilename = 'data/turkey_page1/fig1_chart2_labor.csv'
+infilename = 'data/turkey_page2/fig2_chart2_sequential_inflation.csv'
 if not os.path.isfile(infilename):
     print('File ' + infilename + ' does not exist')
     sys.exit()
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+
+dict_attrs = {'Sequential inflation' : {'color' : IMFBLUE},
+              '3-month moving average' : {'color' : IMFRED, 'linewidth' : 3}}
 
 # Create Chart object
-chart2 = Chart(df, linecols=df.columns[0], rlinecols=df.columns[1],
-               title='Labor Utilization',
-               subtitle='(Percent)',
-               xrange='2023-01:2025-08', # yrange=[8, 11], ryrange=[10, 25],
-               yrange=[8, 11],
-               )
-               # debug=True)
+chart2 = Chart(df, barcols='Sequential inflation', linecols='3-month moving average',
+               dict_attrs=dict_attrs,
+               title='Sequential Inflation',
+               subtitle='(M/m percent change)',
+               xrange='2017-01:', yrange=[-4, 16])
 
 # Save
-chart2.save(outdir + '/page1_chart2_labor.pdf')
+chart2.save(outdir + '/page2_chart2_sequential_inflation.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
-# p. 1 Chart 3
+# p. 2 Chart 3
 # ---------------------------------------------------------------------------------------------------------
 # Read in data
-infilename = 'data/turkey_page1/fig1_chart3_ip.csv'
+infilename = 'data/turkey_page2/fig2_chart3_mp.csv'
 if not os.path.isfile(infilename):
     print('File ' + infilename + ' does not exist')
     sys.exit()
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
-df = df[['Industrial Production', 'Retail sales']]
+
+dict_attrs = {'Policy rate' : {'color' : IMFBLUE},
+              'Inflation' : {'color' : IMFRED},
+              'Inflation expectation' : {'color' : IMFBLACK}}
 
 # Create Chart object
 chart3 = Chart(df, linecols=df.columns,
-               title='Production Indicators',
-               subtitle='(Percent, yoy)',
-               legend_left=0.60, legend_width=0.40,
-               xrange='2023-01:', yrange=[-10, 40],
-               )
-               # debug=True)
+               dict_attrs=dict_attrs,
+               title='Monetary Policy Rate',
+               subtitle='(Percent)',
+               xrange='2017-01:', yrange=[0, 90])
 
 # Save
-chart3.save(outdir + '/page1_chart3_ip.pdf')
+chart3.save(outdir + '/page2_chart3_mp.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
-# p. 1 Chart 4
+# p. 2 Chart 4
 # ---------------------------------------------------------------------------------------------------------
 # Read in data
-infilename = 'data/turkey_page1/fig1_chart4_confidence.csv'
+infilename = 'data/turkey_page2/fig2_chart4_inflation_forecast.csv'
 if not os.path.isfile(infilename):
     print('File ' + infilename + ' does not exist')
     sys.exit()
@@ -134,56 +115,59 @@ df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 
 # Create Chart object
 chart4 = Chart(df, linecols=df.columns,
-               title='Economic Confidence Index',
-               subtitle='(Seasonally adjusted, 100+=optimistic)',
+               title="CBRT's Inflation Forecast",
+               subtitle='(Percent, end-year inflation)',
                ncol_legend=2,
-               xrange='2023-01:', yrange=[60, 140],
-               ) # debug=True)
+               yrange=[0, 70])
 
 # Save
-chart4.save(outdir + '/page1_chart4_confidence.pdf')
+chart4.save(outdir + '/page2_chart4_inflation_forecast.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
-# p. 1 Chart 5
+# p. 2 Chart 5
 # ---------------------------------------------------------------------------------------------------------
 # Read in data
-infilename = 'data/turkey_page1/fig1_chart5_partners.csv'
+infilename = 'data/turkey_page2/fig2_chart5_inflation_expectations.csv'
 if not os.path.isfile(infilename):
     print('File ' + infilename + ' does not exist')
     sys.exit()
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+dict_attrs = {'Market participants' : {'color' : IMFBLUE},
+              'Real sector' : {'color' : IMFRED},
+              'Households' : {'color' : IMFBLACK}}
 
 # Create Chart object
 chart5 = Chart(df, linecols=df.columns,
-               title='Major Trading Partner GDP Growth',
-               subtitle='(Percent q/q, SAAR)',
-               ncol_legend=2,
-               legend_left=0.70, legend_width=0.30,
-               xrange='2023-01:', yrange=[-1, 5],
-               ) # debug=True)
+               dict_attrs=dict_attrs,
+               title='Inflation Expectations by Sector',
+               subtitle='(Percent, 12-month ahead annual inflation)Major Trading Partner GDP Growth',
+               xrange='2017-01:', yrange=[0, 100])
 
 # Save
-chart5.save(outdir + '/page1_chart5_partners.pdf')
+chart5.save(outdir + '/page2_chart5_inflation_expectations.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
-# p. 1 Chart 6
+# p. 2 Chart 6
 # ---------------------------------------------------------------------------------------------------------
 # Read in data
-infilename = 'data/turkey_page1/fig1_chart6_trade.csv'
+infilename = 'data/turkey_page2/fig2_chart6_credit.csv'
 if not os.path.isfile(infilename):
     print('File ' + infilename + ' does not exist')
     sys.exit()
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 
+dict_attrs = {'4-week moving average' : {'color' : IMFBLUE},
+              '13-week moving average' : {'color' : IMFRED}}
+
 # Create Chart object
 chart6 = Chart(df, linecols=df.columns,
-               title='Major Trading Partner GDP Growth',
-               subtitle='(Percent q/q, SAAR)',
-               xrange='2019Q1:', yrange=[20, 55],
-               ) # debug=True)
+               dict_attrs=dict_attrs,
+               title='Total Credit Growth',
+               subtitle='(Percent, m/m)',
+               xrange='2024-01:', yrange=[0, 7])
 
 # Save
-chart6.save(outdir + '/page1_chart6_trade.pdf')
+chart6.save(outdir + '/page2_chart6_credit.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
 # Additional commands
@@ -204,13 +188,13 @@ fig = chart2.fig
 # plt.show()
 
 # Delete previous merged file
-mergedfilename = outdir + '/all_page1.pdf'
+mergedfilename = outdir + '/all_page2.pdf'
 if os.path.isfile(mergedfilename):
     os.remove(mergedfilename)
 
 # Merge all files
 merger = PdfWriter()
-filenames = sorted(glob.glob(outdir + '/page1*.pdf'))
+filenames = sorted(glob.glob(outdir + '/page2*.pdf'))
 for filename in filenames:
     merger.append(filename)
 merger.write(mergedfilename)

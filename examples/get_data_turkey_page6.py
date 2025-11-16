@@ -42,7 +42,7 @@ df[riskcol] = df[riskcol] / df[riskcol].shift(12) * 100
 fig = imfplotly.create_fig(df, linecols=df.columns[:2], rlinecols=riskcol,
                            xrange='2022-01:')
 objects.append(fig)
-df.to_csv(outdir + '/fig6_chart1_current_account.csv')
+df.to_csv(outdir + '/fig6_chart1_current_accountb.csv')
 
 # -----------------------------------------------------
 # 2. Bank Profitability
@@ -63,7 +63,7 @@ df = df.rolling(12).mean()
 fig = imfplotly.create_fig(df, barcols='Return to asset', rlinecols='Return to equity',
                            xrange='2022-01:')
 objects.append(fig)
-df.to_csv(outdir + '/fig6_current_account_mms.csv')
+df.to_csv(outdir + '/fig6_chart2_current_account_mms.csv')
 
 # -----------------------------------------------------
 # 3. Non-Performing Loans
@@ -92,7 +92,7 @@ df.drop(['consumer_loans', 'np_consumer_loans',
         
 fig = imfplotly.create_fig(df, linecols=df.columns, xrange='2022-01:')
 objects.append(fig)
-_df.to_csv(outdir + '/fig6_chart3_terms_of_trade.csv')
+df.to_csv(outdir + '/fig6_chart3_non_performing.csv')
 
 # -----------------------------------------------------
 # 4. Required Reserves
@@ -120,7 +120,7 @@ df = calc_w2m(df, 'last')
 fig = imfplotly.create_fig(df, linecols=df.columns,
                            xrange='2022-01:')
 objects.append(fig)
-df.to_csv(outdir + '/fig6_chart4_current_account_financing.csv')
+df.to_csv(outdir + '/fig6_chart4_required_reserves.csv')
 
 # -----------------------------------------------------
 # 5. Banking Sector Net FX Position
@@ -145,7 +145,7 @@ df = calc_w2m(df, 'last')
 fig = imfplotly.create_fig(df, linecols=df.columns,
                            xrange='2022-01:')
 objects.append(fig)
-df.to_csv(outdir + '/fig6_chart5_financial_account.csv')
+df.to_csv(outdir + '/fig6_chart5_fx_position.csv')
 
 # -----------------------------------------------------
 # 6. Bank FX Exposure
@@ -166,6 +166,7 @@ for series in dict_series:
 
 sharecol = 'Share of FX loans to NFCs'
 df[sharecol] = df['D1863LM@INTWKLY'] / (df['D1863LP@INTWKLY'] + df['D1863LM@INTWKLY']) * 100.
+df[paycol] /= 1000.
 df.drop(['D1863LP@INTWKLY', 'D1863LM@INTWKLY'], axis=1, inplace=True)
 
 # Convert to monthly
@@ -174,7 +175,7 @@ df = calc_w2m(df, 'last')
 fig = imfplotly.create_fig(df, linecols=paycol, barcols=sharecol, bar_right=True,
                            xrange='2022-01:')
 objects.append(fig)
-df.to_csv(outdir + '/fig6_chart6_gross_international_reserves.csv')
+df.to_csv(outdir + '/fig6_chart6_fx_exposure.csv')
 
 # -----------------------------------------------------
 # Create HTML

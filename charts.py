@@ -70,16 +70,21 @@ def guess_freq(df):
     if len(df) < 2:
         return 'D'
     else:
-        if (df.index[1] - df.index[0]).days < 10:
-            return 'D'
-        elif (df.index[1] - df.index[0]).days < 32:
-            return 'M'
-        elif (df.index[1] - df.index[0]).days < 93:
-            return 'Q'
-        elif (df.index[1] - df.index[0]).days < 370:
-            return 'A'
+        idx_types = {type(idx) for idx in df.index}
+        if idx_types in [{pd.Timestamp}, {pd.Period}]:
+            if (df.index[1] - df.index[0]).days < 10:
+                return 'D'
+            elif (df.index[1] - df.index[0]).days < 32:
+                return 'M'
+            elif (df.index[1] - df.index[0]).days < 93:
+                return 'Q'
+            elif (df.index[1] - df.index[0]).days < 370:
+                return 'A'
+            else:
+                return 'D'
         else:
-            return 'D'
+            # If not time series, return 'A', just a holder.
+            return 'A'
 
 class Chart:
     '''
@@ -120,6 +125,7 @@ class Chart:
                  legend_header='',
                  legend_left=0.04, legend_bottom=0.85, legend_width=0.70, legend_height=0.15,
                  legend_mode='expand',
+                 show_legend=True,
                  debug=False):
 
         # ------------------------------------------------------------------------------
@@ -162,6 +168,7 @@ class Chart:
         self.legend_height = legend_height
         self.legend_mode = legend_mode
         self.legend_spacing = legend_spacing
+        self.show_legend = show_legend
 
         # Check whether index of data is datetime
         self.xaxis_type = 'datetime'
@@ -202,7 +209,7 @@ class Chart:
         if barcols is not None:
             barcols = _parse_cols(barcols)
             self.add_bars(self.data, barcols, stack=stack, baraxis=baraxis, xrange=self.xrange, barlinewidth=barlinewidth,
-                          dict_attrs=dict_attrs, debug=True)
+                          dict_attrs=dict_attrs, debug=debug)
             
         if linecols is not None:
             linecols = _parse_cols(linecols)
@@ -219,7 +226,8 @@ class Chart:
             print(self.legend_entries)
             print('self.legend_labels:')
             print(self.legend_labels)
-        self.update_legend()
+        if self.show_legend:
+            self.update_legend()
 
         # Parse y-axis ranges
         self.yrange = self._parse_yrange(yrange)
@@ -592,7 +600,10 @@ class Chart:
             markeredgewidth = matplotlib.rcParams['lines.markeredgewidth']
             linewidth = matplotlib.rcParams['lines.linewidth']
             linestyle = matplotlib.rcParams['lines.linestyle']
-            linecolor = None
+            color = None
+
+            dashes = None
+            dash_capstyle = None
             
             # Get any attributes that were assigned to this column
             if dict_attrs is not None and linecol in dict_attrs:
@@ -622,16 +633,39 @@ class Chart:
 
                 if 'linestyle' in attrs:
                     linestyle = attrs['linestyle']
+                    # If spcecial case, implement
+                    if linestyle == 'imfdash':
+                        linestyle = '--'
+                        dashes = [10, 3]
+                    elif linestyle == 'imfround':
+                        linestyle = '-'
+                        dashes = (0.5, 5)
+                        dash_capstyle = 'round'                        
 
-                if 'linecolor' in attrs:
-                    linecolor = attrs['linecolor']
+                if 'color' in attrs:
+                    color = attrs['color']
+
+                if 'dashes' in attrs:
+                    dashes = attrs['dashes']
+                    
+                if 'dash_capstyle' in attrs:
+                    dash_capstyle = attrs['dash_capstyle']
                     
             if axis == 'left':
-                entry = self.ax.plot(self.data.index, self.data[linecol], label=linecol,
-                                     markersize=markersize, marker=marker,
-                                     markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
-                                     markeredgewidth=markeredgewidth,
-                                     linestyle=linestyle, linewidth=linewidth, color=linecolor)
+                if dashes or dash_capstyle:
+                    entry = self.ax.plot(self.data.index, self.data[linecol], label=linecol,
+                                         markersize=markersize, marker=marker,
+                                         markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
+                                         markeredgewidth=markeredgewidth,
+                                         linestyle=linestyle, linewidth=linewidth, color=color,
+                                         dashes=dashes, dash_capstyle=dash_capstyle)
+                else:
+                    entry = self.ax.plot(self.data.index, self.data[linecol], label=linecol,
+                                         markersize=markersize, marker=marker,
+                                         markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
+                                         markeredgewidth=markeredgewidth,
+                                         linestyle=linestyle, linewidth=linewidth, color=color)
+                    
                 self.legend_entries.append(entry[0])
                 self.legend_labels.append(linecol)
             elif axis == 'right':
@@ -641,11 +675,20 @@ class Chart:
                     # Hack from https://github.com/matplotlib/matplotlib/issues/19479
                     self.ax_right._get_lines = self.ax._get_lines
                     
-                entry = self.ax_right.plot(self.data.index, self.data[linecol], label=linecol,
-                                           markersize=markersize, marker=marker,
-                                           markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
-                                           markeredgewidth=markeredgewidth,
-                                           linestyle=linestyle, linewidth=linewidth, color=linecolor)
+                if dashes or dash_capstyle:
+                    entry = self.ax_right.plot(self.data.index, self.data[linecol], label=linecol,
+                                               markersize=markersize, marker=marker,
+                                               markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
+                                               markeredgewidth=markeredgewidth,
+                                               linestyle=linestyle, linewidth=linewidth, color=color,
+                                               dashes=dashes, dash_capstyle=dash_capstyle)
+                else:
+                    entry = self.ax_right.plot(self.data.index, self.data[linecol], label=linecol,
+                                               markersize=markersize, marker=marker,
+                                               markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
+                                               markeredgewidth=markeredgewidth,
+                                               linestyle=linestyle, linewidth=linewidth, color=color)
+                    
                 self.legend_entries.append(entry[0])
                 self.legend_labels.append(linecol)
             else:
@@ -653,7 +696,8 @@ class Chart:
                 raise VaueError
 
         # Re-create legend
-        self.update_legend()
+        if self.show_legend:
+            self.update_legend()
 
         # Set x-axis range if specified
         if xrange is not None:
@@ -738,22 +782,22 @@ class Chart:
                 if 'barhatchwidth' in attrs:
                     barhatchwidth = attrs['barhatchwidth']
                     
-            # For barcolor, if it is specified use it,
+            # For color, if it is specified use it,
             # otherwise get the next color from the color cycle.
-            if dict_attrs is not None and barcol in dict_attrs and 'barcolor' in dict_attrs[barcol]:
-                barcolor = dict_attrs[barcol]['barcolor']
-                used_colors.append(barcolor)
+            if dict_attrs is not None and barcol in dict_attrs and 'color' in dict_attrs[barcol]:
+                color = dict_attrs[barcol]['color']
+                used_colors.append(color)
                 if debug:
-                    print('1. setting barcolor for ' + barcol + ' to ' + barcolor)
+                    print('1. setting color for ' + barcol + ' to ' + color)
             else:
-                barcolor = next(cycle)['color']
+                color = next(cycle)['color']
                 while 1:
-                    if barcolor in used_colors:
-                        barcolor = next(cycle)['color']
+                    if color in used_colors:
+                        color = next(cycle)['color']
                     else:
-                        used_colors.append(barcolor)
+                        used_colors.append(color)
                         if debug:
-                            print('2. setting barcolor for ' + barcol + ' to ' + barcolor)
+                            print('2. setting color for ' + barcol + ' to ' + color)
                         break
 
             if debug:
@@ -763,7 +807,7 @@ class Chart:
                 print('barhatch = ' + str(barhatch))
                 print('barlinewidth = ' + str(barlinewidth))
                 print('barhatchcolor = ' + str(barhatchcolor))
-                print('barcolor = ' + str(barcolor))
+                print('color = ' + str(color))
 
             # Make copy of positive and negative parts.
             # Set mask to NA so that they don't show up with lines in the chart,
@@ -783,22 +827,22 @@ class Chart:
                     if ibarcol == 0:
                         # Draw negative first
                         entry = self.ax.bar(self.data.index, _df_neg[barcol],
-                                            width=barwidth, color=barcolor, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                            width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
                                             zorder=1, label=barcol)
                         # Draw positive
                         entry = self.ax.bar(self.data.index, _df_pos[barcol],
-                                            width=barwidth, color=barcolor, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                            width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
                                             zorder=1, label=barcol)
                     else:
                         # Draw negative first
                         entry = self.ax.bar(self.data.index, _df_neg[barcol],
                                             bottom=neg_offset,
-                                            width=barwidth, color=barcolor, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                            width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
                                             zorder=1, label=barcol)
                         # Draw positive
                         entry = self.ax.bar(self.data.index, _df_pos[barcol],
                                             bottom=pos_offset,
-                                            width=barwidth, color=barcolor, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                            width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
                                             zorder=1, label=barcol)
                         
                     # Draw again with black edgecolor
@@ -824,22 +868,22 @@ class Chart:
                     if ibarcol == 0:
                         # Draw negative first
                         entry = self.ax_right.bar(self.data.index, _df_neg[barcol],
-                                                  width=barwidth, color=barcolor, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                                  width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
                                                   zorder=1, label=barcol)
                         # Draw positive
                         entry = self.ax_right.bar(self.data.index, _df_pos[barcol],
-                                                  width=barwidth, color=barcolor, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                                  width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
                                                   zorder=1, label=barcol)
                     else:
                         # Draw negative first
                         entry = self.ax_right.bar(self.data.index, _df_neg[barcol],
                                                   bottom=neg_offset,
-                                                  width=barwidth, color=barcolor, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                                  width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
                                                   zorder=1, label=barcol)
                         # Draw positive
                         entry = self.ax_right.bar(self.data.index, _df_pos[barcol],
                                                   bottom=pos_offset,
-                                                  width=barwidth, color=barcolor, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                                  width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
                                                   zorder=1, label=barcol)
                         
                     # Draw again with black edgecolor
@@ -863,7 +907,8 @@ class Chart:
         # end of loop over barcols
 
         # Re-create legend
-        self.update_legend()
+        if self.show_legend:
+            self.update_legend()
         
         # Set x-axis range if specified
         if xrange is not None:
@@ -991,6 +1036,12 @@ class Chart:
         self.fig.canvas.draw()
         
         self.fig.show()
+
+    def set_show_legend(option):
+        if option:
+            self.show_legend = True
+        else:
+            self.show_legend = False
 
 def main(argv):
     pass

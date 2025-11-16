@@ -134,9 +134,9 @@ for series in dict_series:
         df = df.merge(_df, left_index=True, right_index=True, how='outer')
 
 col1 = 'Compensation of employees'
-df[col1] = df['compensation'].rolling(4).sum() / df['gdp'].rolling(4).sum()
+df[col1] = 100. * df['compensation'].rolling(4).sum() / df['gdp'].rolling(4).sum()
 col2 = 'Operating surplus'
-df[col2] = df['surplus'].rolling(4).sum() / df['gdp'].rolling(4).sum()
+df[col2] = 100. * df['surplus'].rolling(4).sum() / df['gdp'].rolling(4).sum()
 
 df = df[[col1, col2]]
         

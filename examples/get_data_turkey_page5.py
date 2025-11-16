@@ -94,7 +94,7 @@ df = df.rolling(12).sum() / 1000
 fig = imfplotly.create_fig(df, linecols=df.columns,
                            xrange='2022-01:')
 objects.append(fig)
-df.to_csv(outdir + '/fig5_current_account_mms.csv')
+df.to_csv(outdir + '/fig5_chart2_current_account_mms.csv')
 
 # -----------------------------------------------------
 # 3. Terms of Trade Shock, 2025Q2 or Latest
@@ -210,7 +210,8 @@ for series in dict_series:
         df = df.merge(_df, left_index=True, right_index=True, how='outer')
 
 # Calculate 3-month moving average
-df = df.rolling(3).mean() / 1000.
+# and take negative
+df = - df.rolling(3).mean() / 1000.
 
 fincol = 'Financial account'
 barcols = [c for c in df.columns if c != fincol]

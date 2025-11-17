@@ -97,7 +97,7 @@ class Chart:
     Able to save internal figure object.
     '''
 
-    def __init__(self, data=None,
+    def __init__(self, data=None, indexcol=None,
                  # plotting options
                  linecols=None, barcols=None, rlinecols=None,
                  # bar options
@@ -134,6 +134,25 @@ class Chart:
         # ------------------------------------------------------------------------------
         # Set attributes
         self.data = data
+        if indexcol is not None:
+            if self.data is not None and type(self.data) == pd.DataFrame:
+                if indexcol not in self.data.columns:
+                    print('indexcol specified as "' + str(indexcol) + '" but not found in data:')
+                    print(data)
+                    sys.exit()
+                else:
+                    if debug:
+                        print('Setting index to ' + str(indexcol))
+                    self.data.set_index(indexcol, inplace=True)
+                    # If possible, convert to datetime index
+                    try:
+                        self.data.index = pd.to_datetime(self.data.index)
+                    except Exception:
+                        pass
+                    # Set self.indexcol
+                    self.indexcol= indexcol
+            else:
+                print('WARNING: indexcol specified but data is not DataFrame')
         self.width = width
         self.height = height
 
@@ -213,16 +232,16 @@ class Chart:
         # Draw lines, bars
         if barcols is not None:
             barcols = _parse_cols(barcols)
-            self.add_bars(self.data, barcols, stack=stack, baraxis=baraxis, xrange=self.xrange, barlinewidth=barlinewidth,
+            self.add_bars(self.data, barcols, indexcol=self.indexcol, stack=stack, baraxis=baraxis, xrange=self.xrange, barlinewidth=barlinewidth,
                           dict_attrs=dict_attrs, debug=debug)
             
         if linecols is not None:
             linecols = _parse_cols(linecols)
-            self.add_lines(self.data, linecols, xrange=self.xrange, dict_attrs=dict_attrs, debug=debug)
+            self.add_lines(self.data, linecols, indexcol=self.indexcol, xrange=self.xrange, dict_attrs=dict_attrs, debug=debug)
 
         if rlinecols is not None:
             rlinecols = _parse_cols(rlinecols)
-            self.add_lines(self.data, rlinecols, axis='right', xrange=self.xrange, dict_attrs=dict_attrs, debug=debug)
+            self.add_lines(self.data, rlinecols, indexcol=self.indexcol, axis='right', xrange=self.xrange, dict_attrs=dict_attrs, debug=debug)
         
         # Create legend
         legend_header = ''
@@ -494,6 +513,7 @@ class Chart:
             
         # Try to interpret xrange as dates and add margin
         try:
+            x1, x2 = pd.Timestamp(xrange[0]) - pd.Timedelta(days=margins), pd.Timestamp(xrange[1]) + pd.Timedelta(days=margins)
             self.ax.set_xlim(pd.Timestamp(xrange[0]) - pd.Timedelta(days=margins), pd.Timestamp(xrange[1]) + pd.Timedelta(days=margins))
             if debug:
                 print('Set xlim to Timestamps')
@@ -647,15 +667,42 @@ class Chart:
         
         self.ax.xaxis.set_major_formatter(formatter)
 
-    def add_lines(self, data, colname, axis='left', xrange=None, dict_attrs=None, debug=False):
+    def add_lines(self, data, colname, indexcol=None, axis='left', xrange=None, dict_attrs=None, debug=False):
         '''
         Add line to chart
         '''
 
         if debug:
             print('Calling add_lines on "' + str(colname) + '"')
+
+        if indexcol is not None:
+            if type(data) == pd.DataFrame:
+                # Check if index has already been set for data
+                if data.index.name == indexcol:
+                    pass
+
+                # Otherwise try to set index to indexcol
+                elif indexcol not in data.columns:
+                    print('indexcol specified as "' + str(indexcol) + '" but not found in data:')
+                    print(data)
+                    sys.exit()
+                else:
+                    data.set_index(indexcol, inplace=True)
+                    # If possible, convert to datetime index
+                    try:
+                        data.index = pd.to_datetime(data.index)
+                    except Exception:
+                        pass
+            else:
+                print('WARNING: indexcol specified but data is not DataFrame')
             
         linecols = _parse_cols(colname)
+        # Don't try to plot indexcol if it was given since this is now the index
+        if indexcol is not None:
+            linecols.remove(indexcol)
+            if debug:
+                print('linecols:')
+                print(linecols)
 
         # Set self.data to be input data
         self.data = data
@@ -774,16 +821,24 @@ class Chart:
             else:
                 print('axis must be left or right, given ' + str(axis))
                 raise VaueError
+        # end of loop over linecols
 
         # Re-create legend
         if self.show_legend:
             self.update_legend()
+            if debug:
+                print('called update_legend()')
 
         # Set x-axis range if specified
         if xrange is not None:
-            self.set_xrange(xrange)
+            if debug:
+                print('before calling set_xrange()')
+                print(xrange)
+            self.set_xrange(xrange, debug=debug)
+            if debug:
+                print('after calling set_xrange()')
 
-    def add_bars(self, data, colname, baraxis='left', stack=True, barlinewidth=None, xrange=None, dict_attrs=None, debug=False):
+    def add_bars(self, data, colname, indexcol=None, baraxis='left', stack=True, barlinewidth=None, xrange=None, dict_attrs=None, debug=False):
         '''
         Add bar to chart
         '''
@@ -791,7 +846,31 @@ class Chart:
         if debug:
             print('Calling add_bars on "' + str(colname) + '"')
             
+        if indexcol is not None:
+            if type(data) == pd.DataFrame:
+                # Check if index has already been set for data
+                if data.index.name == indexcol:
+                    pass
+
+                # Otherwise try to set index to indexcol
+                elif indexcol not in data.columns:
+                    print('indexcol specified as "' + str(indexcol) + '" but not found in data:')
+                    print(data)
+                    sys.exit()
+                else:
+                    data.set_index(indexcol, inplace=True)
+                    # If possible, convert to datetime index
+                    try:
+                        data.index = pd.to_datetime(data.index)
+                    except Exception:
+                        pass
+            else:
+                print('WARNING: indexcol specified but data is not DataFrame')
+                
         barcols = _parse_cols(colname)
+        # Don't try to plot indexcol if it was given since this is now the index
+        if indexcol is not None:
+            barcols.remove(indexcol)
 
         # Line width of bar borders for all bars
         if barlinewidth is None:
@@ -999,15 +1078,31 @@ class Chart:
         
         # Set x-axis range if specified
         if xrange is not None:
-            self.set_xrange(xrange)
+            self.set_xrange(xrange, debug=debug)
         
-    def add_scatter(self, data, colname, dict_attrs=None, debug=False):
+    def add_scatter(self, data, colname, indexcol=None, dict_attrs=None, debug=False):
         '''
         Add scatter to chart
         '''
 
-        # Merge with self.data
-        pass
+        if debug:
+            print('Calling add_lines on "' + str(colname) + '"')
+
+        if indexcol is not None:
+            if type(data) == pd.DataFrame:
+                # Check if index has already been set for data
+                if data.index.name == indexcol:
+                    pass
+
+                # Otherwise try to set index to indexcol
+                elif indexcol not in data.columns:
+                    print('indexcol specified as "' + str(indexcol) + '" but not found in data:')
+                    print(data)
+                    sys.exit()
+                else:
+                    data.set_index(indexcol, inplace=True)
+            else:
+                print('WARNING: indexcol specified but data is not DataFrame')
 
     def set_top_xaxis(self, topxaxis='left'):
         '''
@@ -1195,7 +1290,7 @@ class Chart:
 
         # Get dirname and create as necessary
         dirname = os.path.dirname(filename)
-        if not os.path.isdir(dirname):
+        if not dirname == '' and not os.path.isdir(dirname):
             try:
                 os.makedirs(dirname)
             except Exception as e:

@@ -13,7 +13,7 @@ import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-from matplotlib.ticker import FuncFormatter
+from matplotlib.ticker import FuncFormatter, MaxNLocator
 
 def _parse_cols(cols):
     '''
@@ -72,8 +72,10 @@ def guess_freq(df):
     else:
         idx_types = {type(idx) for idx in df.index}
         if idx_types in [{pd.Timestamp}, {pd.Period}]:
-            if (df.index[1] - df.index[0]).days < 10:
+            if (df.index[1] - df.index[0]).days < 6:
                 return 'D'
+            elif (df.index[1] - df.index[0]).days < 10:
+                return 'W'
             elif (df.index[1] - df.index[0]).days < 32:
                 return 'M'
             elif (df.index[1] - df.index[0]).days < 93:
@@ -106,6 +108,7 @@ class Chart:
                  xtitle='', ytitle='',
                  xtitlesize=14, ytitlesize=14,
                  xtickfontsize=14, ytickfontsize=14,
+                 nxticks=7,
                  xformat='auto',
                  dict_legend=None,
                  dict_xaxis=None,
@@ -145,6 +148,8 @@ class Chart:
 
         self.xtickfontsize = xtickfontsize
         self.ytickfontsize = ytickfontsize
+
+        self.nxticks = nxticks
 
         self.xformat = xformat
         self.xmargins = xmargins
@@ -241,6 +246,9 @@ class Chart:
 
         # Set x-axis formatting
         self.set_date_format()
+
+        # Set number of x-axis ticks
+        self.set_nxticks(self.nxticks)
 
         # Set which x-axis is drawn on top
         self.set_top_xaxis(self.topxaxis)
@@ -377,7 +385,63 @@ class Chart:
         self.ax.tick_params(axis='y', which='major', labelsize=size)
         if self.ax_right:
             self.ax_right.tick_params(axis='y', which='major', labelsize=size)
-        
+
+    def set_nxticks(self, nxticks):
+        self.ax.xaxis.set_major_locator(MaxNLocator(nbins=nxticks))
+
+        # From freq try to specify location of ticks
+        freq = guess_freq(self.data)
+        if freq == 'D':
+            if len(self.data) <= 30:
+                self.ax.xaxis.set_major_locator(mdates.DayLocator([1, 8, 15, 22, 29]))
+            elif 30 < len(self.data) and len(self.data) <= 90:
+                self.ax.xaxis.set_major_locator(mdates.DayLocator([1, 15]))
+            elif len(self.data) <= 180:
+                self.ax.xaxis.set_major_locator(mdates.DayLocator([1]))
+            else:
+                self.ax.xaxis.set_major_locator(mdates.MonthLocator([1, 7]))
+        elif freq == 'W':
+            if len(self.data) <= 42:
+                self.ax.xaxis.set_major_locator(mdates.DayLocator([1, 8, 15, 22]))
+            elif 42 < len(self.data) and len(self.data) <= 310:
+                self.ax.xaxis.set_major_locator(mdates.MonthLocator([1, 7]))
+            else:
+                self.ax.xaxis.set_major_locator(mdates.MonthLocator([1]))
+        elif freq == 'M':
+            if len(self.data) <= 12:
+                self.ax.xaxis.set_major_locator(mdates.MonthLocator([1, 3, 5, 7, 9]))
+            elif 12 < len(self.data) and len(self.data) <= 24:
+                self.ax.xaxis.set_major_locator(mdates.MonthLocator([1, 4, 7, 10]))
+            elif len(self.data) <= 48:
+                self.ax.xaxis.set_major_locator(mdates.MonthLocator([1, 7]))
+            elif len(self.data) < 70:
+                self.ax.xaxis.set_major_locator(mdates.MonthLocator([1]))
+            else:
+                self.ax.xaxis.set_major_locator(mdates.YearLocator(base=2))
+                formatter = mdates.DateFormatter('%b-%y')
+                self.ax.xaxis.set_major_formatter(formatter)
+        elif freq == 'Q':
+            if len(self.data) < 12:
+                self.ax.xaxis.set_major_locator(mdates.MonthLocator([1, 7]))
+            elif len(self.data) < 30:
+                self.ax.xaxis.set_major_locator(mdates.MonthLocator([1]))
+            else:
+                self.ax.xaxis.set_major_locator(mdates.YearLocator(base=2))
+                def quarter_formatter(x, pos):
+                    date = mdates.num2date(x)
+                    quarter = (date.month - 1) // 3 + 1
+                    return f"{date.year}Q{quarter}"
+                formatter = FuncFormatter(quarter_formatter)
+                self.ax.xaxis.set_major_formatter(formatter)
+        elif freq == 'A':
+            if len(self.data) < 8:
+                self.ax.xaxis.set_major_locator(mdates.YearLocator(base=1))
+            elif len(self.data) < 20:
+                self.ax.xaxis.set_major_locator(mdates.YearLocator(base=2))
+            else:
+                base = int(len(self.data) / 6)
+                self.ax.xaxis.set_major_locator(mdates.YearLocator(base=base))
+            
     def set_xrange(self, xrange, margins='auto', debug=False):
         '''
         Set x-axis range of fig.
@@ -516,6 +580,8 @@ class Chart:
             if type(self.data) == pd.DataFrame:
                 freq = guess_freq(self.data)
                 if freq == 'D':
+                    formatter = mdates.DateFormatter('%m/%d/%Y')
+                elif freq == 'W':
                     formatter = mdates.DateFormatter('%m/%d/%Y')
                 elif freq == 'M':
                     formatter = mdates.DateFormatter('%b-%y')

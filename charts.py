@@ -105,7 +105,7 @@ class Chart:
                  subtitle = None,
                  xtitle='', ytitle='',
                  xtitlesize=14, ytitlesize=14,
-                 xtickfontsize=8, ytickfontsize=8,
+                 xtickfontsize=14, ytickfontsize=14,
                  xformat='auto',
                  dict_legend=None,
                  dict_xaxis=None,

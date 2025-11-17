@@ -136,8 +136,8 @@ xtick.direction: in
 ytick.direction: in
 
 ## --- tick labelsize
-xtick.labelsize: 10
-ytick.labelsize: 10
+xtick.labelsize: 14
+ytick.labelsize: 14
 
 ## -- These are the colors of the tick labels and tick marks.
 ## -- The tick labels need to be turned to black in the plot.

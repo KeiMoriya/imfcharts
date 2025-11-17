@@ -61,9 +61,9 @@ def guess_freq(df):
     Checks differences in days between index and tries go guess.
     '''
 
-    # If df is None, return 'A', just a holder
+    # If df is None, return '?', just a holder
     if df is None:
-        return 'A'
+        return '?'
 
     # Not enough data to check differences.
     # Return daily freq.
@@ -83,8 +83,8 @@ def guess_freq(df):
             else:
                 return 'D'
         else:
-            # If not time series, return 'A', just a holder.
-            return 'A'
+            # If not time series, return '?'
+            return '?'
 
 class Chart:
     '''
@@ -265,6 +265,14 @@ class Chart:
         if xrange is None:
             return [None, None]
 
+        # Special case of two floats or ints, just return original.
+        try:
+            x0, x1 = xrange
+            if type(x0) in [float, int] and type(x1) in [float, int]:
+                return xrange
+        except Exception:
+            pass
+        
         if type(xrange) == str and xrange.find(':') != -1:
             xrange = xrange.split(':', 1)
             xrange = [x if x != '' else None for x in xrange]
@@ -387,12 +395,16 @@ class Chart:
             freq = guess_freq(self.data)
             if freq == 'D':
                 margins = 1
+            elif freq == 'W':
+                margins = 5
             elif freq == 'M':
-                margins = 10
-            elif freq == 'Q':
                 margins = 30
+            elif freq == 'Q':
+                margins = 85
             elif freq == 'A':
-                margins = 60
+                margins = 335
+            elif freq == '?':
+                margins = 0
             else:
                 print('Unknown freq ' + freq)
                 sys.exit()
@@ -518,6 +530,8 @@ class Chart:
                 # Annual
                 elif freq == 'A':
                     formatter = mdates.DateFormatter('%Y')
+                elif freq == '?':
+                    pass
             else:
                 print('Cannot determine formatter for xformat = auto')
                 sys.exit()
@@ -726,14 +740,21 @@ class Chart:
 
         # Guess freq of data and set bar width
         freq = guess_freq(self.data)
-        if freq in 'DW':
+        if freq == 'D':
+            barwidth = 1
+        elif freq == 'W':
             barwidth = 3
         elif freq == 'M':
-            barwidth = 25
+            barwidth = 20
         elif freq == 'Q':
             barwidth = 70
         elif freq == 'A':
             barwidth =300
+        elif freq == '?':
+            barwidth = 1
+        else:
+            print('Unknown frequency ' + freq)
+            sys.exit()
 
         # Iterate over barcols and plot each bar.
         cycle = iter(plt.rcParams['axes.prop_cycle'])
@@ -939,18 +960,114 @@ class Chart:
             print('WARNING:')
             print('Chart.topxaxis must be "left" or "right", given ' + str(topxaxis))
 
-    def add_hline(self, y, width=1, color='red', dash='-', opacity=1, text=''):
+    def add_hline(self, y, xrange=None, coordinates='data', color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None,
+                  debug=False, **kwarg):
         '''
         Add horizontal line across figure.
-        '''
-        pass
 
-    def add_vline(self, x, width=1, color='red', dash='-', opacity=1, text=''):
+        If xrange is None, a horizontal line will be drawn across the entire chart.
+        Otherwise range should be a list of two values or a str that has form "start:end".
+
+        `coordinates` is either "data" or "axis", for "data" xrange is converted to data coordinates.
+        For "axis" the fraction of the self.ax is used.
+        '''
+
+        xrange = self._parse_xrange(xrange)
+        if debug:
+            print('xrange:')
+            print(xrange)
+            
+        # No xrange
+        if xrange == [None, None]:
+            if debug:
+                print('adding hline with no xrange')
+            # dashes or dash_capstyle specified
+            if dashes or dash_capstyle:
+                self.ax.axhline(y=y, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha,
+                                dashes=dashes, dash_capstyle=dash_capstyle)
+            # no dashes or dash_capstyle specified
+            else:
+                self.ax.axhline(y=y, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha)
+
+        # xrange given
+        else:
+            if debug:
+                print('adding hline with xrange')
+
+            # If xrange is given as Timestamps, need to calculate fraction of x-axis range.
+            if coordinates == 'data' and type(xrange[0]) == pd.Timestamp and type(xrange[1]) == pd.Timestamp:
+                # Get axis range, this will be in ordinals
+                xmin, xmax = self.ax.get_xlim()
+                # Get fraction of xrange[0], xrange[1]
+                xrange[0] = (xrange[0] - pd.Timestamp('1970-01-01')).days
+                xrange[1] = (xrange[1] - pd.Timestamp('1970-01-01')).days
+                             
+                xrange[0] = (xrange[0] - xmin) / (xmax - xmin)
+                xrange[1] = (xrange[1] - xmin) / (xmax - xmin)
+                if debug:
+                    print('xrange:')
+                    print(xrange)
+                
+            # dashes or dash_capstyle specified
+            if dashes or dash_capstyle:
+                self.ax.axhline(y=y, xmin=xrange[0], xmax=xrange[1],
+                                color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha,
+                                dashes=dashes, dash_capstyle=dash_capstyle)
+            # no dashes or dash_capstyle specified
+            else:
+                self.ax.axhline(y=y, xmin=xrange[0], xmax=xrange[1],
+                                color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha)
+
+    def add_vline(self, x, yrange=None, coordinates='data', width=1, color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None):
         '''
         Add vertical line across figure.
+        If yrange is None, a vertical line will be drawn across the entire chart.
+        Otherwise range should be a list of two values.
+        
+        `coordinates` is either "data" or "axis", for "data" xrange is converted to data coordinates.
+        For "axis" the fraction of the self.ax is used.
         '''
 
-        pass
+        yrange = self._parse_yrange(yrange)
+
+        # If x-axis is datetime, make sure to convert x to datetime
+        if self.xaxis_type != 'datetime':
+            try:
+                x = pd.Timestamp(x)
+            except ValueError:
+                print('Could not convert ' + str(x) + ' to pd.Timestamp')
+                raise ValueError
+
+        # Convert yrange to fraction of self.ax range as needed
+        if coordinates == 'data':
+            # Get axis range, this will be in ordinals
+            ymin, ymax = self.ax.get_ylim()
+
+            # Get fraction of xrange[0], xrange[1]
+            yrange[0] = (yrange[0] - ymin) / (ymax - ymin)
+            yrange[1] = (yrange[1] - ymin) / (ymax - ymin)
+
+        # No yrange
+        if yrange == [None, None]:
+            # dashes or dash_capstyle specified
+            if dashes or dash_capstyle:
+                self.ax.axvline(x=x, color=color, linewidth=linewidth, linestyle=linestyle, dashes=dashes, alpha=alpha,
+                                dash_capstyle=dash_capstyle)
+                # no dashes or dash_capstyle specified
+            else:
+                self.ax.axvline(x=x, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha)
+
+        # yrange given
+        else:
+            # dashes or dash_capstyle specified
+            if dashes or dash_capstyle:
+                self.ax.axvline(x=x, ymin=yrange[0], ymax=yrange[1],
+                                color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha,
+                                dashes=dashes, dash_capstyle=dash_capstyle)
+                # no dashes or dash_capstyle specified
+            else:
+                self.ax.axvline(x=x, ymin=yrange[0], ymax=yrange[1],
+                                color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha)
     
     def add_hrect(self, y0, y1, width=1, linecolor='red', fillcolor=None, dash='-', opacity=1, text=''):
         '''

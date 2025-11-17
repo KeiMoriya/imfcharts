@@ -42,7 +42,7 @@ df[riskcol] = df[riskcol] / df[riskcol].shift(12) * 100
 fig = imfplotly.create_fig(df, linecols=df.columns[:2], rlinecols=riskcol,
                            xrange='2022-01:')
 objects.append(fig)
-df.to_csv(outdir + '/fig6_chart1_current_accountb.csv')
+df.to_csv(outdir + '/fig6_chart1_current_account.csv')
 
 # -----------------------------------------------------
 # 2. Bank Profitability

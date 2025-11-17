@@ -72,7 +72,9 @@ chart1 = Chart(df, linecols=linecol, barcols=barcols,
                subtitle='(Percent, q/q)',
                xrange='2023Q1:', yrange=[-5, 9.5], ryrange=[-5, 9.5],
                ncol_legend=2)
-               # debug=True)
+chart1.add_hline(y=1.4, xrange='2023Q1:' + df.index[-1].strftime('%Y-%m'),
+                 # xrange=[0.05, 0.95], coordinates='axis',
+                 color=IMFBLACK, linewidth=2.5, linestyle='--', dashes=[10, 4])
 
 # Save
 chart1.save(outdir + '/page1_chart1_gdp.pdf')

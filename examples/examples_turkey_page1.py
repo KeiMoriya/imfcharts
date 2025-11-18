@@ -76,6 +76,14 @@ chart1.add_hline(y=1.4, xrange='2023Q1:' + df.index[-1].strftime('%Y-%m'),
                  # xrange=[0.05, 0.95], coordinates='axis',
                  color=IMFBLACK, linewidth=2.5, linestyle='--', dashes=[10, 4])
 
+text = '''Real GDP growth
+long-run average
+(1.4 q/q)'''
+
+chart1.add_text(pd.Timestamp('2024Q3'), 6.5, text=text, fontweight='bold', color='#004C97')
+chart1.add_arrow(head=[pd.Timestamp('2025Q1'), 1.5],
+                 tail=[pd.Timestamp('2025Q1'), 5],
+                 color='#004C97')
 # Save
 chart1.save(outdir + '/page1_chart1_gdp.pdf')
 

@@ -134,7 +134,10 @@ class Chart:
         # ------------------------------------------------------------------------------
         # Set attributes
         self.data = data
-        if indexcol is not None:
+
+        # Set self.indexcol
+        self.indexcol= indexcol
+        if self.indexcol is not None:
             if self.data is not None and type(self.data) == pd.DataFrame:
                 if indexcol not in self.data.columns:
                     print('indexcol specified as "' + str(indexcol) + '" but not found in data:')
@@ -149,8 +152,6 @@ class Chart:
                         self.data.index = pd.to_datetime(self.data.index)
                     except Exception:
                         pass
-                    # Set self.indexcol
-                    self.indexcol= indexcol
             else:
                 print('WARNING: indexcol specified but data is not DataFrame')
         self.width = width
@@ -348,10 +349,10 @@ class Chart:
                 # Trim both
                 self.data = self.data.loc[str(self.xrange[0]):str(self.xrange[1]), :]
 
-    def set_title(self, title):
+    def set_title(self, title, loc='left', y=1.05, fontweight='bold', fontname='Segoe UI'):
         if title is not None:
-            self.ax.set_title(str(title), loc='left', y=1.05,
-                              fontweight='bold', fontname='Segoe UI')
+            self.ax.set_title(str(title), loc=loc, y=y,
+                              fontweight=fontweight, fontname=fontname)
 
     def set_subtitle(self, subtitle):
         if self.subtitle is not None:
@@ -1243,6 +1244,62 @@ class Chart:
         '''
 
         pass
+
+    def add_text(self, x, y, text='', xycoords='data', color='black',
+                 fontsize=14, fontfamily='Segoe UI', fontweight='normal',
+                 va='top', ha='left'):
+        '''
+        Add text.
+
+        va='top' will align the top of the text to the specified value.
+        ha='left' will align the left of the text to the specified value.
+        '''
+
+        if self.xaxis_type == 'datetime':
+            try:
+                x = pd.Timestamp(x)
+            except Exception:
+                print('WARNING: Could not convert ' + str(x) + ' to pd.Timestamp')
+
+        self.ax.text(x, y, text,
+                     color=color,
+                     fontsize=fontsize, fontfamily=fontfamily, fontweight=fontweight,
+                     va=va, ha=ha)
+    
+    def add_arrow(self, head=(0, 0), tail=(1, 1),
+                  color='black', width=4, headwidth=15, headlength=15, shrink=0.05, arrowstyle='->', edgecolor=None, edgewidth=0,
+                  va='top', ha='left',
+                  text='', xycoords='data', textcoords='data'):
+        '''
+        Add arrow and text.
+
+        va='top' will align the top of the arrow to the specified value.
+        ha='left' will align the left of the arrow to the specified value.
+        '''
+
+        if self.xaxis_type == 'datetime' and xycoords=='data':
+            try:
+                head[0] = pd.Timestamp(head[0])
+            except Exception:
+                print('WARNING: Could not convert ' + str(head[0]) + ' to pd.Timestamp')
+
+            try:
+                tail[0] = pd.Timestamp(tail[0])
+            except Exception:
+                print('WARNING: Could not convert ' + str(tail) + ' to pd.Timestamp')
+                
+            self.ax.annotate(xy=head, xytext=tail,
+                             arrowprops=dict(
+                                 facecolor=color,      # Color of the arrow
+                                 edgecolor=edgecolor,  # Color of arrow outline
+                                 linewidth=edgewidth,  # Width of arrow edges
+                                 shrink=shrink,        # Distance from point and text
+                                 width=width,          # Width of the arrow tail in points
+                                 headwidth=headwidth,  # Width of the arrow head base in points
+                                 headlength=headlength # Length of the arrow head in points
+                             ),
+                             va=va, ha=ha,
+                             text=text, xycoords=xycoords, textcoords=textcoords)
 
     def update_legend(self,
                       ncol_legend=None, legend_spacing=None,

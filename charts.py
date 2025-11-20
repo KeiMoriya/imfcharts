@@ -198,6 +198,12 @@ class Chart:
         # Check whether index of data is datetime
         self.xaxis_type = 'datetime'
         if self.data is not None and type(self.data) == pd.DataFrame:
+            # Try to convert to datetime axis
+            try:
+                self.data.index = pd.to_datetime(self.data.index)
+            except:
+                pass
+            
             idx_types = {type(idx) for idx in self.data.index}
             if idx_types in [{pd.Timestamp}, {pd.Period}]:
                 pass
@@ -226,7 +232,7 @@ class Chart:
         self.set_yticks(size=self.ytickfontsize)
 
         # Get xrange and trim data as needed
-        self.xrange = self._parse_xrange(xrange)
+        self.xrange = self._parse_xrange(xrange, debug=debug)
         self._trim_data(self.xrange)
 
         # ---------------------------------------------------------------------------------------------------
@@ -280,7 +286,7 @@ class Chart:
         
         pass
 
-    def _parse_xrange(self, xrange):
+    def _parse_xrange(self, xrange, debug=False):
         '''
         Utility function to parse x-axis range.
         This can either be a date range or a number range.
@@ -290,24 +296,39 @@ class Chart:
         - None
         '''
 
+        if debug:
+            print('start of _parse_xrange with xrange:')
+            print(xrange)
+
         if xrange is None:
+            if debug:
+                print('returning [None, None]')
             return [None, None]
 
         # Special case of two floats or ints, just return original.
         try:
             x0, x1 = xrange
             if type(x0) in [float, int] and type(x1) in [float, int]:
+                if debug:
+                    print('returning:')
+                    print(xrange)
                 return xrange
         except Exception:
             pass
         
         if type(xrange) == str and xrange.find(':') != -1:
-            xrange = xrange.split(':', 1)
+            xrange = [x.strip() for x in xrange.split(':', 1)]
             xrange = [x if x != '' else None for x in xrange]
+            if debug:
+                print('xrange here:')
+                print(xrange)
 
         if self.xaxis_type == 'datetime':
             try:
                 xrange = [pd.Timestamp(str(x)) if x is not None else None for x in xrange]
+                if debug:
+                    print('returning:')
+                    print(xrange)
             except ValueError:
                 print('Could not convert xrange = ' + str(xrange) + ' to pd.Timestamp')
                 sys.exit()
@@ -515,7 +536,7 @@ class Chart:
         # Try to interpret xrange as dates and add margin
         try:
             x1, x2 = pd.Timestamp(xrange[0]) - pd.Timedelta(days=margins), pd.Timestamp(xrange[1]) + pd.Timedelta(days=margins)
-            self.ax.set_xlim(pd.Timestamp(xrange[0]) - pd.Timedelta(days=margins), pd.Timestamp(xrange[1]) + pd.Timedelta(days=margins))
+            self.ax.set_xlim(x1, x2)
             if debug:
                 print('Set xlim to Timestamps')
         # If fails, use xrange as-is.
@@ -700,16 +721,17 @@ class Chart:
         linecols = _parse_cols(colname)
         # Don't try to plot indexcol if it was given since this is now the index
         if indexcol is not None:
-            linecols.remove(indexcol)
-            if debug:
-                print('linecols:')
-                print(linecols)
+            if indexcol in linecols:
+                linecols.remove(indexcol)
+        if debug:
+            print('linecols:')
+            print(linecols)
 
         # Set self.data to be input data
         self.data = data
         # Set x-axis limits and trim data as needed
         if xrange is not None:
-            xrange = self._parse_xrange(xrange)
+            xrange = self._parse_xrange(xrange, debug=debug)
             self._trim_data(xrange)
             
         for linecol in linecols:

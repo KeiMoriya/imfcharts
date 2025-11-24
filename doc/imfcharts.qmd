@@ -1,0 +1,152 @@
+<!--
+2025-11-20
+
+Documentation on imfcharts.
+
+To generate this document run
+quarto render imfcharts.qmd
+
+Geneating PDF output will open a Carbon Black window
+but ignoring it will render the document.
+
+-->
+
+---
+title: "Documentation for imfcharts"
+bibliography: references.bib
+number-sections: true
+page-layout: full
+format:
+  docx:
+    toc: true
+    number-sections: true
+    highlight-style: github
+    execute:
+      echo: false
+
+  html:
+    code-fold: true
+    toc: true
+    toc-depth: 2
+    toc-float: true
+    grid:
+      body-width: 900px
+      margin-width: 150px
+      sidebar-width: 150px
+
+#  pdf:
+#    documentclass: report
+#    papersize: letter
+
+# jupyter: python3
+---
+
+```{python}
+#| label: py-imports
+import os
+import sys
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib
+# Need this, otherwise warning shows
+# matplotlib.use('Qt5Agg')
+# 'GTK3Agg', 'GTK3Cairo', 'GTK4Agg', 'GTK4Cairo', 'MacOSX', 'nbAgg', 'QtAgg', 'QtCairo', 'Qt5Agg', 'Qt5Cairo', 'TkAgg', 'TkCairo', 'WebAgg', 'WX', 
+
+
+# Tables in quarto
+from itables import show
+from IPython.display import Markdown
+
+from imfcharts import *
+```
+
+<!------------------------------------------------------------------------------------------------------------------------------------>
+# Introduction {#sec-intro}
+
+The Fund wastes enormous time and effort...
+
+This document covers the main usage and 
+Most of the discussion is from[@Takagi; @Brodsky]
+and based on experience with missions to Solomon Islands (2024) and Vanuatu (2025).
+
+
+```{python}
+#| label: fig1_chart1_gdp
+#| fig-cap: "A plot with lines and bars."
+
+infilename = '../data/turkey_page1/fig1_chart1_gdp.csv'
+if not os.path.isfile(infilename):
+    print('File ' + infilename + ' does not exist')
+    sys.exit()
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+cols = df.columns
+linecol = cols[0]
+barcols = cols[1:]
+
+# Create Chart object
+
+dict_attrs = {linecol : {'linewidth' : 4,
+                         'color' : '#004C97',
+                         # 'linestyle' : '--',
+                         'marker' : 'o',
+                         'markersize' : 10,
+                         'markerfacecolor' : 'white',
+                         'markeredgewidth' : 4,
+                         'markeredgecolor' : '#004C97'},
+              'Consumption (private)' : {'color' : '#4B8CAD', 'barhatchcolor' : IMFBLUE, 'barhatch' : '\\\\'},
+              'Consumption (public)' : {'color' : 'white', 'barhatch' : '\\\\\\', 'barhatchcolor' : IMFBLACK},
+              'Net exports' : {'color' : IMFGREY},
+              'Inventories/discrepancy' : {'color' : IMFRED},
+              'Fixed investment' : {'color' : 'white',
+                                    'barhatch' : '///',
+                                    'barhatchcolor' : IMFGREEN,
+                                    'barhatchwidth' : 10}
+              }
+
+chart1 = Chart(df, linecols=linecol, barcols=barcols,
+               dict_attrs=dict_attrs,
+               topxaxis='left',
+               title='Contributions to Real GDP Growth',
+               subtitle='(Percent, q/q)',
+               xrange='2023Q1:', yrange=[-5, 9.5], ryrange=[-5, 9.5],
+               ncol_legend=2)
+chart1.add_hline(y=1.4, xrange='2023Q1:' + df.index[-1].strftime('%Y-%m'),
+                 # xrange=[0.05, 0.95], coordinates='axis',
+                 color=IMFBLACK, linewidth=2.5, linestyle='--', dashes=[10, 4])
+
+text = '''Real GDP growth
+long-run average
+(1.4 q/q)'''
+
+chart1.add_text(pd.Timestamp('2024Q3'), 6.5, text=text, fontweight='bold', color='#004C97')
+chart1.add_arrow(head=[pd.Timestamp('2025Q1'), 1.5],
+                 tail=[pd.Timestamp('2025Q1'), 5],
+                 color='#004C97')
+fig = chart1.fig
+plt.show()
+plt.close()
+```
+
+```{python}
+#| label: fig1_chart2_labor
+#| fig-cap: "A plot with lines"
+# Read in data
+infilename = '../data/turkey_page1/fig1_chart2_labor.csv'
+if not os.path.isfile(infilename):
+    print('File ' + infilename + ' does not exist')
+    sys.exit()
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+
+# Create Chart object
+chart2 = Chart(df, linecols=df.columns[0], rlinecols=df.columns[1],
+               title='Labor Utilization',
+               subtitle='(Percent)',
+               xrange='2023-01:2025-08', # yrange=[8, 11], ryrange=[10, 25],
+               yrange=[8, 11],
+               )
+               # debug=True)
+plt.show()
+plt.close()
+```

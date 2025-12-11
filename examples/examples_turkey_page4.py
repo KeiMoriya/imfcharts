@@ -189,6 +189,7 @@ dict_attrs = {'debt' : {'color' : '#004C97'},
 
 # Create Chart object
 chart6 = Chart(df, barcols=df.columns,
+               barlinewidth=0,
                title='General Government Gross Debt, EU Definition',
                subtitle='(Percent of GDP)',
                dict_attrs=dict_attrs,

@@ -74,6 +74,7 @@ dict_attrs = {'Return to asset' : {'color' : IMFBLUE},
 
 # Create Chart object
 chart2 = Chart(df, barcols='Return to asset', rlinecols='Return to equity', topxaxis='right',
+               barlinewidth=0,
                dict_attrs=dict_attrs,
                title='Bank Profitability 1/',
                subtitle='(Percent, 12M moving average)',
@@ -149,7 +150,8 @@ chart5 = Chart(df, linecols=df.columns,
                dict_attrs=dict_attrs,
                title='Banking Sector Net FX Position',
                subtitle='(Billion of USD)',
-               xrange='2022-01:', yrange=[-100, 100])
+               xrange='2022-01:', yrange=[-100, 100],
+               legend_bottom=0.15)
 
 # Save
 chart5.save(outdir + '/page6_chart5_fx_position.pdf')
@@ -171,10 +173,12 @@ dict_attrs = {paycol : {'color' : IMFBLACK},
               sharecol : {'color' : IMFBLUE}}
 
 chart6 = Chart(df, linecols=paycol, barcols=sharecol, baraxis='right',
+               barlinewidth=0,
                dict_attrs=dict_attrs,
                title='Bank FX Exposure 2/',
                subtitle='(Payables in bln USD; share in percent)',
-               xrange='2022-01:', yrange=[20, 120], ryrange=[40, 50])
+               xrange='2022-01:', yrange=[20, 120], ryrange=[40, 50],
+               legend_bottom=0.75, legend_height=0.25)
 
 # Save
 chart6.save(outdir + '/page6_chart6_fx_exposure.pdf')

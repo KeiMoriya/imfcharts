@@ -54,6 +54,7 @@ chart1 = Chart(df, linecols=linecol, barcols=barcols,
                dict_attrs=dict_attrs,
                title='Current Account',
                subtitle='(Percent of GDP)',
+               legend_bottom=0.20, legend_left=0.55,
                xrange='2022-Q1:', yrange=[-30, 25])
 
 # Save
@@ -76,11 +77,12 @@ dict_attrs = {'Current account' : {'color' : IMFBLUE},
 
 # Create Chart object
 chart2 = Chart(df, linecols=df.columns,
+               barlinewidth=0,
                dict_attrs=dict_attrs,
                title='Current Account',
                subtitle='(Billions USD, 12mms)',
                xrange='2022-01:', yrange=[-95, 60],
-               legend_bottom=0.29, legend_left=0.55)
+               legend_bottom=0.22, legend_left=0.55)
 
 # Save
 chart2.save(outdir + '/page5_chart2_current_account_mms.pdf')
@@ -129,7 +131,7 @@ chart4 = Chart(df, linecols='Current Account Balance',
                title='Current Account Financing',
                subtitle='(Percent of GDP)',
                xrange='2022-Q1:', yrange=[-10, 20],
-               ncol_legend=2)
+               ncol_legend=2, legend_width=0.80)
 
 # Save
 chart4.save(outdir + '/page5_chart4_participation.pdf')
@@ -173,13 +175,14 @@ df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 gircol = 'Gross International Reserves (GIR) (rhs)'
 bankcol = 'GIR, net of liabilities to banks'
 corecol = 'Core NIR (rhs)'
-dict_attrs = {gircol : {'color' : IMFBLUE},
+dict_attrs = {gircol : {'color' : '#416FA6'},
               bankcol : {'color' : '#004C97', 'linewidth' : 4, 'linestyle' : 'imfround'},
-              corecol : {'color' : IMFRED},
+              corecol : {'color' : '#DA291C'},
               'Gold' : {'color' : '#CAEDFE'},
               'FX' : {'color' : '#009CDE'}}
 
-chart6 = Chart(df, linecols=[bankcol, gircol], rlinecols=corecol, barcols=['Gold', 'FX'],
+chart6 = Chart(df, linecols=[bankcol, gircol], rlinecols=corecol, barcols=['FX', 'Gold'],
+               barlinewidth=0,
                dict_attrs=dict_attrs,
                topxaxis='right',
                title='Gross International Reserves',

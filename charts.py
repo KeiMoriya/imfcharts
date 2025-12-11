@@ -6,6 +6,7 @@ Generate charts.
 
 import os
 import sys
+import itertools
 
 import numpy as np
 import pandas as pd
@@ -133,6 +134,7 @@ class Chart:
 
         # ------------------------------------------------------------------------------
         # Set attributes
+        self.debug = debug
         self.data = data
 
         # Set self.indexcol
@@ -144,7 +146,7 @@ class Chart:
                     print(data)
                     sys.exit()
                 else:
-                    if debug:
+                    if self.debug:
                         print('Setting index to ' + str(indexcol))
                     self.data.set_index(indexcol, inplace=True)
                     # If possible, convert to datetime index
@@ -216,7 +218,7 @@ class Chart:
         self.fig, self.ax = plt.subplots(1, 1, figsize=(self.width, self.height))
         # Initialize self.ax_right to None, only generate as needed
         self.ax_right = None
-        if debug:
+        if self.debug:
             print('Created self.fig, self.ax')
 
         # Add title, subtitle
@@ -232,7 +234,7 @@ class Chart:
         self.set_yticks(size=self.ytickfontsize)
 
         # Get xrange and trim data as needed
-        self.xrange = self._parse_xrange(xrange, debug=debug)
+        self.xrange = self._parse_xrange(xrange, debug=self.debug)
         self._trim_data(self.xrange)
 
         # ---------------------------------------------------------------------------------------------------
@@ -240,19 +242,19 @@ class Chart:
         if barcols is not None:
             barcols = _parse_cols(barcols)
             self.add_bars(self.data, barcols, indexcol=self.indexcol, stack=stack, baraxis=baraxis, xrange=self.xrange, barlinewidth=barlinewidth,
-                          dict_attrs=dict_attrs, debug=debug)
+                          dict_attrs=dict_attrs, debug=self.debug)
             
         if linecols is not None:
             linecols = _parse_cols(linecols)
-            self.add_lines(self.data, linecols, indexcol=self.indexcol, xrange=self.xrange, dict_attrs=dict_attrs, debug=debug)
+            self.add_lines(self.data, linecols, indexcol=self.indexcol, xrange=self.xrange, dict_attrs=dict_attrs, debug=self.debug)
 
         if rlinecols is not None:
             rlinecols = _parse_cols(rlinecols)
-            self.add_lines(self.data, rlinecols, indexcol=self.indexcol, axis='right', xrange=self.xrange, dict_attrs=dict_attrs, debug=debug)
+            self.add_lines(self.data, rlinecols, indexcol=self.indexcol, axis='right', xrange=self.xrange, dict_attrs=dict_attrs, debug=self.debug)
         
         # Create legend
         legend_header = ''
-        if debug:
+        if self.debug:
             print('self.legend_entries:')
             print(self.legend_entries)
             print('self.legend_labels:')
@@ -925,7 +927,8 @@ class Chart:
             sys.exit()
 
         # Iterate over barcols and plot each bar.
-        cycle = iter(plt.rcParams['axes.prop_cycle'])
+        prop_cycle = plt.rcParams['axes.prop_cycle']
+        cycle = itertools.cycle(prop_cycle)
         used_colors = []
 
         # Need to keep track of positive and negative offsets if stacked.
@@ -979,14 +982,28 @@ class Chart:
                 if debug:
                     print('1. setting color for ' + barcol + ' to ' + color)
             else:
+                itry = 0
                 color = next(cycle)['color']
+                if debug:
+                    print('itry = ' + str(itry) + ', color = ' + color)
                 while 1:
+                    itry += 1
+                    
                     if color in used_colors:
+                        # Break out if all colors in the cycle have been used
+                        if itry == len(prop_cycle):
+                            color = next(cycle)['color']
+                            if debug:
+                                print('Reached max of cycle at itry = ' + str(itry) + ', setting color for ' + barcol + ' to ' + color)
+                            break
+                        
+                        # Otherwise keep trying
                         color = next(cycle)['color']
+                        print('itry = ' + str(itry) + ', color is now ' + color)
                     else:
                         used_colors.append(color)
                         if debug:
-                            print('2. setting color for ' + barcol + ' to ' + color)
+                            print('2. color not used, setting color for ' + barcol + ' to ' + color)
                         break
 
             if debug:

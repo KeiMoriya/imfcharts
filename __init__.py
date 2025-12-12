@@ -7,11 +7,13 @@ from .charts import read
 from .mpl import *
 
 # Define IMF colors
+AXISGREY  = '#B3B3B3'
 AXISGRAY  = '#B3B3B3'
 IMFBLUE   = '#4B82AD'
 IMFGREEN  = '#96BA79'
 IMFRED    = '#C00000'
 IMFGREY   = '#A6A8AC'
+IMFGRAY   = '#A6A8AC'
 IMFBLACK  = '#000000'
 
 # Set default style

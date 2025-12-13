@@ -753,6 +753,8 @@ class Chart:
             linewidth = matplotlib.rcParams['lines.linewidth']
             linestyle = matplotlib.rcParams['lines.linestyle']
             color = None
+            # Add legend for this entry
+            legend = True
 
             dashes = None
             dash_capstyle = None
@@ -802,6 +804,9 @@ class Chart:
                     
                 if 'dash_capstyle' in attrs:
                     dash_capstyle = attrs['dash_capstyle']
+
+                if 'legend' in attrs:
+                    legend = attrs['legend']
                     
             if axis == 'left':
                 if dashes or dash_capstyle:
@@ -817,9 +822,10 @@ class Chart:
                                          markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
                                          markeredgewidth=markeredgewidth,
                                          linestyle=linestyle, linewidth=linewidth, color=color)
-                    
-                self.legend_entries.append(entry[0])
-                self.legend_labels.append(linecol)
+
+                if legend:
+                    self.legend_entries.append(entry[0])
+                    self.legend_labels.append(linecol)
             elif axis == 'right':
                 if self.ax_right is None:
                     self.ax_right = self.ax.twinx()
@@ -840,9 +846,9 @@ class Chart:
                                                markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
                                                markeredgewidth=markeredgewidth,
                                                linestyle=linestyle, linewidth=linewidth, color=color)
-                    
-                self.legend_entries.append(entry[0])
-                self.legend_labels.append(linecol)
+                if legend:
+                    self.legend_entries.append(entry[0])
+                    self.legend_labels.append(linecol)
             else:
                 print('axis must be left or right, given ' + str(axis))
                 raise VaueError
@@ -953,6 +959,9 @@ class Chart:
             barhatch = None
             barhatchwidth = matplotlib.rcParams['hatch.linewidth']
 
+            # Add legend for this entry
+            legend = True
+
             # Get any attributes that were assigned to this column
             if dict_attrs is not None and barcol in dict_attrs:
                 # This should be a dict containing attributes for this column
@@ -973,6 +982,10 @@ class Chart:
                 # Line width of hatches
                 if 'barhatchwidth' in attrs:
                     barhatchwidth = attrs['barhatchwidth']
+
+                # Add legend entry
+                if 'legend' in attrs:
+                    legend = attrs['legend']
                     
             # For color, if it is specified use it,
             # otherwise get the next color from the color cycle.
@@ -1108,8 +1121,9 @@ class Chart:
             neg_offset += _df_neg[barcol].replace(np.nan, 0).values
             pos_offset += _df_pos[barcol].replace(np.nan, 0).values
 
-            self.legend_entries.append(entry[0])
-            self.legend_labels.append(barcol)
+            if legend:
+                self.legend_entries.append(entry[0])
+                self.legend_labels.append(barcol)
         # end of loop over barcols
 
         # Re-create legend

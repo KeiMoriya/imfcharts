@@ -78,11 +78,18 @@ if not os.path.isfile(infilename):
     sys.exit()
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 
+dict_attrs = {'Accrual spending' : {'color' : IMFBLUE},
+              'Cash spending' : {'color' : 'white', 'offset' : 30,
+                                 'barhatch' : '\\\\', 'barhatchcolor' : IMFBLACK}
+              }
+
 # Create Chart object
 chart2 = Chart(df, barcols=df.columns, stack=False,
+               dict_attrs=dict_attrs,
                title='Cash vs. Accrual Earthquake Spending',
                subtitle='(Percent of GDP)',
                yrange=[0, 4],
+               legend_left=0.40, ncol_legend=2, legend_width=0.6, legend_bottom=0.80,
                )
 
 # Save

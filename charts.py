@@ -103,6 +103,7 @@ class Chart:
                  linecols=None, barcols=None, rlinecols=None,
                  # bar options
                  stack=True, area=False, barwidth=None, baraxis='left',
+                 total_barwidth=None,
                  barlinewidth=None,
                  title=None,
                  subtitle = None,
@@ -241,7 +242,8 @@ class Chart:
         # Draw lines, bars
         if barcols is not None:
             barcols = _parse_cols(barcols)
-            self.add_bars(self.data, barcols, indexcol=self.indexcol, stack=stack, baraxis=baraxis, xrange=self.xrange, barlinewidth=barlinewidth,
+            self.add_bars(self.data, barcols, indexcol=self.indexcol, stack=stack, total_barwidth=total_barwidth,
+                          baraxis=baraxis, xrange=self.xrange, barlinewidth=barlinewidth,
                           dict_attrs=dict_attrs, debug=self.debug)
             
         if linecols is not None:
@@ -276,7 +278,8 @@ class Chart:
         self.set_date_format()
 
         # Set number of x-axis ticks
-        self.set_nxticks(self.nxticks)
+        if self.xaxis_type == 'datetime':
+            self.set_nxticks(self.nxticks)
 
         # Set which x-axis is drawn on top
         self.set_top_xaxis(self.topxaxis)
@@ -523,29 +526,53 @@ class Chart:
                 print('set_xrange: margins of type ' + str(type(margins)) + ' not allowed')
                 sys.exit()
 
-        if xrange[0] is None:
-            xrange[0] = self.data.index.min()
-        if xrange[1] is None:
-            xrange[1] = self.data.index.max()
+        if self.xaxis_type == 'datetime':
+            if xrange[0] is None:
+                xrange[0] = self.data.index.min()
+            if xrange[1] is None:
+                xrange[1] = self.data.index.max()
+        elif self.xaxis_type == 'categorical':
+            if xrange[0] is None:
+                xrange[0] = 0
+            if xrange[1] is None:
+                xrange[1] = len(self.data)
+        elif self.xaxis_type == 'numerical':
+            if xrange[0] is None:
+                xrange[0] = self.data.index.min()
+            if xrange[1] is None:
+                xrange[1] = self.data.index.max()
+        else:
+            print('self.axis_type of ' + str(self.axis_type) + ' not implemented for set_xrange()')
+            sys.exit()
             
         if debug:
             print('xrange before setting xlim:')
             print(xrange)
 
         # Trim the data based on xrange
-        self._trim_data(xrange)
+        if self.xaxis_type == 'datetime':
+            self._trim_data(xrange)
             
-        # Try to interpret xrange as dates and add margin
-        try:
-            x1, x2 = pd.Timestamp(xrange[0]) - pd.Timedelta(days=margins), pd.Timestamp(xrange[1]) + pd.Timedelta(days=margins)
-            self.ax.set_xlim(x1, x2)
-            if debug:
-                print('Set xlim to Timestamps')
-        # If fails, use xrange as-is.
-        except ValueError:
-            self.ax.set_xlim(xrange[0],xrange[1])
-            if debug:
-                print('Set xlim to xrange as-is')
+            # Try to interpret xrange as dates and add margin
+            try:
+                x1, x2 = pd.Timestamp(xrange[0]) - pd.Timedelta(days=margins), pd.Timestamp(xrange[1]) + pd.Timedelta(days=margins)
+                self.ax.set_xlim(x1, x2)
+                if debug:
+                    print('Set xlim to Timestamps')
+            # If fails, use xrange as-is.
+            except ValueError:
+                self.ax.set_xlim(xrange[0],xrange[1])
+                if debug:
+                    print('Set xlim to xrange as-is')
+        elif self.xaxis_type == 'categorical':
+            self.ax.set_xlim(xrange[0] - 0.5, xrange[1] - 0.5)
+        elif self.xaxis_type == 'numerical':
+            # Add 3% margin
+            total = np.abs(xrange[1] - xrange[0])
+            self.ax.set_xlim(xrange[0] - 0.03 * total, xrange[1] + 0.03 * total)
+        else:
+            print('self.axis_type of ' + str(self.axis_type) + ' not implemented for set_xrange()')
+            sys.exit()
 
     def set_yrange(self, yrange):
         '''
@@ -924,7 +951,7 @@ class Chart:
             if debug:
                 print('after calling set_xrange()')
 
-    def add_bars(self, data, colname, indexcol=None, baraxis='left', stack=True, barlinewidth=None, xrange=None, dict_attrs=None, debug=False):
+    def add_bars(self, data, colname, indexcol=None, baraxis='left', stack=True, total_barwidth=None, barlinewidth=None, xrange=None, dict_attrs=None, debug=False):
         '''
         Add bar to chart
         '''
@@ -969,22 +996,55 @@ class Chart:
             xrange = self._parse_xrange(xrange)
             self._trim_data(xrange)
 
-        # Guess freq of data and set bar width
-        freq = guess_freq(self.data)
-        if freq == 'D':
-            barwidth = 1
-        elif freq == 'W':
-            barwidth = 3
-        elif freq == 'M':
-            barwidth = 20
-        elif freq == 'Q':
-            barwidth = 70
-        elif freq == 'A':
-            barwidth =300
-        elif freq == '?':
-            barwidth = 1
+        # If total_barwidth is default of None,
+        # set depending on self.xaxis_type
+        if total_barwidth is None:
+            if self.xaxis_type in ['numerical', 'categorical']:
+                total_barwidth = 0.9
+            elif self.xaxis_type == 'datetime':
+                # Set below based on freq
+                pass
+            else:
+                print('total_barwdith not implemented for self.xaxis_type of ' + str(self.xaxis_type))
+                sys.exit()
+
+        # Guess freq of data and set bar width.
+        # This can be overridden later for each individual bar from dict_attrs.
+        if self.xaxis_type == 'datetime':
+            freq = guess_freq(self.data)
+            if freq == 'D':
+                barwidth = 1
+            elif freq == 'W':
+                barwidth = 3
+            elif freq == 'M':
+                barwidth = 20
+            elif freq == 'Q':
+                barwidth = 70
+            elif freq == 'A':
+                barwidth =300
+            elif freq == '?':
+                barwidth = 1
+            else:
+                print('Unknown frequency ' + freq)
+                sys.exit()
+
+            # If stack=False, need to divide each barwidth by number of bars.
+            # If total_barwidth
+            if not stack:
+                if total_barwidth is None:
+                    # Set to total barwdith
+                    total_barwidth = barwidth
+                    
+                # Set each bar to be 1 / len(barcols)
+                barwidth /= len(barcols)
+
+                
+        elif self.xaxis_type in ['categorical', 'numerical']:
+            # Split barwidth among barcols.
+            # This can be overridden later for each individual bar from dict_attrs.
+            barwidth = total_barwidth / len(barcols)
         else:
-            print('Unknown frequency ' + freq)
+            print('self.xaxis_type of ' + str(self.xaxis_type) + ' not implemented')
             sys.exit()
 
         # Iterate over barcols and plot each bar.
@@ -995,6 +1055,12 @@ class Chart:
         # Need to keep track of positive and negative offsets if stacked.
         pos_offset = [0] * len(self.data)
         neg_offset = [0] * len(self.data)
+
+        # For stack=False, need offset for x-axis.
+        # Default is to start from half the total barwidth and half a bar width in the negative direction,
+        # this centers the bars.
+        if not stack:
+            total_offset = - total_barwidth / 2. - total_barwidth / len(barcols) / 2.
         
         for ibarcol, barcol in enumerate(barcols):
             if debug:
@@ -1017,6 +1083,10 @@ class Chart:
             # Add legend for this entry
             legend = True
 
+            # Flag for whether offset was specified for this column.
+            # If not specified, default to fixed offset for each col in barcols.
+            offset_specified = False
+
             # Get any attributes that were assigned to this column
             if dict_attrs is not None and barcol in dict_attrs:
                 # This should be a dict containing attributes for this column
@@ -1038,10 +1108,31 @@ class Chart:
                 if 'barhatchwidth' in attrs:
                     barhatchwidth = attrs['barhatchwidth']
 
+                # If offset is specified for when stack=False, use it
+                if 'offset' in attrs:
+                    offset = attrs['offset']
+                    offset_specified = True
+
+                # If barwidth is specified, use it
+                if 'barwidth' in attrs:
+                    barwidth = attrs['barwidth']
+                    
                 # Add legend entry
                 if 'legend' in attrs:
                     legend = attrs['legend']
-                    
+
+            # Set offset for this bar.
+            # Whether the offset is specified or not,
+            # the barwidth is added into the offset.
+            # Since all offses are cumulative, adding an offset
+            # to the first bar will just shift all bars.
+            # Adding additional offsets to other bars will
+            # add spacing in between bars.
+            if not offset_specified:
+                offset = barwidth
+            else:
+                offset += barwidth
+                
             # For color, if it is specified use it,
             # otherwise get the next color from the color cycle.
             if dict_attrs is not None and barcol in dict_attrs and 'color' in dict_attrs[barcol]:
@@ -1093,42 +1184,73 @@ class Chart:
             _df_neg = self.data[[barcol]].copy()
             mask = _df_neg[barcol] > 0
             _df_neg.loc[mask, barcol] = np.nan
+
+            # Set offset when stack=False
+            if not stack:
+                total_offset += offset
+                # If stack=False, need to set _x to be coordinates
+                # of where bars are.
+                if self.xaxis_type == 'categorical':
+                    _x = np.arange(len(self.data)) + total_offset
+                else:
+                    _x = self.data.index + pd.Timedelta(days=total_offset)
+
+                print('-' * 40)
+                print(barcol)
+                print('barwidth = ' + str(barwidth) + ' offset = ' + str(offset))
+                print('_x:')
+                print(_x)
             
             if baraxis == 'left':
-                # No direct way to set hatch line widths in ax.bar,
-                # need to use plt.rc_context()
-                with plt.rc_context({"hatch.linewidth": barhatchwidth}):
-                    if ibarcol == 0:
-                        # Draw negative first
-                        entry = self.ax.bar(self.data.index, _df_neg[barcol],
-                                            width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
-                                            zorder=1, label=barcol)
-                        # Draw positive
-                        entry = self.ax.bar(self.data.index, _df_pos[barcol],
-                                            width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
-                                            zorder=1, label=barcol)
-                    else:
-                        # Draw negative first
-                        entry = self.ax.bar(self.data.index, _df_neg[barcol],
-                                            bottom=neg_offset,
-                                            width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
-                                            zorder=1, label=barcol)
-                        # Draw positive
-                        entry = self.ax.bar(self.data.index, _df_pos[barcol],
-                                            bottom=pos_offset,
-                                            width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
-                                            zorder=1, label=barcol)
-                        
+                if stack:
+                    # No direct way to set hatch line widths in ax.bar,
+                    # need to use plt.rc_context()
+                    with plt.rc_context({"hatch.linewidth": barhatchwidth}):
+                        if ibarcol == 0:
+                            # Draw negative first
+                            entry = self.ax.bar(self.data.index, _df_neg[barcol],
+                                                width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                                zorder=1, label=barcol)
+                            # Draw positive
+                            entry = self.ax.bar(self.data.index, _df_pos[barcol],
+                                                width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                                zorder=1, label=barcol)
+                        else:
+                            # Draw negative first
+                            entry = self.ax.bar(self.data.index, _df_neg[barcol],
+                                                bottom=neg_offset,
+                                                width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                                zorder=1, label=barcol)
+                            # Draw positive
+                            entry = self.ax.bar(self.data.index, _df_pos[barcol],
+                                                bottom=pos_offset,
+                                                width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                                zorder=1, label=barcol)
+                            
+                        # Draw again with black edgecolor
+                        entry2 = self.ax.bar(self.data.index, _df_pos[barcol],
+                                             width=barwidth, color='none', edgecolor='black', linewidth=barlinewidth,
+                                             bottom=pos_offset,
+                                             zorder=2)
+                        _ = self.ax.bar(self.data.index, _df_neg[barcol],
+                                        bottom=neg_offset,
+                                        width=barwidth, color='none', edgecolor='black', linewidth=barlinewidth,
+                                        zorder=2)
+                else:
+                    entry = self.ax.bar(_x, self.data[barcol],
+                                        width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                        zorder=1, label=barcol)
+
                     # Draw again with black edgecolor
-                    _ = self.ax.bar(self.data.index, _df_pos[barcol],
-                                    width=barwidth, color='none', edgecolor='black', linewidth=barlinewidth,
-                                    bottom=pos_offset,
-                                    zorder=2)
-                    _ = self.ax.bar(self.data.index, _df_neg[barcol],
-                                    bottom=neg_offset,
-                                    width=barwidth, color='none', edgecolor='black', linewidth=barlinewidth,
-                                    zorder=2)
+                    entry2 = self.ax.bar(_x, self.data[barcol],
+                                         width=barwidth, color='none', edgecolor='black', linewidth=barlinewidth,
+                                         zorder=2)
+                    
+                    # Set x-axis categories from self.data.index
+                    self.ax.set_xticks(np.arange(len(self.data)), labels=self.data.index)
+                    
             # end of baraxis == 'left'
+                    
             elif baraxis == 'right':
                 if self.ax_right is None:
                     self.ax_right = self.ax.twinx()
@@ -1138,46 +1260,59 @@ class Chart:
                     
                 # No direct way to set hatch line widths in ax.bar,
                 # need to use plt.rc_context()
-                with plt.rc_context({"hatch.linewidth": barhatchwidth}):
-                    if ibarcol == 0:
-                        # Draw negative first
-                        entry = self.ax_right.bar(self.data.index, _df_neg[barcol],
-                                                  width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
-                                                  zorder=1, label=barcol)
-                        # Draw positive
-                        entry = self.ax_right.bar(self.data.index, _df_pos[barcol],
-                                                  width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
-                                                  zorder=1, label=barcol)
-                    else:
-                        # Draw negative first
-                        entry = self.ax_right.bar(self.data.index, _df_neg[barcol],
-                                                  bottom=neg_offset,
-                                                  width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
-                                                  zorder=1, label=barcol)
-                        # Draw positive
-                        entry = self.ax_right.bar(self.data.index, _df_pos[barcol],
-                                                  bottom=pos_offset,
-                                                  width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
-                                                  zorder=1, label=barcol)
-                        
-                    # Draw again with black edgecolor
-                    _ = self.ax_right.bar(self.data.index, _df_pos[barcol],
-                                          width=barwidth, color='none', edgecolor='black', linewidth=barlinewidth,
-                                          bottom=pos_offset,
-                                          zorder=2)
-                    _ = self.ax_right.bar(self.data.index, _df_neg[barcol],
-                                          bottom=neg_offset,
-                                          width=barwidth, color='none', edgecolor='black', linewidth=barlinewidth,
-                                          zorder=2)
+                if stack:
+                    with plt.rc_context({"hatch.linewidth": barhatchwidth}):
+                        if ibarcol == 0:
+                            # Draw negative first
+                            entry = self.ax_right.bar(self.data.index, _df_neg[barcol],
+                                                      width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                                      zorder=1, label=barcol)
+                            # Draw positive
+                            entry = self.ax_right.bar(self.data.index, _df_pos[barcol],
+                                                      width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                                      zorder=1, label=barcol)
+                        else:
+                            # Draw negative first
+                            entry = self.ax_right.bar(self.data.index, _df_neg[barcol],
+                                                      bottom=neg_offset,
+                                                      width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                                      zorder=1, label=barcol)
+                            # Draw positive
+                            entry = self.ax_right.bar(self.data.index, _df_pos[barcol],
+                                                      bottom=pos_offset,
+                                                      width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                                      zorder=1, label=barcol)
+                            
+                        # Draw again with black edgecolor
+                        entry2 = self.ax_right.bar(self.data.index, _df_pos[barcol],
+                                                   width=barwidth, color='none', edgecolor='black', linewidth=barlinewidth,
+                                                   bottom=pos_offset,
+                                                   zorder=2)
+                        _ = self.ax_right.bar(self.data.index, _df_neg[barcol],
+                                              bottom=neg_offset,
+                                              width=barwidth, color='none', edgecolor='black', linewidth=barlinewidth,
+                                              zorder=2)
+                else:
+                    entry = self.ax_right.bar(_x, self.data[barcol],
+                                              width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                              zorder=1, label=barcol)
                     
-            # end of baraxis == 'left'
+                    # Draw again with black edgecolor
+                    entry2 = self.ax_right.bar(_x, self.data[barcol],
+                                               width=barwidth, color='none', edgecolor='black', linewidth=barlinewidth,
+                                               zorder=2)
+                    # Set x-axis categories from self.data.index
+                    self.ax_right.set_xticks(np.arange(len(self.data)), labels=self.data.index)
+                    
+            # end of baraxis == 'right'
             
             # Adjust offsets
             neg_offset += _df_neg[barcol].replace(np.nan, 0).values
             pos_offset += _df_pos[barcol].replace(np.nan, 0).values
 
             if legend:
-                self.legend_entries.append(entry[0])
+                # Combine entries for entry without and with border line
+                self.legend_entries.append(tuple([entry[0], entry2[0]]))
                 self.legend_labels.append(barcol)
         # end of loop over barcols
 

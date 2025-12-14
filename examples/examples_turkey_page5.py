@@ -96,12 +96,18 @@ if not os.path.isfile(infilename):
     print('File ' + infilename + ' does not exist')
     sys.exit()
 df = pd.read_csv(infilename, index_col=0)
+# df['shock2'] = df['shock'] / 2.
+# df['shock3'] = df['shock'] * 2.
+
+dict_attrs = {'shock' : {'color' : '#BFBFBF'}}
 
 # Create Chart object
-chart3 = Chart(df, barcols=df.columns,
+chart3 = Chart(df, barcols=df.columns, stack=False,
+               dict_attrs=dict_attrs,
+               barlinewidth=0,
                title='Terms of Trade Shock, 2025Q2 or Latest',
                subtitle='(Percent change from 2023 average)',
-               yrange=[-25, 15],
+               yrange=[-15, 15],
                show_legend=False)
 
 # Save

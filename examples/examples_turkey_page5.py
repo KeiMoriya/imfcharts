@@ -104,7 +104,7 @@ dict_attrs = {'shock' : {'color' : '#BFBFBF'}}
 # Create Chart object
 chart3 = Chart(df, barcols=df.columns, stack=False,
                dict_attrs=dict_attrs,
-               barlinewidth=0,
+               barlinewidth=0, xtickangle=90, xticklength=0,
                title='Terms of Trade Shock, 2025Q2 or Latest',
                subtitle='(Percent change from 2023 average)',
                yrange=[-15, 15],

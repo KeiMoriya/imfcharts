@@ -807,24 +807,53 @@ class Chart:
 
                 if 'legend' in attrs:
                     legend = attrs['legend']
-                    
-            if axis == 'left':
-                if dashes or dash_capstyle:
-                    entry = self.ax.plot(self.data.index, self.data[linecol], label=linecol,
-                                         markersize=markersize, marker=marker,
-                                         markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
-                                         markeredgewidth=markeredgewidth,
-                                         linestyle=linestyle, linewidth=linewidth, color=color,
-                                         dashes=dashes, dash_capstyle=dash_capstyle)
-                else:
-                    entry = self.ax.plot(self.data.index, self.data[linecol], label=linecol,
-                                         markersize=markersize, marker=marker,
-                                         markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
-                                         markeredgewidth=markeredgewidth,
-                                         linestyle=linestyle, linewidth=linewidth, color=color)
+            # end of linecol is in dict_attrs
 
+            if marker.strip().lower() == 'none':
+                marker = None
+                
+            if axis == 'left':
+                # Allow iteration over multiple markers into one legend
+                entries = []
+                
+                if marker is None:
+                    if dashes or dash_capstyle:
+                        entry = self.ax.plot(self.data.index, self.data[linecol], label=linecol,
+                                             markersize=markersize, marker=marker,
+                                             markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
+                                             markeredgewidth=markeredgewidth,
+                                             linestyle=linestyle, linewidth=linewidth, color=color,
+                                             dashes=dashes, dash_capstyle=dash_capstyle)
+                    else:
+                        entry = self.ax.plot(self.data.index, self.data[linecol], label=linecol,
+                                             markersize=markersize, marker=marker,
+                                             markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
+                                             markeredgewidth=markeredgewidth,
+                                             linestyle=linestyle, linewidth=linewidth, color=color)
+                    entries.append(entry[0])
+                else:
+                    # Iterate over all specified markers and put in one legend entry
+                    for _marker in marker:
+                        if dashes or dash_capstyle:
+                            entry = self.ax.plot(self.data.index, self.data[linecol], label=linecol,
+                                                 markersize=markersize, marker=_marker,
+                                                 markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
+                                                 markeredgewidth=markeredgewidth,
+                                                 linestyle=linestyle, linewidth=linewidth, color=color,
+                                                 dashes=dashes, dash_capstyle=dash_capstyle)
+                        else:
+                            entry = self.ax.plot(self.data.index, self.data[linecol], label=linecol,
+                                                 markersize=markersize, marker=_marker,
+                                                 markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
+                                                 markeredgewidth=markeredgewidth,
+                                                 linestyle=linestyle, linewidth=linewidth, color=color)
+                            
+                        if legend:
+                            entries.append(entry[0])
+                    # end of loop over marker
+                
                 if legend:
-                    self.legend_entries.append(entry[0])
+                    self.legend_entries.append(tuple(entries))
                     self.legend_labels.append(linecol)
             elif axis == 'right':
                 if self.ax_right is None:
@@ -833,21 +862,47 @@ class Chart:
                     # Hack from https://github.com/matplotlib/matplotlib/issues/19479
                     self.ax_right._get_lines = self.ax._get_lines
                     
-                if dashes or dash_capstyle:
-                    entry = self.ax_right.plot(self.data.index, self.data[linecol], label=linecol,
-                                               markersize=markersize, marker=marker,
-                                               markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
-                                               markeredgewidth=markeredgewidth,
-                                               linestyle=linestyle, linewidth=linewidth, color=color,
-                                               dashes=dashes, dash_capstyle=dash_capstyle)
+                # Allow iteration over multiple markers into one legend
+                entries = []
+                
+                if marker is None:
+                    if dashes or dash_capstyle:
+                        entry = self.ax_right.plot(self.data.index, self.data[linecol], label=linecol,
+                                                   markersize=markersize, marker=marker,
+                                                   markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
+                                                   markeredgewidth=markeredgewidth,
+                                                   linestyle=linestyle, linewidth=linewidth, color=color,
+                                                   dashes=dashes, dash_capstyle=dash_capstyle)
+                    else:
+                        entry = self.ax_right.plot(self.data.index, self.data[linecol], label=linecol,
+                                                   markersize=markersize, marker=marker,
+                                                   markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
+                                                   markeredgewidth=markeredgewidth,
+                                                   linestyle=linestyle, linewidth=linewidth, color=color)
+                    entries.append(entry[0])
                 else:
-                    entry = self.ax_right.plot(self.data.index, self.data[linecol], label=linecol,
-                                               markersize=markersize, marker=marker,
-                                               markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
-                                               markeredgewidth=markeredgewidth,
-                                               linestyle=linestyle, linewidth=linewidth, color=color)
+                    # Iterate over all specified markers and put in one legend entry
+                    for _marker in marker:
+                        if dashes or dash_capstyle:
+                            entry = self.ax_right.plot(self.data.index, self.data[linecol], label=linecol,
+                                                       markersize=markersize, marker=_marker,
+                                                       markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
+                                                       markeredgewidth=markeredgewidth,
+                                                       linestyle=linestyle, linewidth=linewidth, color=color,
+                                                       dashes=dashes, dash_capstyle=dash_capstyle)
+                        else:
+                            entry = self.ax_right.plot(self.data.index, self.data[linecol], label=linecol,
+                                                       markersize=markersize, marker=_marker,
+                                                       markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
+                                                       markeredgewidth=markeredgewidth,
+                                                       linestyle=linestyle, linewidth=linewidth, color=color)
+
+                        if legend:
+                            entries.append(entry[0])
+                    # end of loop over marker
+                        
                 if legend:
-                    self.legend_entries.append(entry[0])
+                    self.legend_entries.append(tuple(entries))
                     self.legend_labels.append(linecol)
             else:
                 print('axis must be left or right, given ' + str(axis))

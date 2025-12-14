@@ -189,6 +189,7 @@ dict_attrs = {gircol : {'color' : '#416FA6'},
 
 chart6 = Chart(df, linecols=[bankcol, gircol], rlinecols=corecol, barcols=['FX', 'Gold'],
                barlinewidth=0,
+               linebreaks=False,
                dict_attrs=dict_attrs,
                topxaxis='right',
                title='Gross International Reserves',

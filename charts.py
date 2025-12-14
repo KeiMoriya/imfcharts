@@ -101,6 +101,8 @@ class Chart:
     def __init__(self, data=None, indexcol=None,
                  # plotting options
                  linecols=None, barcols=None, rlinecols=None,
+                 # whether to remove breaks in line charts
+                 linebreaks=False,
                  # bar options
                  stack=True, area=False, barwidth=None, baraxis='left',
                  total_barwidth=None,
@@ -244,6 +246,10 @@ class Chart:
         self.xrange = self._parse_xrange(xrange, debug=self.debug)
         self._trim_data(self.xrange)
 
+        # Set whether to allow breaks in line charts.
+        # If linebreaks is True, NA values will have a break in lines.
+        self.linebreaks = linebreaks
+
         # ---------------------------------------------------------------------------------------------------
         # Draw lines, bars
         if barcols is not None:
@@ -254,11 +260,11 @@ class Chart:
             
         if linecols is not None:
             linecols = _parse_cols(linecols)
-            self.add_lines(self.data, linecols, indexcol=self.indexcol, xrange=self.xrange, dict_attrs=dict_attrs, debug=self.debug)
+            self.add_lines(self.data, linecols, indexcol=self.indexcol, linebreaks=self.linebreaks, xrange=self.xrange, dict_attrs=dict_attrs, debug=self.debug)
 
         if rlinecols is not None:
             rlinecols = _parse_cols(rlinecols)
-            self.add_lines(self.data, rlinecols, indexcol=self.indexcol, axis='right', xrange=self.xrange, dict_attrs=dict_attrs, debug=self.debug)
+            self.add_lines(self.data, rlinecols, indexcol=self.indexcol, axis='right', linebreaks=self.linebreaks, xrange=self.xrange, dict_attrs=dict_attrs, debug=self.debug)
         
         # Create legend
         legend_header = ''
@@ -732,7 +738,7 @@ class Chart:
         
         self.ax.xaxis.set_major_formatter(formatter)
 
-    def add_lines(self, data, colname, indexcol=None, axis='left', xrange=None, dict_attrs=None, debug=False):
+    def add_lines(self, data, colname, indexcol=None, axis='left', linebreaks=False, xrange=None, dict_attrs=None, debug=False):
         '''
         Add line to chart
         '''
@@ -852,6 +858,15 @@ class Chart:
 
             if marker.strip().lower() == 'none':
                 marker = None
+
+            # Make a copy of this column self.data[linecol] and decide whether to remove NA points.
+            # This will prevent chart from being broken up if there are NA values.
+            if linebreaks:
+                # Just make a copy of the original, don't remove NA
+                _df = self.data[[linecol]]
+            else:
+                # Remove NA points
+                _df = self.data[[linecol]].dropna()
                 
             if axis == 'left':
                 # Allow iteration over multiple markers into one legend
@@ -859,14 +874,14 @@ class Chart:
                 
                 if marker is None:
                     if dashes or dash_capstyle:
-                        entry = self.ax.plot(self.data.index, self.data[linecol], label=linecol,
+                        entry = self.ax.plot(_df.index, _df[linecol], label=linecol,
                                              markersize=markersize, marker=marker,
                                              markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
                                              markeredgewidth=markeredgewidth,
                                              linestyle=linestyle, linewidth=linewidth, color=color,
                                              dashes=dashes, dash_capstyle=dash_capstyle)
                     else:
-                        entry = self.ax.plot(self.data.index, self.data[linecol], label=linecol,
+                        entry = self.ax.plot(_df.index, _df[linecol], label=linecol,
                                              markersize=markersize, marker=marker,
                                              markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
                                              markeredgewidth=markeredgewidth,
@@ -876,14 +891,14 @@ class Chart:
                     # Iterate over all specified markers and put in one legend entry
                     for _marker in marker:
                         if dashes or dash_capstyle:
-                            entry = self.ax.plot(self.data.index, self.data[linecol], label=linecol,
+                            entry = self.ax.plot(_df.index, _df[linecol], label=linecol,
                                                  markersize=markersize, marker=_marker,
                                                  markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
                                                  markeredgewidth=markeredgewidth,
                                                  linestyle=linestyle, linewidth=linewidth, color=color,
                                                  dashes=dashes, dash_capstyle=dash_capstyle)
                         else:
-                            entry = self.ax.plot(self.data.index, self.data[linecol], label=linecol,
+                            entry = self.ax.plot(_df.index, _df[linecol], label=linecol,
                                                  markersize=markersize, marker=_marker,
                                                  markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
                                                  markeredgewidth=markeredgewidth,
@@ -908,14 +923,14 @@ class Chart:
                 
                 if marker is None:
                     if dashes or dash_capstyle:
-                        entry = self.ax_right.plot(self.data.index, self.data[linecol], label=linecol,
+                        entry = self.ax_right.plot(_df.index, _df[linecol], label=linecol,
                                                    markersize=markersize, marker=marker,
                                                    markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
                                                    markeredgewidth=markeredgewidth,
                                                    linestyle=linestyle, linewidth=linewidth, color=color,
                                                    dashes=dashes, dash_capstyle=dash_capstyle)
                     else:
-                        entry = self.ax_right.plot(self.data.index, self.data[linecol], label=linecol,
+                        entry = self.ax_right.plot(_df.index, _df[linecol], label=linecol,
                                                    markersize=markersize, marker=marker,
                                                    markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
                                                    markeredgewidth=markeredgewidth,
@@ -925,14 +940,14 @@ class Chart:
                     # Iterate over all specified markers and put in one legend entry
                     for _marker in marker:
                         if dashes or dash_capstyle:
-                            entry = self.ax_right.plot(self.data.index, self.data[linecol], label=linecol,
+                            entry = self.ax_right.plot(_df.index, _df[linecol], label=linecol,
                                                        markersize=markersize, marker=_marker,
                                                        markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
                                                        markeredgewidth=markeredgewidth,
                                                        linestyle=linestyle, linewidth=linewidth, color=color,
                                                        dashes=dashes, dash_capstyle=dash_capstyle)
                         else:
-                            entry = self.ax_right.plot(self.data.index, self.data[linecol], label=linecol,
+                            entry = self.ax_right.plot(_df.index, _df[linecol], label=linecol,
                                                        markersize=markersize, marker=_marker,
                                                        markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
                                                        markeredgewidth=markeredgewidth,
@@ -1209,11 +1224,12 @@ class Chart:
                 else:
                     _x = self.data.index + pd.Timedelta(days=total_offset)
 
-                print('-' * 40)
-                print(barcol)
-                print('barwidth = ' + str(barwidth) + ' offset = ' + str(offset))
-                print('_x:')
-                print(_x)
+                if debug:
+                    print('-' * 40)
+                    print(barcol)
+                    print('barwidth = ' + str(barwidth) + ' offset = ' + str(offset))
+                    print('_x:')
+                    print(_x)
             
             if baraxis == 'left':
                 if stack:

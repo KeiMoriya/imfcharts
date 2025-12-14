@@ -110,6 +110,8 @@ class Chart:
                  xtitle='', ytitle='',
                  xtitlesize=14, ytitlesize=14,
                  xtickfontsize=14, ytickfontsize=14,
+                 xticklength=None, yticklength=None,
+                 xtickangle=0,
                  nxticks=7,
                  xformat='auto',
                  dict_legend=None,
@@ -172,6 +174,10 @@ class Chart:
         self.xtickfontsize = xtickfontsize
         self.ytickfontsize = ytickfontsize
 
+        self.xticklength = xticklength
+        self.yticklength = yticklength
+        
+        self.xtickangle = xtickangle
         self.nxticks = nxticks
 
         self.xformat = xformat
@@ -231,8 +237,8 @@ class Chart:
         self.set_ytitle(self.ytitle, self.ytitlesize)
 
         # Set x, y tick font size
-        self.set_xticks(size=self.xtickfontsize)
-        self.set_yticks(size=self.ytickfontsize)
+        self.set_xticks(size=self.xtickfontsize, length=self.xticklength, angle=self.xtickangle)
+        self.set_yticks(size=self.ytickfontsize, length=self.yticklength)
 
         # Get xrange and trim data as needed
         self.xrange = self._parse_xrange(xrange, debug=self.debug)
@@ -414,23 +420,31 @@ class Chart:
         # Set y-axis title
         self.ax.set_ylabel(ytitle, fontsize=self.ytitlesize)
 
-    def set_xticks(self, size=None):
+    def set_xticks(self, size=None, length=None, angle=0):
         # If size is specified, update internal value
         if size is not None:
             self.xtickfontsize = size
+            
+        # If length is given as default None, get from rcParams
+        if length is None:
+            length = matplotlib.rcParams['xtick.major.size']
 
         # Set
-        self.ax.tick_params(axis='x', which='major', labelsize=size)
+        self.ax.tick_params(axis='x', which='major', length=length, labelsize=size, labelrotation=angle)
 
-    def set_yticks(self, size=None):
+    def set_yticks(self, size=None, length=None):
         # If size is specified, update internal value
         if size is not None:
             self.ytickfontsize = size
 
+        # If length is given as default None, get from rcParams
+        if length is None:
+            length = matplotlib.rcParams['ytick.major.size']
+
         # Set
         self.ax.tick_params(axis='y', which='major', labelsize=size)
         if self.ax_right:
-            self.ax_right.tick_params(axis='y', which='major', labelsize=size)
+            self.ax_right.tick_params(axis='y', length=length, which='major', labelsize=size)
 
     def set_nxticks(self, nxticks):
         self.ax.xaxis.set_major_locator(MaxNLocator(nbins=nxticks))

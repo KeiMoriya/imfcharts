@@ -212,7 +212,10 @@ class Chart:
         if self.data is not None and type(self.data) == pd.DataFrame:
             # Try to convert to datetime axis
             try:
-                self.data.index = pd.to_datetime(self.data.index)
+                # Ignore pandas warnings
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    self.data.index = pd.to_datetime(self.data.index)
             except:
                 pass
             

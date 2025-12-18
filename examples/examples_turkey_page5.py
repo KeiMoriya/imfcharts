@@ -47,15 +47,20 @@ linecol = 'Current Account Balance'
 dict_attrs = {linecol : {'color' : IMFBLACK},
               'Other' : {'color' : '#009CDE'},
               'Energy Balance' : {'color' : '#004C97'},
-              'Tourism & Transport' : {'color' : '#CAEDFE'},
-              'Gold' : {'color' : IMFRED}}
+              'Tourism & Transport' : {'color' : '#CAEDFE',
+#                                       'barcolors' : [{'2023Q3' : 'gold'},
+#                                                      {'2022Q3' : 'silver'}]},
+              'Gold' : {'color' : IMFRED,
+#                        'barcolors' : [{'2023Q3' : 'orange'},
+#                                       {'2022Q3' : 'green'}]}}
 barcols = ['Other', 'Energy Balance', 'Tourism & Transport', 'Gold']
-chart1 = Chart(df, linecols=linecol, barcols=barcols,
+chart1 = Chart(df, linecols=linecol, barcols=barcols, # baraxis='right',
                dict_attrs=dict_attrs,
                title='Current Account',
                subtitle='(Percent of GDP)',
                legend_bottom=0.20, legend_left=0.55,
-               xrange='2022-Q1:', yrange=[-30, 25])
+               xrange='2022-Q1:', yrange=[-30, 25], # ryrange=[-30, 25],
+               ) # debug=True
 
 # Save
 chart1.save(outdir + '/page5_chart1_current_account.pdf')
@@ -96,19 +101,34 @@ if not os.path.isfile(infilename):
     print('File ' + infilename + ' does not exist')
     sys.exit()
 df = pd.read_csv(infilename, index_col=0)
+
+# Add further unstacked columns
 # df['shock2'] = df['shock'] / 2.
 # df['shock3'] = df['shock'] * 2.
 
-dict_attrs = {'shock' : {'color' : '#BFBFBF'}}
+# # Add duplicate index
+# idx = list(df.index)
+# idx += ['COL']
+# df = df.reindex(idx)
+# # Reset last value
+# df.iloc[-1].values[0] = 10
+
+dict_attrs = {'shock' : {'color' : '#BFBFBF',
+                         'barcolors' : [{'TUR' : 'red'},
+#                                        {'KOR' : 'blue'},
+#                                        {'THA' : (0, 0.8, 0.8, 0.3)},
+#                                        {'COL' : 'gold'}
+                                        ]}
+              }
 
 # Create Chart object
-chart3 = Chart(df, barcols=df.columns, stack=False,
+chart3 = Chart(df, barcols=df.columns, stack=False, # baraxis='right',
                dict_attrs=dict_attrs,
                barlinewidth=0, xtickangle=90, xticklength=0,
                title='Terms of Trade Shock, 2025Q2 or Latest',
                subtitle='(Percent change from 2023 average)',
                yrange=[-15, 15],
-               show_legend=False)
+               show_legend=False) # , debug=True
 
 # Save
 chart3.save(outdir + '/page5_chart3_terms_of_trade.pdf')

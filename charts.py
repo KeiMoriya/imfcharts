@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 
 import matplotlib
+import matplotlib.colors as mplcolors
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.ticker import FuncFormatter, MaxNLocator
@@ -1090,7 +1091,12 @@ class Chart:
         # this centers the bars.
         if not stack:
             total_offset = - total_barwidth / 2. - total_barwidth / len(barcols) / 2.
-        
+
+        # Keep track of all patches from previous barcols so that
+        # if individual bar colors are specified for a barcol,
+        # we do not color other bars.
+        previous_patches = []
+            
         for ibarcol, barcol in enumerate(barcols):
             if debug:
                 print('-' * 40)
@@ -1108,6 +1114,9 @@ class Chart:
             barhatchcolor = matplotlib.rcParams['patch.edgecolor']
             barhatch = None
             barhatchwidth = matplotlib.rcParams['hatch.linewidth']
+
+            # Individual bar colors
+            barcolors = None
 
             # Add legend for this entry
             legend = True
@@ -1149,6 +1158,12 @@ class Chart:
                 # Add legend entry
                 if 'legend' in attrs:
                     legend = attrs['legend']
+
+                # Get individual bar colors
+                if 'barcolors' in attrs:
+                    barcolors = attrs['barcolors']
+
+            # end of attrs existing for this barcol
 
             # Set offset for this bar.
             # Whether the offset is specified or not,
@@ -1266,6 +1281,21 @@ class Chart:
                                         bottom=neg_offset,
                                         width=barwidth, color='none', edgecolor='black', linewidth=barlinewidth,
                                         zorder=2)
+
+                        # If barcolors was specified, get all patches for this barcol,
+                        # and if the index matches, set color for the corresponding bar.
+                        patches = [p for p in self.ax.patches if p not in previous_patches]
+                        if debug:
+                            print('len(patches) = ' + str(len(patches)))
+
+                        # Add individually specified colors
+                        if barcolors is not None:
+                            color_bars(barcolors, patches, self.data.index, stack=True, debug=debug)
+                        
+                        # Add current patches to previous_patches
+                        previous_patches += patches
+                    # end of plt.rc_context()
+                # end of stack
                 else:
                     entry = self.ax.bar(_x, self.data[barcol],
                                         width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
@@ -1278,7 +1308,21 @@ class Chart:
                     
                     # Set x-axis categories from self.data.index
                     self.ax.set_xticks(np.arange(len(self.data)), labels=self.data.index)
+
+                    # If barcolors was specified, get all patches for this barcol,
+                    # and if the index matches, set color for the corresponding bar.
+                    patches = [p for p in self.ax.patches if p not in previous_patches]
+                    if debug:
+                        print('len(patches) = ' + str(len(patches)))
+
+                    # Add individually specified colors
+                    if barcolors is not None:
+                        color_bars(barcolors, patches, self.data.index, stack=False, debug=debug)
+                        
+                    # Add current patches to previous_patches
+                    previous_patches += patches
                     
+                # end of stack=False
             # end of baraxis == 'left'
                     
             elif baraxis == 'right':
@@ -1322,6 +1366,21 @@ class Chart:
                                               bottom=neg_offset,
                                               width=barwidth, color='none', edgecolor='black', linewidth=barlinewidth,
                                               zorder=2)
+
+                        # If barcolors was specified, get all patches for this barcol,
+                        # and if the index matches, set color for the corresponding bar.
+                        patches = [p for p in self.ax_right.patches if p not in previous_patches]
+                        if debug:
+                            print('len(patches) = ' + str(len(patches)))
+
+                        # Add individually specified colors
+                        if barcolors is not None:
+                            color_bars(barcolors, patches, self.data.index, stack=True, debug=debug)
+                        
+                        # Add current patches to previous_patches
+                        previous_patches += patches
+                    # end of plt.rc_context()
+                # end of stack
                 else:
                     entry = self.ax_right.bar(_x, self.data[barcol],
                                               width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
@@ -1333,7 +1392,21 @@ class Chart:
                                                zorder=2)
                     # Set x-axis categories from self.data.index
                     self.ax_right.set_xticks(np.arange(len(self.data)), labels=self.data.index)
+
+                    # If barcolors was specified, get all patches for this barcol,
+                    # and if the index matches, set color for the corresponding bar.
+                    patches = [p for p in self.ax_right.patches if p not in previous_patches]
+                    if debug:
+                        print('len(patches) = ' + str(len(patches)))
+
+                    # Add individually specified colors
+                    if barcolors is not None:
+                        color_bars(barcolors, patches, self.data.index, stack=False, debug=debug)
+                        
+                    # Add current patches to previous_patches
+                    previous_patches += patches
                     
+                # end of stack=False
             # end of baraxis == 'right'
             
             # Adjust offsets
@@ -1650,6 +1723,100 @@ class Chart:
             self.show_legend = True
         else:
             self.show_legend = False
+
+def color_bars(barcolors, patches, dataindex, stack=False, debug=False):
+    '''
+    Color individual bars given a list of dicts of the form
+    [{idx1 : color1}, {idx2 : color2}, ...]
+    and a list of patches for bars and the data's index.
+
+    Treat patches differently based on whether this is a stacked bar chart or not.
+    '''
+
+    if debug:
+        print('start of color_bars():')
+        print('barcolors:')
+        print(barcolors)
+
+    if stack:
+        # barcolors should be a list of dicts of form
+        # [{'idx1' : 'blue'}, {'idx2' : 'red'}]
+        for dict_idx_color in barcolors:
+            idx = list(dict_idx_color.keys())[0]
+            color = dict_idx_color[idx]
+            
+            if debug:
+                print('idx: ' + str(idx) + ', color = ' + str(color))
+
+            # Find matching index number
+            try:
+                matching_idx = dataindex.get_loc(idx)
+                if debug:
+                    print('matching_idx = ' + str(matching_idx))
+        
+                # Get corresponding patch and change color.
+                # If stack=True, there will be 4 patches,
+                # positive with, without edge color,
+                # negative with, without edge color.
+                start = matching_idx.start
+                matching_patches = [(ip, p) for ip, p in enumerate(patches) if ip % len(dataindex) == start]
+                for ip, p in matching_patches:
+                    if debug:
+                        hex = mplcolors.to_hex(p.get_facecolor()[:3], keep_alpha=False)
+                        print('Filling patch color for ip = ' + str(ip) + ', color = ' + hex)
+                        print('x = ' + str(p.get_x()) + ', y = ' + str(p.get_y()) + ', height = ' + str(p.get_height()))
+                    p.set_facecolor(color)
+
+                    
+            except KeyError:
+                print('WARNING: barcolors specified for ' + str(idx) + ' but not found in data')
+                continue
+        # end of loop over barcolors
+    # end of stack
+
+    else:
+        # barcolors should be a list of dicts of form
+        # [{'idx1' : 'blue'}, {'idx2' : 'red'}]
+        for dict_idx_color in barcolors:
+            idx = list(dict_idx_color.keys())[0]
+            color = dict_idx_color[idx]
+
+            if debug:
+                print('idx: ' + str(idx) + ', color = ' + str(color))
+
+            # Find matching index number
+            try:
+                matching_idx = dataindex.get_loc(idx)
+                if debug:
+                    print('matching_idx = ' + str(matching_idx))
+            
+                # Get corresponding patch and change color.
+                # If stack=False and no duplicate index values, only one patch should match
+                if type(matching_idx) == int:
+                    p = patches[matching_idx]
+                    if debug:
+                        print('matching patches: ' + str(p))
+                    p.set_facecolor(color)
+                # If there are duplicate index values, matching_idx
+                # will be a list of [False, False, True, False, True, ...]
+                # where True corresponds to matching indexes.
+                elif type(matching_idx) == np.ndarray:
+                    for iidx, idx in enumerate(matching_idx):
+                        print('iidx = ' + str(iidx) + ' idx = ' + str(idx))
+                        if idx:
+                            p = patches[iidx]
+                            if debug:
+                                print('Setting color for patch with iidx = ' + str(iidx))
+                                print('x = ' + str(p.get_x()) + ', y = ' + str(p.get_y()) + ', height = ' + str(p.get_height()))
+                            p.set_facecolor(color)
+                else:
+                    print('type of matching_idx is ' + str(type(matching_idx)))
+                    sys.exit()
+            except KeyError:
+                print('WARNING: barcolors specified for ' + str(idx) + ' but not found in data')
+                continue
+        # end of loop over barcolors
+    # end of stack=False
 
 def main(argv):
     pass

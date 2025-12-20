@@ -9,6 +9,7 @@ import sys
 import glob
 import shutil
 
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.colors import rgb2hex
 
@@ -16,7 +17,7 @@ from matplotlib.colors import rgb2hex
 stylefiles = glob.glob(os.path.abspath(os.path.dirname(__file__) + '/*.mplstyle'))
 
 # This is where mplstyle files need to be for matplotlib to find them
-STYLEDIR = os.environ['USERPROFILE'] + '/.matplotlib/stylelib'
+STYLEDIR = os.path.abspath(matplotlib.get_configdir() + '/stylelib')
 if not os.path.isdir(STYLEDIR):
     os.makedirs(STYLEDIR)
 

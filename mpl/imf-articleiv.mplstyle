@@ -12,7 +12,7 @@
 ##                                                     Font                                                      ##
 ## ------------------------------------------------------------------------------------------------------------- ##
 font.family: sans-serif
-font.sans-serif: Segoe UI
+font.sans-serif: Segoe UI, DejaVu Sans, Arial, Helvetica, Liberation Sans, Nimbus Sans, sans-serif
 
 ## ------------------------------------------------------------------------------------------------------------- ##
 ##                                                    Figure                                                     ##

@@ -21,14 +21,43 @@ STYLEDIR = os.path.abspath(matplotlib.get_configdir() + '/stylelib')
 if not os.path.isdir(STYLEDIR):
     os.makedirs(STYLEDIR)
 
-# For each style, if it doesn't exist already, copy over to STYLEDIR
-for stylefile in stylefiles:
-    basename = os.path.basename(stylefile)
-    outfilename = os.path.abspath(os.path.join(STYLEDIR, basename))
-    if not os.path.isfile(outfilename):
-        shutil.copy(stylefile, outfilename)
-# Reload Matplotlib so style files are available
-plt.style.reload_library()
+def install_styles(force: bool = False, verbose: bool = False) -> list[str]:
+    """
+    Copy local .mplstyle files into Matplotlib's stylelib directory so that
+    `plt.style.use("imf-articleiv")` works everywhere.
+
+    Best-effort: if we can't write to STYLEDIR, we do not crash.
+    Returns a list of installed/copied style filenames.
+    """
+    installed = []
+    try:
+        os.makedirs(STYLEDIR, exist_ok=True)
+        for stylefile in stylefiles:
+            basename = os.path.basename(stylefile)
+            outfilename = os.path.abspath(os.path.join(STYLEDIR, basename))
+            if force or not os.path.isfile(outfilename):
+                shutil.copy(stylefile, outfilename)
+                installed.append(basename)
+        if installed:
+            # Reload Matplotlib so style files are available
+            plt.style.reload_library()
+    except Exception as e:
+        if verbose:
+            print(f"WARNING: Could not install styles into {STYLEDIR}: {e}")
+    return installed
+
+install_styles(force=False, verbose=False)
+
+def _local_style_path(stylename: str) -> str | None:
+    """
+    Return the absolute path to a local .mplstyle shipped with this package, if it exists.
+    Accepts "imf-articleiv" or "imf-articleiv.mplstyle".
+    """
+    name = stylename
+    if not name.endswith(".mplstyle"):
+        name += ".mplstyle"
+    p = os.path.join(os.path.dirname(__file__), name)
+    return p if os.path.isfile(p) else None
 
 def update_style(stylename):
     '''
@@ -75,11 +104,19 @@ def set_style(stylename):
     
     # Get available styles
     styles = plt.style.available + ['default']
-    if stylename not in styles:
-        print('Style ' + stylename + ' does not exist')
-        sys.exit(-1)
+    if stylename in styles:
+        plt.style.use(stylename)
+        return
 
-    plt.style.use(stylename)
+    # Fallback: if style couldn't be installed (e.g., read-only config dir),
+    # try loading the packaged .mplstyle directly by path.
+    local_path = _local_style_path(stylename)
+    if local_path:
+        plt.style.use(local_path)
+        return
+
+    raise RuntimeError('Style ' + stylename + ' does not exist (not installed and no local .mplstyle found)')
+
     
 def _rgb2hex(r, g, b):
     '''

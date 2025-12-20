@@ -49,10 +49,13 @@ dict_attrs = {linecol : {'color' : IMFBLACK},
               'Energy Balance' : {'color' : '#004C97'},
               'Tourism & Transport' : {'color' : '#CAEDFE',
 #                                       'barcolors' : [{'2023Q3' : 'gold'},
-#                                                      {'2022Q3' : 'silver'}]},
+#                                                      {'2022Q3' : 'silver'}]
+                                       },
               'Gold' : {'color' : IMFRED,
 #                        'barcolors' : [{'2023Q3' : 'orange'},
-#                                       {'2022Q3' : 'green'}]}}
+#                                       {'2022Q3' : 'green'}]
+                        }
+              }
 barcols = ['Other', 'Energy Balance', 'Tourism & Transport', 'Gold']
 chart1 = Chart(df, linecols=linecol, barcols=barcols, # baraxis='right',
                dict_attrs=dict_attrs,

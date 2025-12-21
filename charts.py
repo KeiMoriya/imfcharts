@@ -1721,7 +1721,7 @@ class Chart:
         
         self.fig.show()
 
-    def set_show_legend(option):
+    def set_show_legend(self, option):
         if option:
             self.show_legend = True
         else:

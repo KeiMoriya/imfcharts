@@ -43,9 +43,9 @@ if not os.path.isfile(infilename):
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 
 # Create Chart object
-dict_attrs = {'Real Minimum Wage' : {'color' : IMFBLUE}}
+attrs = {'Real Minimum Wage' : {'color' : IMFBLUE}}
 chart1 = Chart(df, barcols='Real Minimum Wage',
-               dict_attrs=dict_attrs,
+               attrs=attrs,
                title='Real Minimum Wage',
                subtitle='(Jan 2015=100)',
                show_legend=False,
@@ -64,12 +64,12 @@ if not os.path.isfile(infilename):
     sys.exit()
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0]).dropna(how='all', axis=0)
 
-dict_attrs = {'Labor cost' : {'color' : IMFBLUE},
-              'Earnings' : {'color' : IMFRED, 'linestyle' : '--'}}
+attrs = {'Labor cost' : {'color' : IMFBLUE},
+         'Earnings' : {'color' : IMFRED, 'linestyle' : '--'}}
 
 # Create Chart object
 chart2 = Chart(df, linecols=df.columns,
-               dict_attrs=dict_attrs,
+               attrs=attrs,
                title='Real Labor Cost and Earnings Index',
                subtitle='(2015Q1=100)',
                xrange='2015-Q1:', yrange=[80, 240])
@@ -87,13 +87,13 @@ if not os.path.isfile(infilename):
     sys.exit()
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 
-dict_attrs = {'Total' : {'color' : IMFBLUE},
-              'Male' : {'color' : IMFRED},
-              'Female' : {'color' : IMFBLACK}}
+attrs = {'Total' : {'color' : IMFBLUE},
+         'Male' : {'color' : IMFRED},
+         'Female' : {'color' : IMFBLACK}}
 
 # Create Chart object
 chart3 = Chart(df, linecols=df.columns,
-               dict_attrs=dict_attrs,
+               attrs=attrs,
                title='Unemployment Rate',
                subtitle='(Percent)Monetary Policy Rate',
                xrange='2015-01:', yrange=[0, 20],
@@ -113,11 +113,11 @@ if not os.path.isfile(infilename):
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 
 # Create Chart object
-dict_attrs = {'Total' : {'color' : IMFBLUE},
-              'Male' : {'color' : IMFRED},
-              'Female' : {'color' : IMFBLACK}}
+attrs = {'Total' : {'color' : IMFBLUE},
+         'Male' : {'color' : IMFRED},
+         'Female' : {'color' : IMFBLACK}}
 chart4 = Chart(df, linecols=df.columns,
-               dict_attrs=dict_attrs,
+               attrs=attrs,
                title='Labor Force Participation Rate',
                subtitle='(Percent)',
                xrange='2015-01:', yrange=[0, 100])
@@ -136,10 +136,10 @@ if not os.path.isfile(infilename):
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 
 # Create Chart object
-dict_attrs = {'Compensation of employees' : {'color' : IMFBLUE},
-              'Operating surplus' : {'color' : IMFRED}}
+attrs = {'Compensation of employees' : {'color' : IMFBLUE},
+         'Operating surplus' : {'color' : IMFRED}}
 chart5 = Chart(df, linecols=df.columns,
-               dict_attrs=dict_attrs,
+               attrs=attrs,
                title='Labor Compensation',
                subtitle='(Percent of GDP, 4-quarter moving average)',
                xrange='2015-01:', yrange=[0, 100])
@@ -158,11 +158,11 @@ if not os.path.isfile(infilename):
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 
 # Create Chart object
-dict_attrs = {'SME' : {'color' : IMFBLUE},
-              'Large (rhs)' : {'color' : IMFRED}}
+attrs = {'SME' : {'color' : IMFBLUE},
+         'Large (rhs)' : {'color' : IMFRED}}
 
 chart6 = Chart(df, linecols='SME', rlinecols='Large (rhs)',
-               dict_attrs=dict_attrs,
+               attrs=attrs,
                title='Share of Employment: SME vs. Large Firms',
                subtitle='(Percent)',
                yrange=[50, 80], ryrange=[29, 37])

@@ -7,6 +7,7 @@ Generate charts.
 import os
 import sys
 import itertools
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -123,7 +124,7 @@ class Chart:
                  # style
                  style='default',
                  # individual look of each column in data
-                 dict_attrs=None,
+                 attrs=None,
                  xrange=None, yrange=None, ryrange=None,
                  xmargins='auto',
                  width=10, height=6,
@@ -260,15 +261,15 @@ class Chart:
             barcols = _parse_cols(barcols)
             self.add_bars(self.data, barcols, indexcol=self.indexcol, stack=stack, total_barwidth=total_barwidth,
                           baraxis=baraxis, xrange=self.xrange, barlinewidth=barlinewidth,
-                          dict_attrs=dict_attrs, debug=self.debug)
+                          attrs=attrs, debug=self.debug)
             
         if linecols is not None:
             linecols = _parse_cols(linecols)
-            self.add_lines(self.data, linecols, indexcol=self.indexcol, linebreaks=self.linebreaks, xrange=self.xrange, dict_attrs=dict_attrs, debug=self.debug)
+            self.add_lines(self.data, linecols, indexcol=self.indexcol, linebreaks=self.linebreaks, xrange=self.xrange, attrs=attrs, debug=self.debug)
 
         if rlinecols is not None:
             rlinecols = _parse_cols(rlinecols)
-            self.add_lines(self.data, rlinecols, indexcol=self.indexcol, axis='right', linebreaks=self.linebreaks, xrange=self.xrange, dict_attrs=dict_attrs, debug=self.debug)
+            self.add_lines(self.data, rlinecols, indexcol=self.indexcol, axis='right', linebreaks=self.linebreaks, xrange=self.xrange, attrs=attrs, debug=self.debug)
         
         # Create legend
         legend_header = ''
@@ -742,7 +743,7 @@ class Chart:
         
         self.ax.xaxis.set_major_formatter(formatter)
 
-    def add_lines(self, data, colname, indexcol=None, axis='left', linebreaks=False, xrange=None, dict_attrs=None, debug=False):
+    def add_lines(self, data, colname, indexcol=None, axis='left', linebreaks=False, xrange=None, attrs=None, debug=False):
         '''
         Add line to chart
         '''
@@ -811,33 +812,33 @@ class Chart:
             dash_capstyle = None
             
             # Get any attributes that were assigned to this column
-            if dict_attrs is not None and linecol in dict_attrs:
+            if attrs is not None and linecol in attrs:
                 # This should be a dict containing attributes for this column
-                attrs = dict_attrs[linecol]
+                _attrs = attrs[linecol]
                 if debug:
-                    print(attrs)
+                    print(_attrs)
 
                 # If any were specified, overwrite stylefile
-                if 'marker' in attrs:
-                    marker = attrs['marker']
+                if 'marker' in _attrs:
+                    marker = _attrs['marker']
                     
-                if 'markersize' in attrs:
-                    markersize = attrs['markersize']
+                if 'markersize' in _attrs:
+                    markersize = _attrs['markersize']
 
-                if 'markerfacecolor' in attrs:
-                    markerfacecolor = attrs['markerfacecolor']
+                if 'markerfacecolor' in _attrs:
+                    markerfacecolor = _attrs['markerfacecolor']
 
-                if 'markeredgecolor' in attrs:
-                    markeredgecolor = attrs['markeredgecolor']
+                if 'markeredgecolor' in _attrs:
+                    markeredgecolor = _attrs['markeredgecolor']
 
-                if 'markeredgewidth' in attrs:
-                    markeredgewidth = attrs['markeredgewidth']
+                if 'markeredgewidth' in _attrs:
+                    markeredgewidth = _attrs['markeredgewidth']
                     
-                if 'linewidth' in attrs:
-                    linewidth = attrs['linewidth']
+                if 'linewidth' in _attrs:
+                    linewidth = _attrs['linewidth']
 
-                if 'linestyle' in attrs:
-                    linestyle = attrs['linestyle']
+                if 'linestyle' in _attrs:
+                    linestyle = _attrs['linestyle']
                     # If spcecial case, implement
                     if linestyle == 'imfdash':
                         linestyle = '--'
@@ -847,18 +848,18 @@ class Chart:
                         dashes = (0.5, 5)
                         dash_capstyle = 'round'                        
 
-                if 'color' in attrs:
-                    color = attrs['color']
+                if 'color' in _attrs:
+                    color = _attrs['color']
 
-                if 'dashes' in attrs:
-                    dashes = attrs['dashes']
+                if 'dashes' in _attrs:
+                    dashes = _attrs['dashes']
                     
-                if 'dash_capstyle' in attrs:
-                    dash_capstyle = attrs['dash_capstyle']
+                if 'dash_capstyle' in _attrs:
+                    dash_capstyle = _attrs['dash_capstyle']
 
-                if 'legend' in attrs:
-                    legend = attrs['legend']
-            # end of linecol is in dict_attrs
+                if 'legend' in _attrs:
+                    legend = _attrs['legend']
+            # end of linecol is in attrs
 
             if marker.strip().lower() == 'none':
                 marker = None
@@ -984,7 +985,7 @@ class Chart:
             if debug:
                 print('after calling set_xrange()')
 
-    def add_bars(self, data, colname, indexcol=None, baraxis='left', stack=True, total_barwidth=None, barlinewidth=None, xrange=None, dict_attrs=None, debug=False):
+    def add_bars(self, data, colname, indexcol=None, baraxis='left', stack=True, total_barwidth=None, barlinewidth=None, xrange=None, attrs=None, debug=False):
         '''
         Add bar to chart
         '''
@@ -1042,7 +1043,7 @@ class Chart:
                 sys.exit()
 
         # Guess freq of data and set bar width.
-        # This can be overridden later for each individual bar from dict_attrs.
+        # This can be overridden later for each individual bar from attrs.
         if self.xaxis_type == 'datetime':
             freq = guess_freq(self.data)
             if freq == 'D':
@@ -1074,7 +1075,7 @@ class Chart:
                 
         elif self.xaxis_type in ['categorical', 'numerical']:
             # Split barwidth among barcols.
-            # This can be overridden later for each individual bar from dict_attrs.
+            # This can be overridden later for each individual bar from attrs.
             barwidth = total_barwidth / len(barcols)
         else:
             print('self.xaxis_type of ' + str(self.xaxis_type) + ' not implemented')
@@ -1129,42 +1130,42 @@ class Chart:
             offset_specified = False
 
             # Get any attributes that were assigned to this column
-            if dict_attrs is not None and barcol in dict_attrs:
+            if attrs is not None and barcol in attrs:
                 # This should be a dict containing attributes for this column
-                attrs = dict_attrs[barcol]
+                _attrs = attrs[barcol]
                 if debug:
-                    print(attrs)
+                    print(_attrs)
 
                 # If any were specified, overwrite stylefile
 
                 # Hatch colors
-                if 'barhatchcolor' in attrs:
-                    barhatchcolor = attrs['barhatchcolor']
+                if 'barhatchcolor' in _attrs:
+                    barhatchcolor = _attrs['barhatchcolor']
 
                 # Hatch pattern in bars
-                if 'barhatch' in attrs:
-                    barhatch = attrs['barhatch']
+                if 'barhatch' in _attrs:
+                    barhatch = _attrs['barhatch']
 
                 # Line width of hatches
-                if 'barhatchwidth' in attrs:
-                    barhatchwidth = attrs['barhatchwidth']
+                if 'barhatchwidth' in _attrs:
+                    barhatchwidth = _attrs['barhatchwidth']
 
                 # If offset is specified for when stack=False, use it
-                if 'offset' in attrs:
-                    offset = attrs['offset']
+                if 'offset' in _attrs:
+                    offset = _attrs['offset']
                     offset_specified = True
 
                 # If barwidth is specified, use it
-                if 'barwidth' in attrs:
-                    barwidth = attrs['barwidth']
+                if 'barwidth' in _attrs:
+                    barwidth = _attrs['barwidth']
                     
                 # Add legend entry
-                if 'legend' in attrs:
-                    legend = attrs['legend']
+                if 'legend' in _attrs:
+                    legend = _attrs['legend']
 
                 # Get individual bar colors
-                if 'barcolors' in attrs:
-                    barcolors = attrs['barcolors']
+                if 'barcolors' in _attrs:
+                    barcolors = _attrs['barcolors']
 
             # end of attrs existing for this barcol
 
@@ -1182,8 +1183,8 @@ class Chart:
                 
             # For color, if it is specified use it,
             # otherwise get the next color from the color cycle.
-            if dict_attrs is not None and barcol in dict_attrs and 'color' in dict_attrs[barcol]:
-                color = dict_attrs[barcol]['color']
+            if attrs is not None and barcol in attrs and 'color' in attrs[barcol]:
+                color = attrs[barcol]['color']
                 used_colors.append(color)
                 if debug:
                     print('1. setting color for ' + barcol + ' to ' + color)
@@ -1213,9 +1214,9 @@ class Chart:
                         break
 
             if debug:
-                if dict_attrs is not None and barcol in dict_attrs:
-                    print('dict_attrs:')
-                    print(dict_attrs[barcol])
+                if attrs is not None and barcol in attrs:
+                    print('attrs:')
+                    print(attrs[barcol])
                 print('barhatch = ' + str(barhatch))
                 print('barlinewidth = ' + str(barlinewidth))
                 print('barhatchcolor = ' + str(barhatchcolor))
@@ -1430,7 +1431,7 @@ class Chart:
         if xrange is not None:
             self.set_xrange(xrange, debug=debug)
         
-    def add_scatter(self, data, colname, indexcol=None, dict_attrs=None, debug=False):
+    def add_scatter(self, data, colname, indexcol=None, attrs=None, debug=False):
         '''
         Add scatter to chart
         '''

@@ -47,16 +47,16 @@ barcols = list(df.columns)
 barcols.remove(linecol)
 
 # Create Chart object
-attrs = {linecol : {'linewidth' : 4, 'color' : IMFBLACK},
-         'Personnel' : {'color' : '#004C97'},
-         'Goods & services' : {'color' : '#009CDE'},
-         'Current transfers' : {'color' : '#CAEDFE'},
-         'Capital exp.' : {'color' : '#FF8200'},
-         'Other' : {'color' : '#DA291C'},                         
-         }
+dict_attrs = {linecol : {'linewidth' : 4, 'color' : IMFBLACK},
+              'Personnel' : {'color' : '#004C97'},
+              'Goods & services' : {'color' : '#009CDE'},
+              'Current transfers' : {'color' : '#CAEDFE'},
+              'Capital exp.' : {'color' : '#FF8200'},
+              'Other' : {'color' : '#DA291C'},                         
+              }
 
 chart1 = Chart(df, linecols=linecol, barcols=barcols,
-               attrs=attrs,
+               dict_attrs=dict_attrs,
                topxaxis='left',
                title='Central Government: Primary Expenditure Components',
                subtitle='(Percent of GDP)',
@@ -78,14 +78,14 @@ if not os.path.isfile(infilename):
     sys.exit()
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 
-attrs = {'Accrual spending' : {'color' : IMFBLUE},
+dict_attrs = {'Accrual spending' : {'color' : IMFBLUE},
               'Cash spending' : {'color' : 'white', 'offset' : 30,
                                  'barhatch' : '\\\\', 'barhatchcolor' : IMFBLACK}
               }
 
 # Create Chart object
 chart2 = Chart(df, barcols=df.columns, stack=False,
-               attrs=attrs,
+               dict_attrs=dict_attrs,
                title='Cash vs. Accrual Earthquake Spending',
                subtitle='(Percent of GDP)',
                yrange=[0, 4],
@@ -108,19 +108,19 @@ linecol = 'Primary revenues'
 barcols = list(df.columns)
 barcols.remove(linecol)
 
-attrs = {'PIT' : {'color' : '#004C97'},
-         'CIT' : {'color' : '#009CDE'},
-         'VAT' : {'color' : '#CAEDFE'},
-         'SCT' : {'color' : '#BFBFBF'},
-         'Non-tax' : {'color' : '#FF8200'},
-         'Other' : {'color' : '#DA291C'},
-         'Primary revenues' : {'color' : 'black'}}
+dict_attrs = {'PIT' : {'color' : '#004C97'},
+              'CIT' : {'color' : '#009CDE'},
+              'VAT' : {'color' : '#CAEDFE'},
+              'SCT' : {'color' : '#BFBFBF'},
+              'Non-tax' : {'color' : '#FF8200'},
+              'Other' : {'color' : '#DA291C'},
+              'Primary revenues' : {'color' : 'black'}}
 
 # Create Chart object
 chart3 = Chart(df, linecols=linecol, barcols=barcols,
                title='Central Government: Primary Revenue Components',
                subtitle='(Percent of GDP)',
-               attrs=attrs,
+               dict_attrs=dict_attrs,
                xrange='2018-01:2024-01', yrange=[0, 30],
                ncol_legend=2,
                )
@@ -138,15 +138,15 @@ if not os.path.isfile(infilename):
     sys.exit()
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 
-attrs = {'Primary revenue' : {'color' : IMFBLUE},
-         'Primary expenditure' : {'color' : IMFRED}
-         }
+dict_attrs = {'Primary revenue' : {'color' : IMFBLUE},
+              'Primary expenditure' : {'color' : IMFRED}
+              }
 
 # Create Chart object
 chart4 = Chart(df, linecols=df.columns,
                title='Central Government: Primary Revenue/Expenditure',
                subtitle='(Percent, 12-month cumulative growth rate)',
-               attrs=attrs,
+               dict_attrs=dict_attrs,
                xrange='2018-01:', yrange=[5, 145],
                )
 # Save
@@ -165,14 +165,14 @@ df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 barcol = 'Interest payments, rhs'
 linecols = ['Overall balance', 'Primary balance']
 
-attrs = {barcol : {'color' : '#CAEDFE'},
-         'Overall balance' : {'color' : '#004C97'},
-         'Primary balance' : {'color' : '#DA291C'}}
+dict_attrs = {barcol : {'color' : '#CAEDFE'},
+              'Overall balance' : {'color' : '#004C97'},
+              'Primary balance' : {'color' : '#DA291C'}}
 
 # Create Chart object
 chart5 = Chart(df, linecols=linecols, barcols=barcol, baraxis='right',
                barlinewidth=0,
-               attrs=attrs,
+               dict_attrs=dict_attrs,
                title='Central Government Fiscal Balance',
                subtitle="(Percent of GDP; 12-month cumulative, authorities' definition)",
                xrange='2018-01:', yrange=[-10, 6], ryrange=[0, 5],
@@ -191,7 +191,7 @@ if not os.path.isfile(infilename):
     sys.exit()
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 
-attrs = {'debt' : {'color' : '#004C97'},
+dict_attrs = {'debt' : {'color' : '#004C97'},
               }
 
 # Create Chart object
@@ -199,7 +199,7 @@ chart6 = Chart(df, barcols=df.columns,
                barlinewidth=0,
                title='General Government Gross Debt, EU Definition',
                subtitle='(Percent of GDP)',
-               attrs=attrs,
+               dict_attrs=dict_attrs,
                xrange='2018-01:2025-01', yrange=[0, 50],
                )
 

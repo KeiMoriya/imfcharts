@@ -47,26 +47,26 @@ barcols = cols[1:]
 
 # Create Chart object
 
-attrs = {linecol : {'linewidth' : 4,
-                    'color' : '#004C97',
-                    # 'linestyle' : '--',
-                    'marker' : 'o',
-                    'markersize' : 10,
-                    'markerfacecolor' : 'white',
-                    'markeredgewidth' : 4,
-                    'markeredgecolor' : '#004C97'},
-         'Consumption (private)' : {'color' : '#4B8CAD', 'barhatchcolor' : IMFBLUE, 'barhatch' : '\\\\'},
-         'Consumption (public)' : {'color' : 'white', 'barhatch' : '\\\\\\', 'barhatchcolor' : IMFBLACK},
-         'Net exports' : {'color' : IMFGREY},
-         'Inventories/discrepancy' : {'color' : IMFRED},
-         'Fixed investment' : {'color' : 'white',
-                               'barhatch' : '///',
-                               'barhatchcolor' : IMFGREEN,
-                               'barhatchwidth' : 10}
-         }
+dict_attrs = {linecol : {'linewidth' : 4,
+                         'color' : '#004C97',
+                         # 'linestyle' : '--',
+                         'marker' : 'o',
+                         'markersize' : 10,
+                         'markerfacecolor' : 'white',
+                         'markeredgewidth' : 4,
+                         'markeredgecolor' : '#004C97'},
+              'Consumption (private)' : {'color' : '#4B8CAD', 'barhatchcolor' : IMFBLUE, 'barhatch' : '\\\\'},
+              'Consumption (public)' : {'color' : 'white', 'barhatch' : '\\\\\\', 'barhatchcolor' : IMFBLACK},
+              'Net exports' : {'color' : IMFGREY},
+              'Inventories/discrepancy' : {'color' : IMFRED},
+              'Fixed investment' : {'color' : 'white',
+                                    'barhatch' : '///',
+                                    'barhatchcolor' : IMFGREEN,
+                                    'barhatchwidth' : 10}
+              }
 
 chart1 = Chart(df, linecols=linecol, barcols=barcols,
-               attrs=attrs,
+               dict_attrs=dict_attrs,
                topxaxis='left',
                title='Contributions to Real GDP Growth',
                subtitle='(Percent, q/q)',

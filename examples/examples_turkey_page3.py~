@@ -3,8 +3,8 @@
 
 Examples of running imfcharts.
 
-Data files are created by get_data_turkey_page6.py
-and files are stored in data/turkey_page6/.
+Data files are created by get_data_turkey_page3.py
+and files are stored in data/turkey_page3/.
 '''
 
 import os
@@ -33,155 +33,142 @@ plt.close('all')
 outdir = 'pdf'
 
 # ---------------------------------------------------------------------------------------------------------
-# p. 6 Chart 1
+# p. 3 Chart 1
 # ---------------------------------------------------------------------------------------------------------
 # Read in data
-infilename = 'data/turkey_page6/fig6_chart1_current_account.csv'
+infilename = 'data/turkey_page3/fig3_chart1_wage.csv'
 if not os.path.isfile(infilename):
     print('File ' + infilename + ' does not exist')
     sys.exit()
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 
 # Create Chart object
-riskcol = 'Risk weighted Assets (RHS)'
-
-attrs = {riskcol : {'color' : IMFBLACK},
-         'Capital' : {'color' : IMFBLUE},
-         'Core capital' : {'color' : IMFRED}}
-
-chart1 = Chart(df, linecols=['Capital', 'Core capital'], rlinecols=riskcol,
-               attrs=attrs,
-               title='Bank Capital',
-               subtitle='(Percent of risk-weighted assets; RWA y/y percent change)',
-               legend_left=0.4,
-               xrange='2022-01:', yrange=[10, 25], ryrange=[120, 200])
+dict_attrs = {'Real Minimum Wage' : {'color' : IMFBLUE}}
+chart1 = Chart(df, barcols='Real Minimum Wage',
+               dict_attrs=dict_attrs,
+               title='Real Minimum Wage',
+               subtitle='(Jan 2015=100)',
+               show_legend=False,
+               xrange='2015-01:', yrange=[0, 250])
 
 # Save
-chart1.save(outdir + '/page6_chart1_current_account.pdf')
+chart1.save(outdir + '/page3_chart1_wage.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
-# p. 6 Chart 2
+# p. 3 Chart 2
 # ---------------------------------------------------------------------------------------------------------
 # Read in data
-infilename = 'data/turkey_page6/fig6_chart2_current_account_mms.csv'
+infilename = 'data/turkey_page3/fig3_chart2_labor.csv'
 if not os.path.isfile(infilename):
     print('File ' + infilename + ' does not exist')
     sys.exit()
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0]).dropna(how='all', axis=0)
 
-attrs = {'Return to asset' : {'color' : IMFBLUE},
-         'Return to equity' : {'color' : IMFRED}}
+dict_attrs = {'Labor cost' : {'color' : IMFBLUE},
+              'Earnings' : {'color' : IMFRED, 'linestyle' : '--'}}
 
 # Create Chart object
-chart2 = Chart(df, barcols='Return to asset', rlinecols='Return to equity', topxaxis='right',
-               barlinewidth=0,
-               attrs=attrs,
-               title='Bank Profitability 1/',
-               subtitle='(Percent, 12M moving average)',
-               xrange='2022-01:', yrange=[0, 3], ryrange=[0, 30],
-               legend_bottom=0.75, legend_left=0.55)
+chart2 = Chart(df, linecols=df.columns,
+               dict_attrs=dict_attrs,
+               title='Real Labor Cost and Earnings Index',
+               subtitle='(2015Q1=100)',
+               xrange='2015-Q1:', yrange=[80, 240])
 
 # Save
-chart2.save(outdir + '/page6_chart2_current_account_mms.pdf')
+chart2.save(outdir + '/page3_chart2_labor.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
-# p. 6 Chart 3
+# p. 3 Chart 3
 # ---------------------------------------------------------------------------------------------------------
 # Read in data
-infilename = 'data/turkey_page6/fig6_chart3_non_performing.csv'
+infilename = 'data/turkey_page3/fig3_chart3_unemp.csv'
 if not os.path.isfile(infilename):
     print('File ' + infilename + ' does not exist')
     sys.exit()
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 
+dict_attrs = {'Total' : {'color' : IMFBLUE},
+              'Male' : {'color' : IMFRED},
+              'Female' : {'color' : IMFBLACK}}
+
 # Create Chart object
-attrs = {'Total NPL' : {'color' : IMFBLUE},
-         'Consumer loan NPL' : {'color' : IMFRED},
-         'SME loan NPL' : {'color' : IMFBLACK}}
 chart3 = Chart(df, linecols=df.columns,
-               attrs=attrs,
-               title='Non-Performing Loans',
-               subtitle='(Percent of respective loan portfolio)',
-               xrange='2022-01:', yrange=[0, 6],
-               legend_left=0.6)
+               dict_attrs=dict_attrs,
+               title='Unemployment Rate',
+               subtitle='(Percent)Monetary Policy Rate',
+               xrange='2015-01:', yrange=[0, 20],
+               legend_bottom=0.20)
 
 # Save
-chart3.save(outdir + '/page6_chart3_non_performing.pdf')
+chart3.save(outdir + '/page3_chart3_unemp.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
-# p. 6 Chart 4
+# p. 3 Chart 4
 # ---------------------------------------------------------------------------------------------------------
 # Read in data
-infilename = 'data/turkey_page6/fig6_chart4_required_reserves.csv'
+infilename = 'data/turkey_page3/fig3_chart4_participation.csv'
 if not os.path.isfile(infilename):
     print('File ' + infilename + ' does not exist')
     sys.exit()
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 
 # Create Chart object
-attrs = {'Total' : {'color' : IMFBLACK},
-         'TL' : {'color' : IMFRED},
-         'FX' : {'color' : IMFBLUE}}
+dict_attrs = {'Total' : {'color' : IMFBLUE},
+              'Male' : {'color' : IMFRED},
+              'Female' : {'color' : IMFBLACK}}
 chart4 = Chart(df, linecols=df.columns,
-               attrs=attrs,
-               title='Required Reserves',
-               subtitle='(Percent of total bank deposits at CBRT)',
-               xrange='2022-01:', yrange=[-0.5, 80],
-               legend_left=0.15, legend_bottom=0.15)
+               dict_attrs=dict_attrs,
+               title='Labor Force Participation Rate',
+               subtitle='(Percent)',
+               xrange='2015-01:', yrange=[0, 100])
 
 # Save
-chart4.save(outdir + '/page6_chart4_required_reserves.pdf')
+chart4.save(outdir + '/page3_chart4_participation.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
-# p. 6 Chart 5
+# p. 3 Chart 5
 # ---------------------------------------------------------------------------------------------------------
 # Read in data
-infilename = 'data/turkey_page6/fig6_chart5_fx_position.csv'
+infilename = 'data/turkey_page3/fig3_chart5_compensation.csv'
 if not os.path.isfile(infilename):
     print('File ' + infilename + ' does not exist')
     sys.exit()
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 
 # Create Chart object
-attrs = {'On balance sheet' : {'color' : IMFBLUE},
-         'Off balance sheet' : {'color' : IMFRED},
-         'Net position' : {'color' : IMFBLACK}}
+dict_attrs = {'Compensation of employees' : {'color' : IMFBLUE},
+              'Operating surplus' : {'color' : IMFRED}}
 chart5 = Chart(df, linecols=df.columns,
-               attrs=attrs,
-               title='Banking Sector Net FX Position',
-               subtitle='(Billion of USD)',
-               xrange='2022-01:', yrange=[-100, 100],
-               legend_bottom=0.15)
+               dict_attrs=dict_attrs,
+               title='Labor Compensation',
+               subtitle='(Percent of GDP, 4-quarter moving average)',
+               xrange='2015-01:', yrange=[0, 100])
 
 # Save
-chart5.save(outdir + '/page6_chart5_fx_position.pdf')
+chart5.save(outdir + '/page3_chart5_compensation.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
-# p. 6 Chart 6
+# p. 3 Chart 6
 # ---------------------------------------------------------------------------------------------------------
 # Read in data
-infilename = 'data/turkey_page6/fig6_chart6_fx_exposure.csv'
+infilename = 'data/turkey_page3/fig3_chart6_employment_share.csv'
 if not os.path.isfile(infilename):
     print('File ' + infilename + ' does not exist')
     sys.exit()
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 
 # Create Chart object
-paycol = 'Payables to banks abroad'
-sharecol = 'Share of FX loans to NFCs'
-attrs = {paycol : {'color' : IMFBLACK},
-         sharecol : {'color' : IMFBLUE}}
+dict_attrs = {'SME' : {'color' : IMFBLUE},
+              'Large (rhs)' : {'color' : IMFRED}}
 
-chart6 = Chart(df, linecols=paycol, barcols=sharecol, baraxis='right',
-               barlinewidth=0,
-               attrs=attrs,
-               title='Bank FX Exposure 2/',
-               subtitle='(Payables in bln USD; share in percent)',
-               xrange='2022-01:', yrange=[20, 120], ryrange=[40, 50],
-               legend_bottom=0.75, legend_height=0.25)
+chart6 = Chart(df, linecols='SME', rlinecols='Large (rhs)',
+               dict_attrs=dict_attrs,
+               title='Share of Employment: SME vs. Large Firms',
+               subtitle='(Percent)',
+               yrange=[50, 80], ryrange=[29, 37])
 
 # Save
-chart6.save(outdir + '/page6_chart6_fx_exposure.pdf')
+chart6.save(outdir + '/page3_chart6_employment_share.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
 # Additional commands
@@ -202,13 +189,13 @@ fig = chart2.fig
 # plt.show()
 
 # Delete previous merged file
-mergedfilename = outdir + '/all_page6.pdf'
+mergedfilename = outdir + '/all_page3.pdf'
 if os.path.isfile(mergedfilename):
     os.remove(mergedfilename)
 
 # Merge all files
 merger = PdfWriter()
-filenames = sorted(glob.glob(outdir + '/page6*.pdf'))
+filenames = sorted(glob.glob(outdir + '/page3*.pdf'))
 for filename in filenames:
     merger.append(filename)
 merger.write(mergedfilename)

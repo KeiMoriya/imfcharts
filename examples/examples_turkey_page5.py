@@ -44,21 +44,21 @@ df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 
 # Create Chart object
 linecol = 'Current Account Balance'
-dict_attrs = {linecol : {'color' : IMFBLACK},
-              'Other' : {'color' : '#009CDE'},
-              'Energy Balance' : {'color' : '#004C97'},
-              'Tourism & Transport' : {'color' : '#CAEDFE',
-#                                       'barcolors' : [{'2023Q3' : 'gold'},
-#                                                      {'2022Q3' : 'silver'}]
-                                       },
-              'Gold' : {'color' : IMFRED,
-#                        'barcolors' : [{'2023Q3' : 'orange'},
-#                                       {'2022Q3' : 'green'}]
-                        }
-              }
+attrs = {linecol : {'color' : IMFBLACK},
+         'Other' : {'color' : '#009CDE'},
+         'Energy Balance' : {'color' : '#004C97'},
+         'Tourism & Transport' : {'color' : '#CAEDFE',
+                                  #                                       'barcolors' : [{'2023Q3' : 'gold'},
+                                  #                                                      {'2022Q3' : 'silver'}]
+                                  },
+         'Gold' : {'color' : IMFRED,
+                   #                        'barcolors' : [{'2023Q3' : 'orange'},
+                   #                                       {'2022Q3' : 'green'}]
+                   }
+         }
 barcols = ['Other', 'Energy Balance', 'Tourism & Transport', 'Gold']
 chart1 = Chart(df, linecols=linecol, barcols=barcols, # baraxis='right',
-               dict_attrs=dict_attrs,
+               attrs=attrs,
                title='Current Account',
                subtitle='(Percent of GDP)',
                legend_bottom=0.20, legend_left=0.55,
@@ -78,15 +78,15 @@ if not os.path.isfile(infilename):
     sys.exit()
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0]).dropna(how='all', axis=0)
 
-dict_attrs = {'Current account' : {'color' : IMFBLUE},
-              'Excluding fuel' : {'color' : '#009CDE'},
-              'Excluding gold' : {'color' : IMFRED},
-              'Excluding fuel & gold' : {'color' : '#BFBFBF'}}
+attrs = {'Current account' : {'color' : IMFBLUE},
+         'Excluding fuel' : {'color' : '#009CDE'},
+         'Excluding gold' : {'color' : IMFRED},
+         'Excluding fuel & gold' : {'color' : '#BFBFBF'}}
 
 # Create Chart object
 chart2 = Chart(df, linecols=df.columns,
                barlinewidth=0,
-               dict_attrs=dict_attrs,
+               attrs=attrs,
                title='Current Account',
                subtitle='(Billions USD, 12mms)',
                xrange='2022-01:', yrange=[-95, 60],
@@ -116,17 +116,17 @@ df = pd.read_csv(infilename, index_col=0)
 # # Reset last value
 # df.iloc[-1].values[0] = 10
 
-dict_attrs = {'shock' : {'color' : '#BFBFBF',
-                         'barcolors' : [{'TUR' : 'red'},
-#                                        {'KOR' : 'blue'},
-#                                        {'THA' : (0, 0.8, 0.8, 0.3)},
-#                                        {'COL' : 'gold'}
-                                        ]}
-              }
+attrs = {'shock' : {'color' : '#BFBFBF',
+                    'barcolors' : [{'TUR' : 'red'},
+                                   #                                        {'KOR' : 'blue'},
+                                   #                                        {'THA' : (0, 0.8, 0.8, 0.3)},
+                                   #                                        {'COL' : 'gold'}
+                                   ]}
+}
 
 # Create Chart object
 chart3 = Chart(df, barcols=df.columns, stack=False, # baraxis='right',
-               dict_attrs=dict_attrs,
+               attrs=attrs,
                barlinewidth=0, xtickangle=90, xticklength=0,
                title='Terms of Trade Shock, 2025Q2 or Latest',
                subtitle='(Percent change from 2023 average)',
@@ -147,16 +147,16 @@ if not os.path.isfile(infilename):
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 
 # Create Chart object
-dict_attrs = {'Current Account Balance' : {'color' : IMFBLACK},
-              'Portfolio' : {'color' : IMFRED},
-              'Reserves (+ = drawdown)' : {'color' : IMFGREY},
-              'Other Inv. & FDI' : {'color' : '#009CDE'},
-              'E&O' : {'color' : '#004C97'}}
+attrs = {'Current Account Balance' : {'color' : IMFBLACK},
+         'Portfolio' : {'color' : IMFRED},
+         'Reserves (+ = drawdown)' : {'color' : IMFGREY},
+         'Other Inv. & FDI' : {'color' : '#009CDE'},
+         'E&O' : {'color' : '#004C97'}}
 
 chart4 = Chart(df, linecols='Current Account Balance',
                barcols=['Portfolio', 'Reserves (+ = drawdown)',
                         'Other Inv. & FDI', 'E&O'],
-               dict_attrs=dict_attrs,
+               attrs=attrs,
                title='Current Account Financing',
                subtitle='(Percent of GDP)',
                xrange='2022-Q1:', yrange=[-10, 20],
@@ -176,13 +176,13 @@ if not os.path.isfile(infilename):
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 
 # Create Chart object
-dict_attrs = {'Other investment' : {'color' : '#009CDE'},
-              'Direct investment' : {'color' : '#CAEDFE'},
-              'Portfolio investment' : {'color' : '#004C97'},
-              'Financial account' : {'color' : '#BFBFBF'}}
+attrs = {'Other investment' : {'color' : '#009CDE'},
+         'Direct investment' : {'color' : '#CAEDFE'},
+         'Portfolio investment' : {'color' : '#004C97'},
+         'Financial account' : {'color' : '#BFBFBF'}}
 chart5 = Chart(df, linecols='Financial account',
                barcols=['Other investment', 'Direct investment', 'Portfolio investment'],
-               dict_attrs=dict_attrs,
+               attrs=attrs,
                title='Financial Account 2/',
                subtitle='(Billions USD, 3mma, NSA)',
                xrange='2022-01:', yrange=[-8, 12])
@@ -204,16 +204,16 @@ df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 gircol = 'Gross International Reserves (GIR) (rhs)'
 bankcol = 'GIR, net of liabilities to banks'
 corecol = 'Core NIR (rhs)'
-dict_attrs = {gircol : {'color' : '#416FA6'},
-              bankcol : {'color' : '#004C97', 'linewidth' : 4, 'linestyle' : 'imfround'},
-              corecol : {'color' : '#DA291C'},
-              'Gold' : {'color' : '#CAEDFE'},
-              'FX' : {'color' : '#009CDE'}}
+attrs = {gircol : {'color' : '#416FA6'},
+         bankcol : {'color' : '#004C97', 'linewidth' : 4, 'linestyle' : 'imfround'},
+         corecol : {'color' : '#DA291C'},
+         'Gold' : {'color' : '#CAEDFE'},
+         'FX' : {'color' : '#009CDE'}}
 
 chart6 = Chart(df, linecols=[bankcol, gircol], rlinecols=corecol, barcols=['FX', 'Gold'],
                barlinewidth=0,
                linebreaks=False,
-               dict_attrs=dict_attrs,
+               attrs=attrs,
                topxaxis='right',
                title='Gross International Reserves',
                subtitle='(Billions USD)',

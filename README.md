@@ -28,7 +28,9 @@ and provide detailed documentation, examples and latest updates.
 - IMF guidelines on charts can be found under [here](http://www-intranet.imf.org/fundwide/info/StyleGuide/board-documents/Pages/default.aspx).
   See also under [Quick Reference Cards, Style Guides, and Other Supporting Documentation](http://www-intranet.imf.org/fundwide/info/StyleGuide/board-documents/Quick%20Reference%20Cards,%20Style%20Guides,%20and%20Other%20Supporting%20Documentation/Pages/default.aspx)
   for example the [Style Guide for Country Reports](http://dm-edms.imf.org/cyberdocs/opendocument.asp?docnumber=4822110&library=DMSDR1S),
-  and [Guidelines for formatting Excel Charts in the Board document format](http://www-intranet.imf.org/fundwide/info/StyleGuide/board-documents/Quick%20Reference%20Cards,%20Style%20Guides,%20and%20Other%20Supporting%20Documentation/Documents/Board_Document_QRC_for_Excel.pdf).  
+  and [Guidelines for formatting Excel Charts in the Board document format](http://www-intranet.imf.org/fundwide/info/StyleGuide/board-documents/Quick%20Reference%20Cards,%20Style%20Guides,%20and%20Other%20Supporting%20Documentation/Documents/Board_Document_QRC_for_Excel.pdf).
+
+- The official Brand Guide is [here](https://intlmonetaryfund.sharepoint.com/sites/fw-brand-guidelines/SitePages/Home.aspx?web=1) including the full [PDF guide](https://intlmonetaryfund.sharepoint.com/teams/CSFCreative/Shared%20Documents/Forms/AllItems.aspx?id=%2Fteams%2FCSFCreative%2FShared%20Documents%2FBranding%2FINDD%2FIMF%5FBrand%2DGuidelines%5F2023%5FFeb%2FIMF%5FBrand%2DGuidelines%5F2023%5FFeb%2Epdf&parent=%2Fteams%2FCSFCreative%2FShared%20Documents%2FBranding%2FINDD%2FIMF%5FBrand%2DGuidelines%5F2023%5FFeb&p=true&ga=1)
 
 - A tutorial on using R at the Fund by Bas Bakker is available at https://bookr.basbakker.us/
   including how to generate charts and do econometrics.

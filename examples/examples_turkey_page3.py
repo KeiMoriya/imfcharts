@@ -24,6 +24,7 @@ importlib.reload(imfcharts)
 importlib.reload(imfcharts.charts)
 importlib.reload(imfcharts.mpl)
 from imfcharts import *
+# set_style('fund-guide')
 
 # Turn on interactive mode
 # plt.ion()

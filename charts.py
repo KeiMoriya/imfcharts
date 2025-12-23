@@ -109,6 +109,7 @@ class Chart:
                  stack=True, area=False, barwidth=None, baraxis='left',
                  total_barwidth=None,
                  barlinewidth=None,
+                 baredgecolor='black',
                  title=None,
                  subtitle = None,
                  xtitle='', ytitle='',
@@ -163,6 +164,15 @@ class Chart:
                         pass
             else:
                 print('WARNING: indexcol specified but data is not DataFrame')
+
+        # If barlinewidth was specified, use it
+        if barlinewidth is not None:
+            self.barlinewidth = barlinewidth
+        # Otherwise get from style
+        else:
+            self.barlinewidth = matplotlib.rcParams['patch.linewidth']
+        self.baredgecolor = baredgecolor
+                
         self.width = width
         self.height = height
 
@@ -260,7 +270,7 @@ class Chart:
         if barcols is not None:
             barcols = _parse_cols(barcols)
             self.add_bars(self.data, barcols, indexcol=self.indexcol, stack=stack, total_barwidth=total_barwidth,
-                          baraxis=baraxis, xrange=self.xrange, barlinewidth=barlinewidth,
+                          baraxis=baraxis, xrange=self.xrange, barlinewidth=self.barlinewidth, baredgecolor=self.baredgecolor,
                           attrs=attrs, debug=self.debug)
             
         if linecols is not None:
@@ -985,7 +995,7 @@ class Chart:
             if debug:
                 print('after calling set_xrange()')
 
-    def add_bars(self, data, colname, indexcol=None, baraxis='left', stack=True, total_barwidth=None, barlinewidth=None, xrange=None, attrs=None, debug=False):
+    def add_bars(self, data, colname, indexcol=None, baraxis='left', stack=True, total_barwidth=None, barlinewidth=None, baredgecolor=None, xrange=None, attrs=None, debug=False):
         '''
         Add bar to chart
         '''
@@ -1019,9 +1029,13 @@ class Chart:
         if indexcol is not None:
             barcols.remove(indexcol)
 
-        # Line width of bar borders for all bars
-        if barlinewidth is None:
-            barlinewidth = matplotlib.rcParams['patch.linewidth']
+        # Line width of bar borders for all bars.
+        # If specified as input arg, use
+        if barlinewidth is not None:
+            _barlinewidth = barlinewidth
+        # Otherwise use class settings
+        else:
+            _barlinewidth = self.barlinewidth
         
         # Set self.data to be input data
         self.data = data
@@ -1118,6 +1132,12 @@ class Chart:
             barhatchcolor = matplotlib.rcParams['patch.edgecolor']
             barhatch = None
             barhatchwidth = matplotlib.rcParams['hatch.linewidth']
+            # Local copy for this column, can be overwritten with attrs
+            # If baredgecolor has not been set, use default
+            if baredgecolor is None:
+                _baredgecolor = self.baredgecolor
+            else:
+                _baredgecolor = baredgecolor
 
             # Individual bar colors
             barcolors = None
@@ -1150,6 +1170,10 @@ class Chart:
                 if 'barhatchwidth' in _attrs:
                     barhatchwidth = _attrs['barhatchwidth']
 
+                # Color of bar edges
+                if 'baredgecolor' in _attrs:
+                    _baredgecolor = _attrs['baredgecolor']
+                    
                 # If offset is specified for when stack=False, use it
                 if 'offset' in _attrs:
                     offset = _attrs['offset']
@@ -1218,7 +1242,8 @@ class Chart:
                     print('attrs:')
                     print(attrs[barcol])
                 print('barhatch = ' + str(barhatch))
-                print('barlinewidth = ' + str(barlinewidth))
+                print('barlinewidth = ' + str(_barlinewidth))
+                print('_baredgecolor = ' + str(_baredgecolor))
                 print('barhatchcolor = ' + str(barhatchcolor))
                 print('color = ' + str(color))
 
@@ -1278,12 +1303,12 @@ class Chart:
                             
                         # Draw again with black edgecolor
                         entry2 = self.ax.bar(self.data.index, _df_pos[barcol],
-                                             width=barwidth, color='none', edgecolor='black', linewidth=barlinewidth,
+                                             width=barwidth, color='none', edgecolor=_baredgecolor, linewidth=_barlinewidth,
                                              bottom=pos_offset,
                                              zorder=2)
                         _ = self.ax.bar(self.data.index, _df_neg[barcol],
                                         bottom=neg_offset,
-                                        width=barwidth, color='none', edgecolor='black', linewidth=barlinewidth,
+                                        width=barwidth, color='none', edgecolor=_baredgecolor, linewidth=_barlinewidth,
                                         zorder=2)
 
                         # If barcolors was specified, get all patches for this barcol,
@@ -1307,7 +1332,7 @@ class Chart:
 
                     # Draw again with black edgecolor
                     entry2 = self.ax.bar(_x, self.data[barcol],
-                                         width=barwidth, color='none', edgecolor='black', linewidth=barlinewidth,
+                                         width=barwidth, color='none', edgecolor=_baredgecolor, linewidth=_barlinewidth,
                                          zorder=2)
                     
                     # Set x-axis categories from self.data.index
@@ -1363,12 +1388,12 @@ class Chart:
                             
                         # Draw again with black edgecolor
                         entry2 = self.ax_right.bar(self.data.index, _df_pos[barcol],
-                                                   width=barwidth, color='none', edgecolor='black', linewidth=barlinewidth,
+                                                   width=barwidth, color='none', edgecolor='black', linewidth=_barlinewidth,
                                                    bottom=pos_offset,
                                                    zorder=2)
                         _ = self.ax_right.bar(self.data.index, _df_neg[barcol],
                                               bottom=neg_offset,
-                                              width=barwidth, color='none', edgecolor='black', linewidth=barlinewidth,
+                                              width=barwidth, color='none', edgecolor='black', linewidth=_barlinewidth,
                                               zorder=2)
 
                         # If barcolors was specified, get all patches for this barcol,
@@ -1392,7 +1417,7 @@ class Chart:
                     
                     # Draw again with black edgecolor
                     entry2 = self.ax_right.bar(_x, self.data[barcol],
-                                               width=barwidth, color='none', edgecolor='black', linewidth=barlinewidth,
+                                               width=barwidth, color='none', edgecolor='black', linewidth=_barlinewidth,
                                                zorder=2)
                     # Set x-axis categories from self.data.index
                     self.ax_right.set_xticks(np.arange(len(self.data)), labels=self.data.index)

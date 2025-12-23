@@ -1230,7 +1230,8 @@ class Chart:
                         
                         # Otherwise keep trying
                         color = next(cycle)['color']
-                        print('itry = ' + str(itry) + ', color is now ' + color)
+                        if debug:
+                            print('itry = ' + str(itry) + ', color is now ' + color)
                     else:
                         used_colors.append(color)
                         if debug:

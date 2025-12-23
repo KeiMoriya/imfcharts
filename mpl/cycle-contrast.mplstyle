@@ -1,0 +1,2 @@
+# Highest contrast color schemes: No tints
+axes.prop_cycle: cycler('color', ['004C97', 'DA291C', '8031A7', '009CDE', '78BE20', 'F2A900'])

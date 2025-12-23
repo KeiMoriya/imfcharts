@@ -55,24 +55,6 @@ axes.linewidth: 1
 # Color cycle is FUNDBLUE, FUNDPACIFICBLUE, FUNDGREY, FUNDRED
 axes.prop_cycle: cycler('color', ['004C97', '009CDE', 'B1B3B3', 'DA291C'])
 
-# Color cycle is FUNDBLUE, FUNDPACIFICBLUE, FUNDGREEN, FUNDYELLOW
-# axes.prop_cycle: cycler('color', ['004C97', '009CDE', '78BE20', 'DA291C'])
-
-# Color cycle is FUNDBLUE, FUNDPACIFICBLUE, FUNDPURPLE, FUNDORANGE
-# axes.prop_cycle: cycler('color', ['004C97', '009CDE', '8031A7', 'FF8200'])
-
-# High contrast color cycle with no tints is FUNDBLUE, FUNDDARKORANGE, FUNDPURPLE, FUNDPACIFICBLUE, FUNDGREEN, FUNDYELLOW
-# axes.prop_cycle: cycler('color', ['004C97', 'DA291C', '8031A7', '009CDE', '78BE20', 'F2A900'])
-
-# High contrast color cycle with tints is FUNDBLUE, FUNDPACIFICBLUE, FUNDGREEN, FUNDDARKORANGE, FUNDGREY, FUNDSNOWFALL
-# axes.prop_cycle: cycler('color', ['004C97', '009CDE', '78BE20', 'DA291C', 'B1B3B3', 'D8D9D9']
-
-# High contrast color cycle with tints is FUNDBLUE, FUNDDARKORANGE, FUNDGREEN, FUNDYELLOW, FUNDGREY, FUNDMUTEDGREY
-# axes.prop_cycle: cycler('color', ['004C97', 'DA291C', '78BE20', 'F2A900', 'B1B3B3', '707372']
-
-# High contrast color cycle with tints is FUNDBLUE, FUNDPACIFICBLUE, FUNDGREEN, FUNDPURPLE, FUNDGREY, FUNDMUTEDGREY
-# axes.prop_cycle: cycler('color', ['004C97', '009CDE', '78BE20, '8031A7', 'B1B3B3', '707372']
-
 axes.titlesize: 18
 
 ## ------------------------------------------------------------------------------------------------------------- ##

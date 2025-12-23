@@ -45,7 +45,7 @@ figure.subplot.hspace: 0.2    # the amount of height reserved for space between 
 ## ------------------------------------------------------------------------------------------------------------- ##
 ##                                                     Axes                                                      ##
 ## ------------------------------------------------------------------------------------------------------------- ##
-axes.axisbelow: True
+axes.axisbelow: False # Setting to True will set ticks below bars
 axes.edgecolor: B3B3B3
 axes.facecolor: white
 axes.grid: False

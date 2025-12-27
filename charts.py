@@ -1607,13 +1607,88 @@ class Chart:
                 self.ax.axvline(x=x, ymin=yrange[0], ymax=yrange[1],
                                 color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha)
     
-    def add_hrect(self, y0, y1, width=1, linecolor='red', fillcolor=None, dash='-', opacity=1, text=''):
+    def add_hrect(self, ymin=0, ymax=0, xrange=None, coordinates='data', color='red', linecolor='none', linewidth=0, linestyle='-', alpha=0.3,
+                  dash_capstyle=None,
+                  hatch=None, # hatchlinewidth=None,
+                  zorder=1,
+                  debug=False, **kwarg):
         '''
         Add horizontal rectangle across figure.
+
+        If xrange is None, a horizontal  will be drawn across the entire chart.
+        Otherwise range should be a list of two values or a str that has form "start:end".
+
+        `coordinates` is either "data" or "axis", for "data" xrange is converted to data coordinates.
+        For "axis" the fraction of the self.ax is used.
         '''
 
-        pass
+        xrange = self._parse_xrange(xrange)
+        if debug:
+            print('xrange:')
+            print(xrange)
+            
+        # No xrange
+        if xrange == [None, None]:
+            if debug:
+                print('adding rect with no xrange')
+            xrange = [0, 1]
+        # xrange given
+        else:
+            if debug:
+                print('adding hline with xrange')
 
+            # If xrange is given as Timestamps, need to calculate fraction of x-axis range.
+            if coordinates == 'data' and type(xrange[0]) == pd.Timestamp and type(xrange[1]) == pd.Timestamp:
+                # Get axis range, this will be in ordinals
+                xmin, xmax = self.ax.get_xlim()
+                # Get fraction of xrange[0], xrange[1]
+                xrange[0] = (xrange[0] - pd.Timestamp('1970-01-01')).days
+                xrange[1] = (xrange[1] - pd.Timestamp('1970-01-01')).days
+                             
+                xrange[0] = (xrange[0] - xmin) / (xmax - xmin)
+                xrange[1] = (xrange[1] - xmin) / (xmax - xmin)
+                if debug:
+                    print('xrange:')
+                    print(xrange)
+
+        # dash_capstyle specified
+        if dash_capstyle:
+            self.ax.axhspan(ymin, ymax, xmin=xrange[0], xmax=xrange[1],
+                            facecolor=color, linewidth=linewidth, edgecolor=linecolor, linestyle=linestyle, alpha=alpha,
+                            hatch=hatch,
+                            zorder=zorder,
+                            dash_capstyle=dash_capstyle)
+        # no dash_capstyle specified
+        else:
+            self.ax.axhspan(ymin, ymax, xmin=xrange[0], xmax=xrange[1],
+                            facecolor=color, linewidth=linewidth, edgecolor=linecolor, linestyle=linestyle, alpha=alpha,
+                            hatch=hatch,
+                            zorder=zorder)
+
+#        # As of Matplotlib 3.8.0, changing the hatch linewidth does not work.
+#        # It is possible to set the rcParams temporarily,
+#        # but once it is restored to the original value that value takes over.
+#        # Below is code in case this is fixed in the future.
+#
+#        # If hatch_linewdith is set, use it.
+#        # Otherwise default to rcParams
+#        hatchlinewidth_rc = matplotlib.rcParams["hatch.linewidth"]
+#        if hatchlinewidth is None:
+#            hatchlinewidth = hatchlinewidth_rc
+#
+#        # The following try-finally is so that matplotlib.rcParams["hatch.linewidth"]
+#        # is always resstored to original value.
+#        try:
+#            # Set value to hatchlinewidth
+#            matplotlib.rcParams["hatch.linewidth"] = hatchlinewidth
+#
+#            # Add ax.axhspan here
+#        finally:
+#            # Set mpl.rcParams back to original value.
+#            # For Matplotlib 3.8.0, this negates the effect of setting hatch.linewidth
+#            # and the resulting figure will always have the hatch linewidth of rcParams.
+#            matplotlib.rcParams["hatch.linewidth"] = hatchlinewidth_rc
+                
     def add_vrect(self, y0, y1, width=1, linecolor='red', fillcolor=None, dash='-', opacity=1, text=''):
         '''
         Add vertical rectangle across figure.

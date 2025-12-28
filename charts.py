@@ -1701,6 +1701,7 @@ class Chart:
                 facecolor=color,
                 edgecolor=linecolor,
                 hatch=hatch,
+                alpha=alpha,
                 label=label)
             self.legend_entries.append(entry)
             self.legend_labels.append(label)
@@ -1802,6 +1803,7 @@ class Chart:
                 facecolor=color,
                 edgecolor=linecolor,
                 hatch=hatch,
+                alpha=alpha,
                 label=label)
             self.legend_entries.append(entry)
             self.legend_labels.append(label)
@@ -1892,6 +1894,62 @@ class Chart:
                              va=va, ha=ha,
                              text=text, xycoords=xycoords, textcoords=textcoords)
 
+    def add_fill(self, lo, hi, data=None, indexcol=None,
+                 color='red', linecolor='none', linewidth=0, linestyle='-', alpha=0.3,
+                 dash_capstyle=None,
+                 hatch=None, # hatchlinewidth=None,
+                 label='', legend=False,
+                 zorder=1,
+                 debug=False, **kwarg):
+
+        # Set data if specified
+        if data is not None:
+            if type(data) != pd.DataFrame:
+                raise RuntimeError('add_fill(): data must be pd.DataFrame, given ' + str(data) + ' of type ' + str(type(data)))
+            self.data = data
+            if indexcol:
+                if indexcol not in self.data.columns:
+                    raise RuntimeError('indexcol specified as "' + str(indexcol) + '" but not found in data:' + str(data))
+                self.data.set_index(indexcol, inplace=True)
+
+        # Check lo and hi are valid columns in self.data
+        if lo not in self.data.columns:
+            raise RuntimeError('lo specified as "' + str(lo) + '" but not found in data:' + str(data))
+        if hi not in self.data.columns:
+            raise RuntimeError('hi specified as "' + str(hi) + '" but not found in data:' + str(data))
+            
+        if dash_capstyle:
+            entry = self.ax.fill_between(self.data.index, self.data[lo], self.data[hi],
+                                          facecolor=color, linewidth=linewidth, edgecolor=linecolor, linestyle=linestyle, alpha=alpha,
+                                          hatch=hatch,
+                                          zorder=zorder,
+                                          dash_capstyle=dash_capstyle)
+        # no dash_capstyle specified
+        else:
+            entry = self.ax.fill_between(self.data.index, self.data[lo], self.data[hi],
+                                    facecolor=color, linewidth=linewidth, edgecolor=linecolor, linestyle=linestyle, alpha=alpha,
+                                    hatch=hatch,
+                                    zorder=zorder)
+            
+        # If adding to legend
+        if legend:
+            # Create a Patch that has the same characteristics
+            # that can be added to the legend entries.
+            entry = Patch(
+                facecolor=color,
+                edgecolor=linecolor,
+                hatch=hatch,
+                alpha=alpha,
+                label=label)
+            self.legend_entries.append(entry)
+            self.legend_labels.append(label)
+
+        # Re-create legend
+        if self.show_legend:
+            self.update_legend()
+            if debug:
+                print('called update_legend()')
+            
     def update_legend(self,
                       ncol_legend=None, legend_spacing=None,
                       legend_left=None, legend_bottom=None, legend_width=None, legend_height=None, legend_mode=None):

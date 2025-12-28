@@ -17,6 +17,7 @@ import matplotlib.colors as mplcolors
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.ticker import FuncFormatter, MaxNLocator
+from matplotlib.patches import Patch
 
 def _parse_cols(cols):
     '''
@@ -1499,6 +1500,7 @@ class Chart:
             print('Chart.topxaxis must be "left" or "right", given ' + str(topxaxis))
 
     def add_hline(self, y, xrange=None, coordinates='data', color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None,
+                  label='', legend=False,
                   debug=False, **kwarg):
         '''
         Add horizontal line across figure.
@@ -1521,11 +1523,11 @@ class Chart:
                 print('adding hline with no xrange')
             # dashes or dash_capstyle specified
             if dashes or dash_capstyle:
-                self.ax.axhline(y=y, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha,
-                                dashes=dashes, dash_capstyle=dash_capstyle)
+                entry = self.ax.axhline(y=y, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha,
+                                        dashes=dashes, dash_capstyle=dash_capstyle)
             # no dashes or dash_capstyle specified
             else:
-                self.ax.axhline(y=y, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha)
+                entry = self.ax.axhline(y=y, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha)
 
         # xrange given
         else:
@@ -1548,15 +1550,28 @@ class Chart:
                 
             # dashes or dash_capstyle specified
             if dashes or dash_capstyle:
-                self.ax.axhline(y=y, xmin=xrange[0], xmax=xrange[1],
-                                color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha,
-                                dashes=dashes, dash_capstyle=dash_capstyle)
+                entry = self.ax.axhline(y=y, xmin=xrange[0], xmax=xrange[1],
+                                        color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha,
+                                        dashes=dashes, dash_capstyle=dash_capstyle)
             # no dashes or dash_capstyle specified
             else:
-                self.ax.axhline(y=y, xmin=xrange[0], xmax=xrange[1],
-                                color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha)
+                entry = self.ax.axhline(y=y, xmin=xrange[0], xmax=xrange[1],
+                                        color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha)
 
-    def add_vline(self, x, yrange=None, coordinates='data', width=1, color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None):
+        # If adding to legend
+        if legend:
+            self.legend_entries.append(entry)
+            self.legend_labels.append(label)
+
+        # Re-create legend
+        if self.show_legend:
+            self.update_legend()
+            if debug:
+                print('called update_legend()')
+            
+    def add_vline(self, x, yrange=None, coordinates='data', width=1, color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None,
+                  label='', legend=False,
+                  debug=False, **kwarg):
         '''
         Add vertical line across figure.
         If yrange is None, a vertical line will be drawn across the entire chart.
@@ -1569,7 +1584,7 @@ class Chart:
         yrange = self._parse_yrange(yrange)
 
         # If x-axis is datetime, make sure to convert x to datetime
-        if self.xaxis_type != 'datetime':
+        if self.xaxis_type == 'datetime':
             try:
                 x = pd.Timestamp(x)
             except ValueError:
@@ -1577,7 +1592,7 @@ class Chart:
                 raise ValueError
 
         # Convert yrange to fraction of self.ax range as needed
-        if coordinates == 'data':
+        if coordinates == 'data' and yrange != [None, None]:
             # Get axis range, this will be in ordinals
             ymin, ymax = self.ax.get_ylim()
 
@@ -1589,33 +1604,46 @@ class Chart:
         if yrange == [None, None]:
             # dashes or dash_capstyle specified
             if dashes or dash_capstyle:
-                self.ax.axvline(x=x, color=color, linewidth=linewidth, linestyle=linestyle, dashes=dashes, alpha=alpha,
-                                dash_capstyle=dash_capstyle)
+                entry = self.ax.axvline(x=x, color=color, linewidth=linewidth, linestyle=linestyle, dashes=dashes, alpha=alpha,
+                                        dash_capstyle=dash_capstyle)
                 # no dashes or dash_capstyle specified
             else:
-                self.ax.axvline(x=x, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha)
+                entry = self.ax.axvline(x=x, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha)
 
         # yrange given
         else:
             # dashes or dash_capstyle specified
             if dashes or dash_capstyle:
-                self.ax.axvline(x=x, ymin=yrange[0], ymax=yrange[1],
-                                color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha,
-                                dashes=dashes, dash_capstyle=dash_capstyle)
+                entry = self.ax.axvline(x=x, ymin=yrange[0], ymax=yrange[1],
+                                        color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha,
+                                        dashes=dashes, dash_capstyle=dash_capstyle)
                 # no dashes or dash_capstyle specified
             else:
-                self.ax.axvline(x=x, ymin=yrange[0], ymax=yrange[1],
-                                color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha)
-    
+                entry = self.ax.axvline(x=x, ymin=yrange[0], ymax=yrange[1],
+                                        color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha)
+
+
+        # If adding to legend
+        if legend:
+            self.legend_entries.append(entry)
+            self.legend_labels.append(label)
+
+        # Re-create legend
+        if self.show_legend:
+            self.update_legend()
+            if debug:
+                print('called update_legend()')
+                
     def add_hrect(self, ymin=0, ymax=0, xrange=None, coordinates='data', color='red', linecolor='none', linewidth=0, linestyle='-', alpha=0.3,
                   dash_capstyle=None,
                   hatch=None, # hatchlinewidth=None,
+                  label='', legend=False,
                   zorder=1,
                   debug=False, **kwarg):
         '''
         Add horizontal rectangle across figure.
 
-        If xrange is None, a horizontal  will be drawn across the entire chart.
+        If xrange is None, a horizontal rectangle will be drawn across the entire chart.
         Otherwise range should be a list of two values or a str that has form "start:end".
 
         `coordinates` is either "data" or "axis", for "data" xrange is converted to data coordinates.
@@ -1653,18 +1681,36 @@ class Chart:
 
         # dash_capstyle specified
         if dash_capstyle:
-            self.ax.axhspan(ymin, ymax, xmin=xrange[0], xmax=xrange[1],
-                            facecolor=color, linewidth=linewidth, edgecolor=linecolor, linestyle=linestyle, alpha=alpha,
-                            hatch=hatch,
-                            zorder=zorder,
-                            dash_capstyle=dash_capstyle)
+            entry = self.ax.axhspan(ymin, ymax, xmin=xrange[0], xmax=xrange[1],
+                                    facecolor=color, linewidth=linewidth, edgecolor=linecolor, linestyle=linestyle, alpha=alpha,
+                                    hatch=hatch,
+                                    zorder=zorder,
+                                    dash_capstyle=dash_capstyle)
         # no dash_capstyle specified
         else:
-            self.ax.axhspan(ymin, ymax, xmin=xrange[0], xmax=xrange[1],
-                            facecolor=color, linewidth=linewidth, edgecolor=linecolor, linestyle=linestyle, alpha=alpha,
-                            hatch=hatch,
-                            zorder=zorder)
+            entry = self.ax.axhspan(ymin, ymax, xmin=xrange[0], xmax=xrange[1],
+                                    facecolor=color, linewidth=linewidth, edgecolor=linecolor, linestyle=linestyle, alpha=alpha,
+                                    hatch=hatch,
+                                    zorder=zorder)
 
+        # If adding to legend
+        if legend:
+            # Create a Patch that has the same characteristics
+            # that can be added to the legend entries.
+            entry = Patch(
+                facecolor=color,
+                edgecolor=linecolor,
+                hatch=hatch,
+                label=label)
+            self.legend_entries.append(entry)
+            self.legend_labels.append(label)
+
+        # Re-create legend
+        if self.show_legend:
+            self.update_legend()
+            if debug:
+                print('called update_legend()')
+            
 #        # As of Matplotlib 3.8.0, changing the hatch linewidth does not work.
 #        # It is possible to set the rcParams temporarily,
 #        # but once it is restored to the original value that value takes over.
@@ -1688,13 +1734,107 @@ class Chart:
 #            # For Matplotlib 3.8.0, this negates the effect of setting hatch.linewidth
 #            # and the resulting figure will always have the hatch linewidth of rcParams.
 #            matplotlib.rcParams["hatch.linewidth"] = hatchlinewidth_rc
-                
-    def add_vrect(self, y0, y1, width=1, linecolor='red', fillcolor=None, dash='-', opacity=1, text=''):
+
+    def add_vrect(self, xmin=0, xmax=0, yrange=None, coordinates='data', color='red', linecolor='none', linewidth=0, linestyle='-', alpha=0.3,
+                  dash_capstyle=None,
+                  hatch=None, # hatchlinewidth=None,
+                  label='', legend=False,
+                  zorder=1,
+                  debug=False, **kwarg):
         '''
         Add vertical rectangle across figure.
+
+        If yrange is None, a vertical rectangle will be drawn across the entire chart.
+        Otherwise range should be a list of two values or a str that has form "start:end".
+
+        `coordinates` is either "data" or "axis", for "data" xrange is converted to data coordinates.
+        For "axis" the fraction of the self.ax is used.
         '''
 
-        pass
+        yrange = self._parse_yrange(yrange)
+        if debug:
+            print('yrange:')
+            print(yrange)
+            
+        # No yrange
+        if yrange == [None, None]:
+            if debug:
+                print('adding rect with no yrange')
+            yrange = [0, 1]
+        # yrange given
+        else:
+            if debug:
+                print('adding hline with yrange')
+
+            # If yrange is given, need to calculate fraction of x-axis range.
+            if coordinates == 'data':
+                # Get axis range
+                _ymin, _ymax = self.ax.get_ylim()
+                # Get fraction of yrange[0], yrange[1]
+                yrange[0] = (yrange[0] - _ymin) / (_ymax - _ymin)
+                yrange[1] = (yrange[1] - _ymin) / (_ymax - _ymin)
+                if debug:
+                    print('yrange:')
+                    print(yrange)
+
+        # Parse x-axis range
+        xmin, xmax = self._parse_xrange([xmin, xmax])
+
+        # dash_capstyle specified
+        if dash_capstyle:
+            entry = self.ax.axvspan(xmin, xmax, ymin=yrange[0], ymax=yrange[1],
+                                    facecolor=color, linewidth=linewidth, edgecolor=linecolor, linestyle=linestyle, alpha=alpha,
+                                    hatch=hatch,
+                                    zorder=zorder,
+                                    dash_capstyle=dash_capstyle)
+        # no dash_capstyle specified
+        else:
+            entry = self.ax.axvspan(xmin, xmax, ymin=yrange[0], ymax=yrange[1],
+                                    facecolor=color, linewidth=linewidth, edgecolor=linecolor, linestyle=linestyle, alpha=alpha,
+                                    hatch=hatch,
+                                    zorder=zorder)
+            
+        # If adding to legend
+        if legend:
+            # Create a Patch that has the same characteristics
+            # that can be added to the legend entries.
+            entry = Patch(
+                facecolor=color,
+                edgecolor=linecolor,
+                hatch=hatch,
+                label=label)
+            self.legend_entries.append(entry)
+            self.legend_labels.append(label)
+
+        # Re-create legend
+        if self.show_legend:
+            self.update_legend()
+            if debug:
+                print('called update_legend()')
+            
+#        # As of Matplotlib 3.8.0, changing the hatch linewidth does not work.
+#        # It is possible to set the rcParams temporarily,
+#        # but once it is restored to the original value that value takes over.
+#        # Below is code in case this is fixed in the future.
+#
+#        # If hatch_linewdith is set, use it.
+#        # Otherwise default to rcParams
+#        hatchlinewidth_rc = matplotlib.rcParams["hatch.linewidth"]
+#        if hatchlinewidth is None:
+#            hatchlinewidth = hatchlinewidth_rc
+#
+#        # The following try-finally is so that matplotlib.rcParams["hatch.linewidth"]
+#        # is always resstored to original value.
+#        try:
+#            # Set value to hatchlinewidth
+#            matplotlib.rcParams["hatch.linewidth"] = hatchlinewidth
+#
+#            # Add ax.axhspan here
+#        finally:
+#            # Set mpl.rcParams back to original value.
+#            # For Matplotlib 3.8.0, this negates the effect of setting hatch.linewidth
+#            # and the resulting figure will always have the hatch linewidth of rcParams.
+#            matplotlib.rcParams["hatch.linewidth"] = hatchlinewidth_rc
 
     def add_text(self, x, y, text='', xycoords='data', color='black',
                  fontsize=14, fontfamily='Segoe UI', fontweight='normal',

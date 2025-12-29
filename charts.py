@@ -131,7 +131,7 @@ class Chart:
                  xmargins='auto',
                  width=10, height=6,
                  topxaxis='left',
-                 hlines=[], vlines=[], hrects=[], vrects=[],
+                 hlines=None, vlines=None, hrects=None, vrects=None, fills=None,
                  ncol_legend=1,
                  legend_spacing=0.5,
                  legend_fontsize=14,
@@ -281,7 +281,46 @@ class Chart:
         if rlinecols is not None:
             rlinecols = _parse_cols(rlinecols)
             self.add_lines(self.data, rlinecols, indexcol=self.indexcol, axis='right', linebreaks=self.linebreaks, xrange=self.xrange, attrs=attrs, debug=self.debug)
-        
+
+        # If hlines, vlines, hrects, vrects, fills is given, loop over.
+        # Each of these should be a list of kwargs of the form
+        # [{'y' : 10, 'color' : 'red'}, ...]
+        if hlines is not None:
+            try:
+                for hline in hlines:
+                    self.add_hline(**hline)
+            except Exception as e:
+                raise RuntimeError('Could not process hlines = ' + str(hlines) + ' with exception:' + str(e))
+
+        if vlines is not None:
+            try:
+                for vline in vlines:
+                    self.add_vline(**vline)
+            except Exception as e:
+                raise RuntimeError('Could not process vlines = ' + str(vlines) + ' with exception:' + str(e))
+
+        if hrects is not None:
+            try:
+                for hrect in hrects:
+                    self.add_hrect(**hrect)
+            except Exception as e:
+                raise RuntimeError('Could not process hrects = ' + str(hrects) + ' with exception:' + str(e))
+
+        if vrects is not None:
+            try:
+                for vrect in vrects:
+                    self.add_vrect(**vrect)
+            except Exception as e:
+                raise RuntimeError('Could not process vrects = ' + str(vrects) + ' with exception:' + str(e))
+
+        if fills is not None:
+            try:
+                for fill in fills:
+                    self.add_fill(**fill)
+            except Exception as e:
+                raise RuntimeError('Could not process fills = ' + str(fills) + ' with exception:' + str(e))
+            
+            
         # Create legend
         legend_header = ''
         if self.debug:

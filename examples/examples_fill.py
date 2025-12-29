@@ -156,6 +156,33 @@ chart1.add_fill(hi, hi2, data=df,
 # Save
 chart1.save(outdir + '/fill_5_legend.pdf')
 
+# ---------------------------------------------------------------------------------------------------------
+# 6. kwargs
+# ---------------------------------------------------------------------------------------------------------
+# Create Chart object
+chart1 = Chart(df, linecols=linecols,
+               attrs=attrs,
+               title='Inflation: Goods and Services',
+               subtitle='(Y/y percent change)',
+               xrange='2017-01:', yrange=[0, 120])
+
+# Add fill
+kwargs = {'lo' : lo, 'hi' : 'hi', 'legend' : True, 'label' : 'base'}
+chart1.add_fill(**kwargs)
+kwargs = {'lo' : lo2, 'hi' : 'lo', 'color' : 'blue', 'edgecolor' : 'orange',
+          'linewidth' : 1.5, 'linestyle' : '--', 'alpha' : 0.2, 'zorder' : 2,
+          'legend' : True, 'label' : 'larger error'}
+chart1.add_fill(**kwargs)
+# No legend for higher band
+kwargs = {'data' : df, 'lo' : hi, 'hi' : 'hi2', 'color' : 'blue', 'edgecolor' : 'orange',
+          'linewidth' : 1.5, 'linestyle' : '--', 'alpha' : 0.2, 'zorder' : 2}
+chart1.add_fill(**kwargs)
+
+chart1.set_xrange('2016-01:')
+
+# Save
+chart1.save(outdir + '/fill_6_kwargs.pdf')
+
 #==========================================================================================================
 # Merge all files
 #==========================================================================================================

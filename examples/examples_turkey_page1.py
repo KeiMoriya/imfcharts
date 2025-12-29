@@ -66,22 +66,41 @@ attrs = {linecol : {'linewidth' : 4,
                                'barhatchwidth' : 10}
          }
 
+kw_hline = {'y' : 1.4, 'xrange' : '2023Q1:' + df.index[-1].strftime('%Y-%m'),
+            'color' : IMFBLACK, 'linewidth' : 2.5, 'linestyle' : '--', 'dashes' : [10, 4]}
+
+
+text = '''Real GDP growth
+long-run average
+(1.4 q/q)'''
+
+kw_text = {'x' : pd.Timestamp('2024Q3'), 'y' : 6.5, 'text' : text,
+           'fontweight' : 'bold', 'color' : '#004C97'}
+
+kw_arrow = {'head' : [pd.Timestamp('2025Q1'), 1.5],
+            'tail' : [pd.Timestamp('2025Q1'), 5],
+            'color' : '#004C97'}
+
 chart1 = Chart(df, linecols=linecol, barcols=barcols,
                attrs=attrs,
                topxaxis='left',
                title='Contributions to Real GDP Growth',
                subtitle='(Percent, q/q)',
                xrange='2023Q1:', yrange=[-5, 9.5], ryrange=[-5, 9.5],
+               hlines=[kw_hline], # Add hline via kwargs
+               texts = [kw_text], # Add text via kwargs
+               arrows = [kw_arrow], # Add arrow via kwargs
                ncol_legend=2)
-chart1.add_hline(y=1.4, xrange='2023Q1:' + df.index[-1].strftime('%Y-%m'),
-                 # xrange=[0.05, 0.95], coordinates='axis',
-                 color=IMFBLACK, linewidth=2.5, linestyle='--', dashes=[10, 4])
 
-text = '''Real GDP growth
-long-run average
-(1.4 q/q)'''
+# Add hline with add_hline()
+# chart1.add_hline(y=1.4, xrange='2023Q1:' + df.index[-1].strftime('%Y-%m'),
+#                  # xrange=[0.05, 0.95], coordinates='axis',
+#                  color=IMFBLACK, linewidth=2.5, linestyle='--', dashes=[10, 4])
 
-chart1.add_text(pd.Timestamp('2024Q3'), 6.5, text=text, fontweight='bold', color='#004C97')
+# Add text with add_text()
+# chart1.add_text(pd.Timestamp('2024Q3'), 6.5, text=text, fontweight='bold', color='#004C97')
+
+# Add arrow with add_arrow()
 chart1.add_arrow(head=[pd.Timestamp('2025Q1'), 1.5],
                  tail=[pd.Timestamp('2025Q1'), 5],
                  color='#004C97')

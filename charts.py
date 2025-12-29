@@ -1946,7 +1946,7 @@ class Chart:
                              va=va, ha=ha,
                              text=text, xycoords=xycoords, textcoords=textcoords)
 
-    def add_fill(self, lo, hi, data=None, indexcol=None,
+    def add_fill(self, lo, hi, data=None, indexcol=None, axis='left',
                  color='red', linecolor='none', linewidth=0, linestyle='-', alpha=0.3,
                  dash_capstyle=None,
                  hatch=None, # hatchlinewidth=None,
@@ -1969,19 +1969,39 @@ class Chart:
             raise RuntimeError('lo specified as "' + str(lo) + '" but not found in data:' + str(data))
         if hi not in self.data.columns:
             raise RuntimeError('hi specified as "' + str(hi) + '" but not found in data:' + str(data))
-            
-        if dash_capstyle:
-            entry = self.ax.fill_between(self.data.index, self.data[lo], self.data[hi],
-                                          facecolor=color, linewidth=linewidth, edgecolor=linecolor, linestyle=linestyle, alpha=alpha,
-                                          hatch=hatch,
-                                          zorder=zorder,
-                                          dash_capstyle=dash_capstyle)
-        # no dash_capstyle specified
+
+        if axis == 'left':
+            if dash_capstyle:
+                entry = self.ax.fill_between(self.data.index, self.data[lo], self.data[hi],
+                                             facecolor=color, linewidth=linewidth, edgecolor=linecolor, linestyle=linestyle, alpha=alpha,
+                                             hatch=hatch,
+                                             zorder=zorder,
+                                             dash_capstyle=dash_capstyle)
+                # no dash_capstyle specified
+            else:
+                entry = self.ax.fill_between(self.data.index, self.data[lo], self.data[hi],
+                                             facecolor=color, linewidth=linewidth, edgecolor=linecolor, linestyle=linestyle, alpha=alpha,
+                                             hatch=hatch,
+                                             zorder=zorder)
         else:
-            entry = self.ax.fill_between(self.data.index, self.data[lo], self.data[hi],
-                                    facecolor=color, linewidth=linewidth, edgecolor=linecolor, linestyle=linestyle, alpha=alpha,
-                                    hatch=hatch,
-                                    zorder=zorder)
+            if self.ax_right is None:
+                self.ax_right = self.ax.twinx()
+                # Set color cycler to be common with the left y-axis.
+                # Hack from https://github.com/matplotlib/matplotlib/issues/19479
+                self.ax_right._get_lines = self.ax._get_lines
+
+            if dash_capstyle:
+                entry = self.ax_right.fill_between(self.data.index, self.data[lo], self.data[hi],
+                                                   facecolor=color, linewidth=linewidth, edgecolor=linecolor, linestyle=linestyle, alpha=alpha,
+                                                   hatch=hatch,
+                                                   zorder=zorder,
+                                                   dash_capstyle=dash_capstyle)
+                # no dash_capstyle specified
+            else:
+                entry = self.ax_right.fill_between(self.data.index, self.data[lo], self.data[hi],
+                                                   facecolor=color, linewidth=linewidth, edgecolor=linecolor, linestyle=linestyle, alpha=alpha,
+                                                   hatch=hatch,
+                                                   zorder=zorder)
             
         # If adding to legend
         if legend:

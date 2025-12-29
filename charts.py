@@ -131,7 +131,7 @@ class Chart:
                  xmargins='auto',
                  width=10, height=6,
                  topxaxis='left',
-                 hlines=None, vlines=None, hrects=None, vrects=None, fills=None,
+                 hlines=None, vlines=None, hrects=None, vrects=None, fills=None, texts=None, arrows=None,
                  ncol_legend=1,
                  legend_spacing=0.5,
                  legend_fontsize=14,
@@ -282,7 +282,7 @@ class Chart:
             rlinecols = _parse_cols(rlinecols)
             self.add_lines(self.data, rlinecols, indexcol=self.indexcol, axis='right', linebreaks=self.linebreaks, xrange=self.xrange, attrs=attrs, debug=self.debug)
 
-        # If hlines, vlines, hrects, vrects, fills is given, loop over.
+        # If hlines, vlines, hrects, vrects, fills, texts, arrows is given, loop over.
         # Each of these should be a list of kwargs of the form
         # [{'y' : 10, 'color' : 'red'}, ...]
         if hlines is not None:
@@ -320,6 +320,19 @@ class Chart:
             except Exception as e:
                 raise RuntimeError('Could not process fills = ' + str(fills) + ' with exception:' + str(e))
             
+        if texts is not None:
+            try:
+                for text in texts:
+                    self.add_text(**text)
+            except Exception as e:
+                raise RuntimeError('Could not process texts = ' + str(texts) + ' with exception:' + str(e))
+
+        if arrows is not None:
+            try:
+                for arrow in arrows:
+                    self.add_arrow(**arrow)
+            except Exception as e:
+                raise RuntimeError('Could not process arrows = ' + str(arrows) + ' with exception:' + str(e))
             
         # Create legend
         legend_header = ''
@@ -1879,7 +1892,7 @@ class Chart:
 
     def add_text(self, x, y, text='', xycoords='data', color='black',
                  fontsize=14, fontfamily='Segoe UI', fontweight='normal',
-                 va='top', ha='left'):
+                 va='top', ha='left', **kwargs):
         '''
         Add text.
 
@@ -1901,7 +1914,7 @@ class Chart:
     def add_arrow(self, head=(0, 0), tail=(1, 1),
                   color='black', width=4, headwidth=15, headlength=15, shrink=0.05, arrowstyle='->', edgecolor=None, edgewidth=0,
                   va='top', ha='left',
-                  text='', xycoords='data', textcoords='data'):
+                  text='', xycoords='data', textcoords='data', **kwargs):
         '''
         Add arrow and text.
 

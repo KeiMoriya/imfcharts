@@ -135,6 +135,25 @@ chart1.add_hline(y=10, xrange='2020-03:2025-04',
 # Save
 chart1.save(outdir + '/hlines_5_legend.pdf')
 
+# ---------------------------------------------------------------------------------------------------------
+# 6. kwargs
+# ---------------------------------------------------------------------------------------------------------
+# Create Chart object
+chart1 = Chart(df, linecols=df.columns,
+               attrs=attrs,
+               title='Inflation: Goods and Services',
+               subtitle='(Y/y percent change)',
+               xrange='2017-01:', yrange=[0, 120])
+
+# Add hline
+kwargs = {'y' : 10, 'xrange' : '2020-03:2025-04',
+          'label' : 'horizontal line', 'legend' : True,
+          'color' : 'grey', 'linewidth' : 0.5, 'linestyle' : '--', 'alpha' : 0.2}
+chart1.add_hline(**kwargs)
+
+# Save
+chart1.save(outdir + '/hlines_6_kwargs.pdf')
+
 #==========================================================================================================
 # vline
 #==========================================================================================================

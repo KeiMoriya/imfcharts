@@ -1,45 +1,52 @@
-<!--
-2025-11-20
-
-Documentation on imfcharts.
-
-To generate this document run
-quarto render imfcharts.qmd
-
-Geneating PDF output will open a Carbon Black window
-but ignoring it will render the document.
-
--->
 
 ---
 title: "Documentation for imfcharts"
+date: today
+author:
+  - name: Datatools Team
+    email: datatools-support@imf.org
+    url: https://intlmonetaryfund.sharepoint.com/sites/fw-datatools
+    department: 
+      - name: ITD
+      - url; http://datatools/
 bibliography: references.bib
 number-sections: true
 page-layout: full
+code-block-bg: "#F0F0F0"
 format:
-  docx:
-    toc: true
-    number-sections: true
-    highlight-style: github
-    execute:
-      echo: false
-
   html:
+    link-external-newwindow: true
     code-fold: true
     toc: true
     toc-depth: 2
     toc-float: true
+    theme: custom-theme.scss # cyborg
     grid:
-      body-width: 900px
-      margin-width: 150px
-      sidebar-width: 150px
+      body-width: 1200px  # Main body width
+      margin-width: 150px # width of toc
+      sidebar-width: 20px # ???
 
+#  docx:
+#    toc: true
+#    number-sections: true
+#    execute:
+#      echo: false
+#
 #  pdf:
 #    documentclass: report
 #    papersize: letter
 
 # jupyter: python3
 ---
+
+<!-- 2025-11-20                                             -->
+<!--                                                        -->
+<!-- Documentation on imfcharts.                            -->
+<!-- To generate this document run                          -->
+<!-- quarto render imfcharts.qmd                            -->
+<!--                                                        -->
+<!-- Geneating PDF output will open a Carbon Black window   -->
+<!-- but ignoring it will render the document.              -->
 
 ```{python}
 #| label: py-imports
@@ -50,31 +57,232 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
-# Need this, otherwise warning shows
-# matplotlib.use('Qt5Agg')
-# 'GTK3Agg', 'GTK3Cairo', 'GTK4Agg', 'GTK4Cairo', 'MacOSX', 'nbAgg', 'QtAgg', 'QtCairo', 'Qt5Agg', 'Qt5Cairo', 'TkAgg', 'TkCairo', 'WebAgg', 'WX', 
-
 
 # Tables in quarto
 from itables import show
 from IPython.display import Markdown
 
+import imf_datatools
+
 from imfcharts import *
+set_style('imf-articleiv')
 ```
 
 <!------------------------------------------------------------------------------------------------------------------------------------>
 # Introduction {#sec-intro}
+This is the documentation for the `imfcharts` package.
+The goal of this package is simple, to allow easy (re)production of IMF charts for publications.
+The technology to do this has been available for decades, our goal is to make this as simple as it should be.
 
-The Fund wastes enormous time and effort...
+The authors wish to thank the [Process Modernization Challenge](https://imf.brightidea.com/Process){target="_blank"}
+committee for their support and encouragement. The project started out as an [idea](https://imf.brightidea.com/D1580){target="_blank"}
+for the Challenge, and in Feb 2025 the project [received First Place in the Challenge event](https://imf.brightidea.com/Process){target="_blank"}.
 
-This document covers the main usage and 
-Most of the discussion is from[@Takagi; @Brodsky]
-and based on experience with missions to Solomon Islands (2024) and Vanuatu (2025).
+The documentation is orgnaized as follows. In the next subsections @sec-quickstart is a Quick Start,
+and motivation, examples are provided in @sec-motivation. The sections that follow are @sec-basics, followed by @sec-styles, and
+integration with other systems are shown in @sec-R, @sec-stata and @sec-aida.
 
+## Quick Start and Installation {#sec-quickstart}
+
+The library is written in the Python language, but can be called from R (and perhaps in the future) Stata.
+In all cases the Python library must be installed. This library is based on the well-known [Matplotlib](https://matplotlib.org/){target="_blank"}
+library which is the basis for most Python visualization libraries.
+Beyond Matplotlib the only dependencies are `numpy` and `pandas` so the library should be usable in any environment.
+
+To install the library,
+
+1. Install Python from the Software Center
+
+2. Copy the folder `\\ecnswn12p\ems_shared\pub\datatools\dev\imfcharts` to your computer's `C:\ProgramData\Python3\Lib\site-packages` folder.
+
+3. Open Command Prompt and run the following:
+    a. `ipython` Open ipython session
+    b. `from imfcharts import *` If no error message appears the installation is complete
+
+Note that importing the library should create a copy of style files in your computer's `C:\User\[username]\.matplotlib\stylelib` folder.
+
+To create a chart, prepare a `pandas.DataFrame` with your data and set the index to be what you want your x-axis to be.
+For example, in most cases a time series is plotted, so the index should be set to the dates.
+
+A simple example is given below.
+
+```{python}
+#| label: quickstart
+#| code-fold: show
+#| fig-cap: "Simple GDP plot."
+
+import pandas as pd
+from imfcharts import *
+
+# Create data
+data = {'dates' : ['2024Q1', '2024Q2', '2024Q3', '2024Q4', '2025Q1'],
+        'Consumption' : [2.5, 3, 2.8, 2.7, 1.3],
+	'Gov' : [1.2, 1.1, 0.8, 0.3, -0.2],
+	'Net exports' : [-0.5, 0.3, 1.2, 0.3, -1.5],
+	'Fixed capital formation' : [0.2, 0.3, -0.2, -0.3, -0.3]}
+df = pd.DataFrame(data).set_index('dates')
+df['GDP'] = df.sum(axis=1)
+
+# Get all columns except "GDP" for bars
+barcols = list(df.columns)
+barcols.remove('GDP')
+
+# Create chart
+chart = Chart(df, linecols='GDP', barcols=barcols)
+
+# Show chart
+chart
+```
+
+As can be seen, the code needed to generate the chart is one line,
+
+
+```
+chart = Chart(df, linecols='GDP', barcols=barcols)
+```
+
+The chart automatically uses the default IMF Article IV colors, which is set by the library as the default colors.
+Adding a few options will make the chart presentable:
+
+```{python}
+#| label: quickstart-better
+#| code-fold: show
+#| fig-cap: "Modified GDP plot."
+
+chart = Chart(df, linecols='GDP', barcols=barcols,
+              attrs={'GDP' : {'color' : 'black'}},
+              title='GDP by Composition', subtitle='(Seasonally Adjusted)',
+              yrange=[-3, 5],
+              legend_bottom=0.1, ncol_legend=2)
+chart
+```
+
+The differences with the first chart are:
+
+- Added title, subtitle
+- Specifid line for "GDP" to be black
+- Specified y-axis range
+- Moved legend bottom, specified number of columns in legend
+
+All of these options and more are explained in @sec-basics.
+The `chart` object can then be saved with commands
+
+```{python}
+#| label: quickstart-save
+#| code-fold: show
+#| eval: false
+
+chart.save('GDP.pdf') # change extention to png etc.
+chart.show()
+```
+
+The `chart` variable is a `Chart` object within the library, and provides a direct interface with the underlying
+`matplotlib.pyplot.Figure` and `matplotlib.pyplot.Axes` objects so that they can be modified further.
+For example,  the popular [`seaborn`](https://seaborn.pydata.org/){target="_blank"} library is built on top of `Matplotlib`
+so it can be called on the created `Chart`.
+
+<!-- TODO: Add example -->
+
+## Motivation {#sec-motivation}
+
+The Fund wastes enormous time and effort by not provding a standard program to generate charts[^chart-programs],
+and this hurts in the Fund in multiple ways.
+
+1. People (especially young ones) are forced to repeat menial tasks ad nauseam
+2. The mindset is stuck in Excel and people do not understand that technology can mitigate these efforts
+3. The standards of visualization are stuck with outdated standards and terrible aesthetics
+
+[^chart-programs]: The ITD CATS team provides the Excel PCF tool for this purpose, but this is still contained within Excel. Furthermore, it has not been updated for many years.
+
+Therefore goals of this project are:
+
+1. Provide a package to easily generate IMF charts
+2. Provide templates that allow users to easily switch to a new style
+
+This allows Fund users (especially young ones) to realize that menial tasks can be automated and done with much less effort.
+It also incentivizes the Fund to move to better standards of visualization since the transition is now much easier and
+does not require editing every single Excel chart that has been created previously.
+
+While the main library we provide is written in Python, it can be used from R (and in the future possibly from Stata),
+and  given the recent advances in AI, it may be possible to use these tools through AI, see @sec-aida which will broaden the audience further.
+
+For users of Python and R, combining with the [datatools](http://datatools){target="_blank"} now provides an end-to-end solution for
+
+1. data collection
+2. data transformation
+3. visualizatoin
+
+all in very accessible libraries. This allows **fully reproducible and automated workstreams**
+which should greatly reduce the need to redo simple tasks over and over.
+
+Below are several examples along with the code used to generate them.
+
+```{python}
+#| label: fig_lines
+#| fig-cap: "Simple line chart."
+
+# Get data from Haver (need imf_datatools)
+col1, col2 = 'Unemployment rate', 'Combined rate of underemployment and unemployment (rhs)'
+dict_series = {'S186ELUR@EMERGEMA' : col1,
+	       'S186EUDR@EMERGEMA' : col2
+               }
+df = None
+for series in dict_series:
+    _df = imf_datatools.get_haver_data(series)
+    _df.columns = [dict_series[series]]
+    # Merge
+    if df is None:
+        df = _df
+    else:
+        df = df.merge(_df, left_index=True, right_index=True, how='outer')
+
+# Create Chart object
+chart = Chart(df, linecols=df.columns[0], rlinecols=df.columns[1],
+               title='Labor Utilization', subtitle='(Percent)',
+               xrange='2023-01:2025-08',
+               yrange=[8, 11],
+               )
+chart
+```
+
+```{python}
+#| label: fig_lines_bars
+#| fig-cap: "Chart with bars on left y-axis, lines on right y-axis."
+
+# Get data
+dict_series = {'N186FPAP@EMERGEMA' : 'Return to asset',
+               'N186FNIE@EMERGEMA' : 'Return to equity'}
+df = None
+for series in dict_series:
+    _df = imf_datatools.get_haver_data(series)
+    _df.columns = [dict_series[series]]
+    if df is None:
+        df = _df
+    else:
+        df = df.merge(_df, left_index=True, right_index=True, how='outer')
+
+# Take 12-month rolling mean
+df = df.rolling(12).mean()
+
+attrs = {'Return to asset' : {'color' : IMFBLUE},
+         'Return to equity' : {'color' : IMFRED}}
+
+# Create Chart object
+chart = Chart(df, barcols='Return to asset', rlinecols='Return to equity',
+              topxaxis='right',
+              barlinewidth=0,
+              attrs=attrs,
+              title='Bank Profitability 1/',
+              subtitle='(Percent, 12M moving average)',
+              xrange='2022-01:', yrange=[0, 3], ryrange=[0, 30],
+              legend_bottom=0.75, legend_left=0.55)
+
+chart
+```
 
 ```{python}
 #| label: fig1_chart1_gdp
-#| fig-cap: "A plot with lines and bars."
+#| fig-cap: "A complicated plot with lines, bars and arrow, text."
 
 infilename = '../data/turkey_page1/fig1_chart1_gdp.csv'
 if not os.path.isfile(infilename):
@@ -87,66 +295,506 @@ barcols = cols[1:]
 
 # Create Chart object
 
-dict_attrs = {linecol : {'linewidth' : 4,
-                         'color' : '#004C97',
-                         # 'linestyle' : '--',
-                         'marker' : 'o',
-                         'markersize' : 10,
-                         'markerfacecolor' : 'white',
-                         'markeredgewidth' : 4,
-                         'markeredgecolor' : '#004C97'},
-              'Consumption (private)' : {'color' : '#4B8CAD', 'barhatchcolor' : IMFBLUE, 'barhatch' : '\\\\'},
-              'Consumption (public)' : {'color' : 'white', 'barhatch' : '\\\\\\', 'barhatchcolor' : IMFBLACK},
-              'Net exports' : {'color' : IMFGREY},
-              'Inventories/discrepancy' : {'color' : IMFRED},
-              'Fixed investment' : {'color' : 'white',
-                                    'barhatch' : '///',
-                                    'barhatchcolor' : IMFGREEN,
-                                    'barhatchwidth' : 10}
-              }
+attrs = {linecol : {'linewidth' : 4,
+                    'color' : '#004C97',
+                    # 'linestyle' : '--',
+                    'marker' : 'o',
+                    'markersize' : 10,
+                    'markerfacecolor' : 'white',
+                    'markeredgewidth' : 4,
+                    'markeredgecolor' : '#004C97'},
+         'Consumption (private)' : {'color' : '#4B8CAD', 'barhatchcolor' : IMFBLUE, 'barhatch' : '\\\\'},
+         'Consumption (public)' : {'color' : 'white', 'barhatch' : '\\\\\\', 'barhatchcolor' : IMFBLACK},
+         'Net exports' : {'color' : IMFGREY},
+         'Inventories/discrepancy' : {'color' : IMFRED},
+         'Fixed investment' : {'color' : 'white',
+                               'barhatch' : '///',
+                               'barhatchcolor' : IMFGREEN,
+                               'barhatchwidth' : 10}
+         }
 
 chart1 = Chart(df, linecols=linecol, barcols=barcols,
-               dict_attrs=dict_attrs,
+               attrs=attrs,
                topxaxis='left',
                title='Contributions to Real GDP Growth',
                subtitle='(Percent, q/q)',
                xrange='2023Q1:', yrange=[-5, 9.5], ryrange=[-5, 9.5],
                ncol_legend=2)
-chart1.add_hline(y=1.4, xrange='2023Q1:' + df.index[-1].strftime('%Y-%m'),
-                 # xrange=[0.05, 0.95], coordinates='axis',
-                 color=IMFBLACK, linewidth=2.5, linestyle='--', dashes=[10, 4])
-
-text = '''Real GDP growth
-long-run average
-(1.4 q/q)'''
-
-chart1.add_text(pd.Timestamp('2024Q3'), 6.5, text=text, fontweight='bold', color='#004C97')
-chart1.add_arrow(head=[pd.Timestamp('2025Q1'), 1.5],
-                 tail=[pd.Timestamp('2025Q1'), 5],
-                 color='#004C97')
-fig = chart1.fig
-plt.show()
-plt.close()
+chart1
 ```
 
+But with a simple switch of style...
+
+## About this Document
+
+This document was generated by [Quarto](https://quarto.org/){target="_blank"}, a document generation program.
+To generate this document yourself, open Command Prompt and do the following.
+It is assumed you have R and RStudio installed from the Software Center, which installs Quarto.
+
+```
+cd C:\ProgramData\Python3\Lib\site-packages\imfcharts\doc
+# If necessary specify full path to quarto
+# C:\Program Files\RStudio\resources\app\bin\quarto\bin\quarto.exe render imfcharts.qmd
+
+quarto render imfcharts.qmd
+```
+
+and this will generate the HTML and Word output files.
+
+All of the code used to generate the output charts are embedded in the HTML version
+of this document, and can be pasted and used directly (as long as the corresponding data is also copied appropriately).
+See @sec-quickstart for installation instructions, and for guidance on the `imf_datatools` see [the website](http://datatools/){target="_blank"}.
+
+<!------------------------------------------------------------------------------------------------------------------------------------>
+# Basic Usage {#sec-basics}
+
+Below basic usage of the `imfcharts` package are shown.
+For most purposes it should be possible to create a `Chart` object with a single call to the `Chart()` function
+by specifying the data to be charted (a `pandas.DataFrame`) and the columns to be shown as lines, bars, etc.
+In some cases further modifications can be made by calling a member function on the `Chart` like `chart.set_xrange([0, 3])`.
+
+## Add Lines {#sec-basics-add_lines}
+
+The most straightforward use case is to create a line chart, typically a time series chart.
+The `Chart()` function will take in a `pandas.DataFrame` and argument `linecols` which can either be a
+`str` specifying a column name or an iterable of column names.
+
 ```{python}
-#| label: fig1_chart2_labor
+#| label: lines
 #| fig-cap: "A plot with lines"
+#| code-fold: show
 # Read in data
 infilename = '../data/turkey_page1/fig1_chart2_labor.csv'
 if not os.path.isfile(infilename):
     print('File ' + infilename + ' does not exist')
     sys.exit()
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+unemp = df.columns[0]
+combined = df.columns[1]
 
 # Create Chart object
-chart2 = Chart(df, linecols=df.columns[0], rlinecols=df.columns[1],
+chart2 = Chart(df, linecols=unemp, rlinecols=combined,
                title='Labor Utilization',
                subtitle='(Percent)',
-               xrange='2023-01:2025-08', # yrange=[8, 11], ryrange=[10, 25],
+               xrange='2023-01:2025-08',
                yrange=[8, 11],
                )
-               # debug=True)
-plt.show()
-plt.close()
+chart2
 ```
+
+Note that in the above example, the argument `linecols` and `rlinecols` are used
+to specify the columns to be plotted on the left and right y-axes, respectively.
+
+To further customize the lines, the `attrs` option can be used which is a `dict` between each
+column to be plotted and its attributes. For example, to change the line colors from the defaults, do
+
+```{python}
+#| label: lines_color
+#| fig-cap: "Specify line colors."
+#| code-fold: show
+
+# Create Chart object
+chart2 = Chart(df, linecols=unemp, rlinecols=combined,
+               attrs={unemp : {'color' : 'magenta'},
+	              combined : {'color' : '#00ffff'}},
+               title='Labor Utilization',
+               subtitle='(Percent)',
+               xrange='2023-01:2025-08',
+               yrange=[8, 11],
+               )
+chart2
+```
+
+In the above the variable `attrs` is a `dict` with keys corresponding to the line columns.
+The colors of each line are specified with the key `color` and corresponding color.
+
+Colors can be specified as
+
+- A valid `matplotlib` color (see [List of named colors](https://matplotlib.org/stable/gallery/color/named_colors.html){target="_blank"}
+- A color hex code specified as a `str` with format "#RRGGBB" where each of RR, GG, BB are hexadecimal values from "00" to "FF".
+- An RGBA string of the form (r, g, b, t) where r, g, b are values between 0 - 1 and t is the transparency, also 0 - 1.
+- Several colors are defined as `IMFBLUE`, `IMFRED`, `IMFGREEN`, `IMFGREY`, `IMFBLACK` and are imported from `imfcharts`.
+
+The available keys for a column within `attrs` are:
+
+- `linewidth` - Line width of marker
+- `linestyle` - A valid `Matplotlib` line style specified [here](https://matplotlib.org/stable/gallery/lines_bars_and_markers/linestyles.html).
+  Special implementations such as "imfdash", "imfround" are implemented which mimic Excel styles.
+- `dashes`, `dash_capstyle` - Advanced options to specify cap styles.
+- `legend` - If `False`, do not show this entry in the legend.
+- `marker` - Specify the marker (default no marker) using one of symbols [here](https://matplotlib.org/stable/api/markers_api.html).
+  Specifying multiple symbols together like "x|" will combine the symbols in the legend.
+- `markersize` - Size of marker
+- `markerfacecolor` - Face color of marker
+- `markeredgecolor` - Edge color of marker
+- `markeredgewidth` - Edge width of marker
+
+A fuller example is below.
+```{python}
+#| label: lines_all_options
+#| fig-cap: "Full example of line options."
+#| code-fold: show
+
+attrs = {unemp : {'color' : (0.22, 0.5, 0.9, 0.7),
+                  'linestyle' : 'dashed',
+		  'marker' : 'x|', # combine markers
+		  'markeredgecolor' : 'green',
+		  'markersize' : 12,
+		  'markeredgewidth' : 2,
+                 },
+         combined : {'color' : 'salmon',
+                     'linestyle' : 'dotted',
+                     'legend' : False, # don't show in legend
+                     'marker' : 'o',
+                     'markersize' : 12,
+                     'markerfacecolor' : '#00CCCC',
+                     'markeredgecolor' : '#AB2323',
+                     'markeredgewidth' : 3,
+	            }
+	}
+
+# Create Chart object
+chart2 = Chart(df, linecols=unemp, rlinecols=combined,
+               attrs=attrs,
+               title='Labor Utilization',
+               subtitle='(Percent)',
+               xrange='2023-01:2025-08',
+               yrange=[8, 11],
+               )
+chart2
+```
+
+Internally, lines are added with the function `Chart.add_lines()`, other options for this function are
+
+- `indexcol=None` - By default the input `pandas.DataFrame`'s index is used as the x-axis. If this is a column in the DataFrame, specify using this option.
+- `axis='left'` - Specify which y-axis to plot on.
+- `linebreaks=False` - If `linebreaks=False`, then connect the lines even if there are NA values.
+- `xrange=None` - Specify x-axis range. See @sec-basics-format_axes.
+- `debug=False` - Show information when running.
+
+## Add Bars {#sec-basics-add_bars}
+
+To add bars, use the argument `barcols` in `Chart()`. This can either be a `str` specifying a single column
+or an iterable of multiple column names.
+An example is shown below.
+
+```{python}
+#| label: data_barchart
+#| fig-cap: "Generate bar chart data."
+dict_series = {'S186NGPC@EMERGEMA' : 'Real GDP growth',
+               'S186NCYC@EMERGEMA' : 'Consumption1', # resident household
+               'S186NCNC@EMERGEMA' : 'Consumption2', # nonprofit serving household
+               'S186NCGC@EMERGEMA' : 'Consumption (public)',
+               'S186NFC@EMERGEMA'  : 'Fixed investment',
+               'S186NXC@EMERGEMA'  : 'Exports',
+               'S186NMC@EMERGEMA'  : 'Imports'}
+
+df = None
+for series in dict_series:
+    _df = imf_datatools.get_haver_data(series)
+    _df.columns = [dict_series[series]]
+    if df is None:
+        df = _df
+    else:
+        df = df.merge(_df, left_index=True, right_index=True, how='outer')
+df['Consumption (private)'] = df['Consumption1'] + df['Consumption2']
+df['Net exports'] = df['Exports'] - df['Imports']
+df['Inventories/discrepancy'] = df['Real GDP growth'] - df['Consumption (private)'] - df['Consumption (public)'] - df['Fixed investment'] - df['Net exports']
+
+gdpcol = 'Real GDP growth'
+barcols = ['Consumption (private)', 'Consumption (public)', 'Net exports', 'Inventories/discrepancy', 'Fixed investment']
+df = df[[gdpcol] + barcols].copy()
+# Normalize change by previous GDP value
+for barcol in barcols:
+    df[barcol] = 100. * df[barcol].diff() / df[gdpcol].shift()
+# Calculate %pop for GDP
+df[gdpcol] = imf_datatools.dataframe_utilities.calc_pop(df[gdpcol])
+```
+
+```{python}
+#| label: barchart
+#| fig-cap: "Example bar chart."
+#| code-fold: show
+linecol = cols[0]
+barcols = cols[1:]
+
+# Create Chart object
+chart1 = Chart(df, linecols=linecol, barcols=barcols,
+               topxaxis='left',
+               title='Contributions to Real GDP Growth',
+               subtitle='(Percent, q/q)',
+               xrange='2023Q1:', yrange=[-5, 9.5], ryrange=[-5, 9.5],
+               ncol_legend=2)
+chart1
+```
+
+Similar to plotting lines, an option `attrs` can be passed in to specify the attributes of each bar.
+The default is to follow the color scheme that is specified in the current style.
+
+The available options in `attrs` for bars is as follows:
+
+- `color` - The color of bars for this column.
+- `barwidth` - Specify width of bars. If time series, in units of days.
+- `offset` - Additional offset for bars. If time series, in units of days.
+- `baredgecolor` - Edge colors of bars.
+- `barhatchcolor` - Specify colors for any hatches
+- `barhatch` - Specify a valid hatch specified [here](https://matplotlib.org/stable/gallery/shapes_and_collections/hatch_style_reference.html)
+- `barhatchwidth` - Specify hatch bar width
+- `baredgecolor` - Overwrites for each column what is passed through same option in `Charts()` or `add_bars()`
+- `legend` - If `False`, do not add to legend.
+- `barcolors` - Specify color of individual colors of bars using the index of the data. See example below.
+
+
+Note that the default is to have the edges of bars in black. This color can be modfiied with `baredgecolor` for each column,
+and to remove use the option `barlinewidth=0` when calling `Chart()` or `Chart.add_bars()`.
+
+An example with customized bar `attrs` is below.
+
+```{python}
+#| label: barchart_options
+#| fig-cap: "Example bar chart."
+#| code-fold: show
+
+# Create Chart object
+attrs = {linecol : {'linewidth' : 4,
+                    'color' : '#004C97',
+                    # 'linestyle' : '--',
+                    'marker' : 'o',
+                    'markersize' : 10,
+                    'markerfacecolor' : 'white',
+                    'markeredgewidth' : 4,
+                    'markeredgecolor' : '#004C97'},
+         'Consumption (private)' : {'color' : '#4B8CAD', 'barhatchcolor' : IMFBLUE, 'barhatch' : '\\\\'},
+         'Consumption (public)' : {'color' : 'white', 'barhatch' : '\\\\\\', 'barhatchcolor' : IMFBLACK},
+         'Net exports' : {'color' : IMFGREY},
+         'Inventories/discrepancy' : {'color' : IMFRED},
+         'Fixed investment' : {'color' : 'white',
+                               'barhatch' : '///',
+                               'barhatchcolor' : IMFGREEN,
+                               'barhatchwidth' : 10}
+         }
+
+chart1 = Chart(df, linecols=linecol, barcols=barcols,
+               attrs=attrs,
+               topxaxis='left',
+               title='Contributions to Real GDP Growth',
+               subtitle='(Percent, q/q)',
+               xrange='2023Q1:', yrange=[-5, 9.5], ryrange=[-5, 9.5],
+               ncol_legend=2)
+chart1
+```
+
+Internally, bar charts are created with the function `chart.add_bars()`. Other options for this function are
+
+- `indexcol=None` -By default the input `pandas.DataFrame`'s index is used as the x-axis. If this is a column in the DataFrame, specify using this option.
+- `baraxis='left'` - Specify which y-axis to plot on.
+- `stack=True` - Specify whether to stack bars. If `True`, all bars are stacked on top of each other (default), otherwise they are staggered.
+- `total_barwidth=None` - When not plotting bars as a time series, specify the width of each bar, default is 0.9.
+- `barlinewidth=None` - Width of edges of bars.
+- `baredgecolor='black'` - Edge color for bars. Can be overwritten for individual columns by `attrs`.
+- `xrange=None` - Specify x-axis range. See @sec-basics-format_axes.
+- `debug=False` - Show information when running.
+
+## Add Lines and Rectangles {#sec-basics-add_lines_rects}
+
+    def add_hline(self, y, xrange=None, coordinates='data', color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None,
+    def add_vline(self, x, yrange=None, coordinates='data', width=1, color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None):
+    def add_hrect(self, y0, y1, width=1, linecolor='red', fillcolor=None, dash='-', opacity=1, text=''):
+    def add_vrect(self, y0, y1, width=1, linecolor='red', fillcolor=None, dash='-', opacity=1, text=''):
+    def add_text(self, x, y, text='', xycoords='data', color='black',
+    def add_arrow(self, head=(0, 0), tail=(1, 1),
+
+Add hlines
+Add vlines
+
+Add hrect
+Add vrect
+
+## Additional Options{#sec-basics-additional}
+
+### Adding Titles, Subtitles, axis titles.
+
+The `Chart()` function has arguments `title` and `subtitle` which allow specifying titles and subtitles, respectively.
+Internally these call `Chart.add_title()` and `Chart.add_subtitle()`.
+
+Axes titles are set within `Chart()` with arguments `xtitle` and `yttile`, together with `xtitlesize`, `ytitlesize`.
+Internally these call `Chart.set_xtitle(xtitle, xtitlesize)` and `Chart.set_ytitle(ytitle, ytitlesize)`.
+
+                 xtickfontsize=14, ytickfontsize=14,
+                 xticklength=None, yticklength=None,
+                 xtickangle=0,
+                 nxticks=7,
+                 xformat='auto',
+                 dict_legend=None,
+                 dict_xaxis=None,
+                 dict_yaxis=None,
+                 # style
+                 style='default',
+
+                 xrange=None, yrange=None, ryrange=None,
+                 xmargins='auto',
+                 width=10, height=6,
+                 topxaxis='left',
+                 hlines=[], vlines=[], hrects=[], vrects=[],
+
+### Legend options.
+                 ncol_legend=1,
+                 legend_spacing=0.5,
+                 legend_fontsize=14,
+                 legend_header='',
+                 legend_left=0.04, legend_bottom=0.85, legend_width=0.70, legend_height=0.15,
+                 legend_mode='expand',
+                 show_legend=True,
+    def update_legend(self,
+    def set_show_legend(self, option):
+
+### Show, save `Chart`.
+    def save(self, filename, dpi=250):
+    def show(self, debug=False):
+
+### Show left or right x-axis on top.
+    `topxaxis`.
+    
+    def set_top_xaxis(self, topxaxis='left'):
+
+### Showing information.
+
+To show internal debugging messages, set `debug=True`.
+
+
+## Formatting Axis and Setting Ranges {#sec-basics-format_axes}
+
+format axes
+
+    def set_xrange(self, xrange, margins='auto', debug=False):
+    def set_yrange(self, yrange):
+    def set_ryrange(self, ryrange):
+
+    def set_xticks(self, size=None, length=None, angle=0):
+    def set_yticks(self, size=None, length=None):
+    def set_nxticks(self, nxticks):
+                def quarter_formatter(x, pos):
+    def set_date_format(self, xformat='auto', debug=False):
+
+## Miscellaneous Topics
+
+Set which y-axis comes on top with chart.set_top_xaxis('left')
+
+By default, if NA values are in a column, the chart will connect all line segments.
+This may be misleading though as there is no data for some parts of the line.
+To show breaks in the line charts, set linebreaks=True.
+
+<!------------------------------------------------------------------------------------------------------------------------------------>
+# Switching Styles {#sec-styles}
+
+The `imfcharts` package is available with several pre-defined styles which will automatically set the style to be that for IMF Article IV reports etc.
+One of the main purposes of this library is to allow switching between styles to be easy.
+By doing this charts can be customized not just for existing styles but can be reused for any future changes in style.
+
+When the `imfcharts` library is imported, it will automatically copy the available style files where `matplotlib` can find them.
+To do this copying manually, do
+
+```
+from imfcharts import *
+install_styles(force=True)
+```
+
+which will copy the style files to `matplotlib.get_configdir() + '/stylelib'` which is typically `C:\Users\[user]\.matlotlib\stylelib`
+on a Fund laptop.
+
+The command
+
+```
+# This is just returning plt.style.available
+show_styles()
+```
+
+will show all available styles, including ones that are included from `matplotlib` and other libraries.
+
+To switch styles, call the command
+
+```{python}
+#| eval: false
+# This is just a wrapper around plt.style.use() with some guardrails
+set_style('imf-articleiv')
+```
+
+To temporarily switch styles, do the following.
+
+```{python}
+#| label: get_data_ca
+
+
+# Get data
+cacol = 'Current account'
+dict_series = {'N186BC@EMERGEMA' : cacol,
+               'N186IX3@EMERGEMA' : 'export_fuel',
+	       'N186IM3@EMERGEMA' : 'import_fuel',
+               'N186BGXN@EMERGEMA' : 'export_gold',
+	       'N186BGMN@EMERGEMA' : 'import_gold'}
+df = None
+for series in dict_series:
+    _df = imf_datatools.get_haver_data(series)
+    _df.columns = [dict_series[series]]
+    if df is None:
+        df = _df
+    else:
+        df = df.merge(_df, left_index=True, right_index=True, how='outer')
+df['Excluding fuel'] = df[cacol] - (df['export_fuel'] - df['import_fuel'])
+df['Excluding fuel & gold'] = df[cacol] - (df['export_fuel'] - df['import_fuel']) - (df['export_gold'] - df['import_gold'])
+df['Excluding gold'] = df[cacol] - (df['export_gold'] - df['import_gold'])
+df.drop(['export_fuel', 'import_fuel', 'export_gold', 'import_gold'], axis=1, inplace=True)
+
+# Take 12-month moving sum and divide by 1000
+df = df.rolling(12).sum() / 1000
+```
+
+```{python}
+#| label: style_comparison
+#| fig-cap: "Switching styles."
+#| code-fold: show
+# Create Chart object with default IMF Article IV style
+set_style('imf-articleiv')
+chart = Chart(df, linecols=df.columns,
+              title='Current Account', subtitle='(Billions USD, 12mms)',
+              xrange='2022-01:', yrange=[-95, 60],
+              legend_bottom=0.28, legend_left=0.60, height=4)
+chart
+```
+
+```{python}
+#| label: style_comparison2
+#| fig-cap: "Switching styles."
+#| code-fold: show
+# Create Chart object with Fund Guide style
+set_style('fund-guide')
+chart2 = Chart(df, linecols=df.columns,
+               title='Current Account', subtitle='(Billions USD, 12mms)',
+               xrange='2022-01:', yrange=[-95, 60],
+               legend_bottom=0.28, legend_left=0.60, height=4)
+chart2
+```
+
+It is also possible to switch styles temporarily for a single chart:
+
+
+
+<!------------------------------------------------------------------------------------------------------------------------------------>
+# Usage in R {#sec-R}
+
+How to use in R
+
+
+<!------------------------------------------------------------------------------------------------------------------------------------>
+# Usage in Stata {#sec-stata}
+
+How to use in Stata
+
+
+<!------------------------------------------------------------------------------------------------------------------------------------>
+# Usage in AIDA {#sec-aida}
+
+How to use in AIDA
+
+
+

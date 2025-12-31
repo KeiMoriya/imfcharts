@@ -104,6 +104,8 @@ class Chart:
     def __init__(self, data=None, indexcol=None,
                  # plotting options
                  linecols=None, barcols=None, rlinecols=None,
+                 # iterable of colors for colorcycle
+                 colorcycle=None,
                  # whether to remove breaks in line charts
                  linebreaks=False,
                  # bar options
@@ -166,6 +168,16 @@ class Chart:
             else:
                 print('WARNING: indexcol specified but data is not DataFrame')
 
+        # Set colorcycle using iterable of colors if specified
+        if colorcycle is not None:
+            self.colorcycle = itertools.cycle([c for c in colorcycle])
+            self.ncolors = len([c for c in colorcycle])
+        # Otherwise default to style file
+        else:
+            prop_cycle = [v['color'] for v in plt.rcParams['axes.prop_cycle']]
+            self.colorcycle = itertools.cycle(prop_cycle)
+            self.ncolors = len(prop_cycle)
+                
         # If barlinewidth was specified, use it
         if barlinewidth is not None:
             self.barlinewidth = barlinewidth
@@ -270,17 +282,19 @@ class Chart:
         # Draw lines, bars
         if barcols is not None:
             barcols = _parse_cols(barcols)
-            self.add_bars(self.data, barcols, indexcol=self.indexcol, stack=stack, total_barwidth=total_barwidth,
+            self.add_bars(self.data, barcols, indexcol=self.indexcol, colorcycle=None, stack=stack, total_barwidth=total_barwidth,
                           baraxis=baraxis, xrange=self.xrange, barlinewidth=self.barlinewidth, baredgecolor=self.baredgecolor,
                           attrs=attrs, debug=self.debug)
             
         if linecols is not None:
             linecols = _parse_cols(linecols)
-            self.add_lines(self.data, linecols, indexcol=self.indexcol, linebreaks=self.linebreaks, xrange=self.xrange, attrs=attrs, debug=self.debug)
+            self.add_lines(self.data, linecols, indexcol=self.indexcol, colorcycle=None,
+                           linebreaks=self.linebreaks, xrange=self.xrange, attrs=attrs, debug=self.debug)
 
         if rlinecols is not None:
             rlinecols = _parse_cols(rlinecols)
-            self.add_lines(self.data, rlinecols, indexcol=self.indexcol, axis='right', linebreaks=self.linebreaks, xrange=self.xrange, attrs=attrs, debug=self.debug)
+            self.add_lines(self.data, rlinecols, indexcol=self.indexcol, axis='right', colorcycle=None,
+                           linebreaks=self.linebreaks, xrange=self.xrange, attrs=attrs, debug=self.debug)
 
         # If hlines, vlines, hrects, vrects, fills, texts, arrows is given, loop over.
         # Each of these should be a list of kwargs of the form
@@ -806,7 +820,8 @@ class Chart:
         
         self.ax.xaxis.set_major_formatter(formatter)
 
-    def add_lines(self, data, colname, indexcol=None, axis='left', linebreaks=False, xrange=None, attrs=None, debug=False):
+    def add_lines(self, data, colname, indexcol=None, axis='left', colorcycle=None, linebreaks=False, xrange=None, attrs=None,
+                  debug=False):
         '''
         Add line to chart
         '''
@@ -850,6 +865,15 @@ class Chart:
         if xrange is not None:
             xrange = self._parse_xrange(xrange, debug=debug)
             self._trim_data(xrange)
+
+        # Create cycle if specified.
+        if colorcycle is not None:
+            cycle = itertools.cycle([c for c in colorcycle])
+            ncolors = len([c for c in colorcycle])
+        # Otherwise use defaults
+        else:
+            cycle = self.colorcycle
+            ncolors = self.ncolors
             
         for linecol in linecols:
             if debug:
@@ -1048,7 +1072,9 @@ class Chart:
             if debug:
                 print('after calling set_xrange()')
 
-    def add_bars(self, data, colname, indexcol=None, baraxis='left', stack=True, total_barwidth=None, barlinewidth=None, baredgecolor=None, xrange=None, attrs=None, debug=False):
+    def add_bars(self, data, colname, indexcol=None, baraxis='left', colorcycle=None,
+                 stack=True, total_barwidth=None, barlinewidth=None, baredgecolor=None, xrange=None, attrs=None,
+                 debug=False):
         '''
         Add bar to chart
         '''
@@ -1149,8 +1175,18 @@ class Chart:
             sys.exit()
 
         # Iterate over barcols and plot each bar.
-        prop_cycle = plt.rcParams['axes.prop_cycle']
-        cycle = itertools.cycle(prop_cycle)
+        # Create cycle if specified.
+        if colorcycle is not None:
+            cycle = itertools.cycle([c for c in colorcycle])
+            ncolors = len([c for c in colorcycle])
+        # Otherwise use defaults
+        else:
+            cycle = self.colorcycle
+            ncolors = self.ncolors
+        if debug:
+            print('cycle:')
+            print(cycle)
+            
         used_colors = []
 
         # Need to keep track of positive and negative offsets if stacked.
@@ -1267,7 +1303,7 @@ class Chart:
                     print('1. setting color for ' + barcol + ' to ' + color)
             else:
                 itry = 0
-                color = next(cycle)['color']
+                color = next(cycle)
                 if debug:
                     print('itry = ' + str(itry) + ', color = ' + color)
                 while 1:
@@ -1275,14 +1311,14 @@ class Chart:
                     
                     if color in used_colors:
                         # Break out if all colors in the cycle have been used
-                        if itry == len(prop_cycle):
-                            color = next(cycle)['color']
+                        if itry == ncolors:
+                            color = next(cycle)
                             if debug:
                                 print('Reached max of cycle at itry = ' + str(itry) + ', setting color for ' + barcol + ' to ' + color)
                             break
                         
                         # Otherwise keep trying
-                        color = next(cycle)['color']
+                        color = next(cycle)
                         if debug:
                             print('itry = ' + str(itry) + ', color is now ' + color)
                     else:

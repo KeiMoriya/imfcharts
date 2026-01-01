@@ -171,12 +171,10 @@ class Chart:
         # Set colorcycle using iterable of colors if specified
         if colorcycle is not None:
             self.colorcycle = itertools.cycle([c for c in colorcycle])
-            self.ncolors = len([c for c in colorcycle])
         # Otherwise default to style file
         else:
             prop_cycle = [v['color'] for v in plt.rcParams['axes.prop_cycle']]
             self.colorcycle = itertools.cycle(prop_cycle)
-            self.ncolors = len(prop_cycle)
                 
         # If barlinewidth was specified, use it
         if barlinewidth is not None:
@@ -869,11 +867,9 @@ class Chart:
         # Create cycle if specified.
         if colorcycle is not None:
             cycle = itertools.cycle([c for c in colorcycle])
-            ncolors = len([c for c in colorcycle])
         # Otherwise use defaults
         else:
             cycle = self.colorcycle
-            ncolors = self.ncolors
             
         for linecol in linecols:
             if debug:
@@ -891,6 +887,7 @@ class Chart:
             markeredgewidth = matplotlib.rcParams['lines.markeredgewidth']
             linewidth = matplotlib.rcParams['lines.linewidth']
             linestyle = matplotlib.rcParams['lines.linestyle']
+            # Initialize color as None
             color = None
             # Add legend for this entry
             legend = True
@@ -947,6 +944,10 @@ class Chart:
                 if 'legend' in _attrs:
                     legend = _attrs['legend']
             # end of linecol is in attrs
+
+            # If color was not specified from attrs, get from color cycle
+            if color is None:
+                color = next(cycle)
 
             if marker.strip().lower() == 'none':
                 marker = None
@@ -1178,17 +1179,13 @@ class Chart:
         # Create cycle if specified.
         if colorcycle is not None:
             cycle = itertools.cycle([c for c in colorcycle])
-            ncolors = len([c for c in colorcycle])
         # Otherwise use defaults
         else:
             cycle = self.colorcycle
-            ncolors = self.ncolors
         if debug:
             print('cycle:')
             print(cycle)
             
-        used_colors = []
-
         # Need to keep track of positive and negative offsets if stacked.
         pos_offset = [0] * len(self.data)
         neg_offset = [0] * len(self.data)
@@ -1298,34 +1295,10 @@ class Chart:
             # otherwise get the next color from the color cycle.
             if attrs is not None and barcol in attrs and 'color' in attrs[barcol]:
                 color = attrs[barcol]['color']
-                used_colors.append(color)
                 if debug:
                     print('1. setting color for ' + barcol + ' to ' + color)
             else:
-                itry = 0
                 color = next(cycle)
-                if debug:
-                    print('itry = ' + str(itry) + ', color = ' + color)
-                while 1:
-                    itry += 1
-                    
-                    if color in used_colors:
-                        # Break out if all colors in the cycle have been used
-                        if itry == ncolors:
-                            color = next(cycle)
-                            if debug:
-                                print('Reached max of cycle at itry = ' + str(itry) + ', setting color for ' + barcol + ' to ' + color)
-                            break
-                        
-                        # Otherwise keep trying
-                        color = next(cycle)
-                        if debug:
-                            print('itry = ' + str(itry) + ', color is now ' + color)
-                    else:
-                        used_colors.append(color)
-                        if debug:
-                            print('2. color not used, setting color for ' + barcol + ' to ' + color)
-                        break
 
             if debug:
                 if attrs is not None and barcol in attrs:

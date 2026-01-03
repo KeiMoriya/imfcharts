@@ -106,6 +106,8 @@ class Chart:
                  linecols=None, barcols=None, rlinecols=None, areacols=None,
                  # iterable of colors for colorcycle
                  colorcycle=None,
+                 # Global linewidth
+                 linewidth=None,
                  # whether to remove breaks in line charts
                  linebreaks=False,
                  # bar options
@@ -179,7 +181,10 @@ class Chart:
         else:
             prop_cycle = [v['color'] for v in plt.rcParams['axes.prop_cycle']]
             self.colorcycle = itertools.cycle(prop_cycle)
-                
+
+        # Set global linewidth, default is None.
+        self.linewidth = linewidth
+        
         # If barlinewidth was specified, use it
         if barlinewidth is not None:
             self.barlinewidth = barlinewidth
@@ -297,16 +302,18 @@ class Chart:
             
         if barcols is not None:
             self.add_bars(self.data, barcols, indexcol=self.indexcol, colorcycle=None, barstack=barstack, total_barwidth=total_barwidth,
-                          baraxis=baraxis, xrange=self.xrange, barlinewidth=self.barlinewidth, baredgecolor=self.baredgecolor,
+                          baraxis=baraxis, xrange=self.xrange, linewidth=self.barlinewidth, edgecolor=self.baredgecolor,
                           attrs=attrs, debug=self.debug)
             
         if linecols is not None:
             self.add_lines(self.data, linecols, indexcol=self.indexcol, colorcycle=None,
-                           linebreaks=self.linebreaks, xrange=self.xrange, attrs=attrs, debug=self.debug)
+                           linewidth=self.linewidth, linebreaks=self.linebreaks,
+                           xrange=self.xrange, attrs=attrs, debug=self.debug)
 
         if rlinecols is not None:
             self.add_lines(self.data, rlinecols, indexcol=self.indexcol, axis='right', colorcycle=None,
-                           linebreaks=self.linebreaks, xrange=self.xrange, attrs=attrs, debug=self.debug)
+                           linewidth=self.linewidth, linebreaks=self.linebreaks,
+                           xrange=self.xrange, attrs=attrs, debug=self.debug)
             
         # If hlines, vlines, hrects, vrects, fills, texts, arrows is given, loop over.
         # Each of these should be a list of kwargs of the form
@@ -783,6 +790,9 @@ class Chart:
                     formatter = mdates.DateFormatter('%Y')
                 elif freq == '?':
                     pass
+            elif self.data is None:
+                # If no data is set, format of x-axis is not set.
+                formatter = None
             else:
                 print('Cannot determine formatter for xformat = auto')
                 sys.exit()
@@ -829,8 +839,9 @@ class Chart:
             print('set_date_format():')
             print('xformat of "' + str(xformat) + '" of type ' + str(type(xformat)) + ' not allowed')
             sys.exit()
-        
-        self.ax.xaxis.set_major_formatter(formatter)
+
+        if formatter is not None:
+            self.ax.xaxis.set_major_formatter(formatter)
 
     def add_lines(self, data, cols, indexcol=None, axis='left', colorcycle=None, linewidth=None, linebreaks=False,
                   xrange=None, margins=None, attrs=None,
@@ -1056,7 +1067,7 @@ class Chart:
                 print('after calling set_xrange()')
 
     def add_bars(self, data, cols, indexcol=None, baraxis='left', colorcycle=None,
-                 barstack=True, total_barwidth=None, barlinewidth=None, baredgecolor=None,
+                 barstack=True, total_barwidth=None, linewidth=None, edgecolor=None,
                  xrange=None, margins=None, attrs=None,
                  debug=False):
         '''
@@ -1094,11 +1105,11 @@ class Chart:
 
         # Line width of bar borders for all bars.
         # If specified as input arg, use
-        if barlinewidth is not None:
-            _barlinewidth = barlinewidth
+        if linewidth is not None:
+            _linewidth = linewidth
         # Otherwise use class settings
         else:
-            _barlinewidth = self.barlinewidth
+            _linewidth = self.linewidth
         
         # Set self.data to be input data
         self.data = data
@@ -1140,7 +1151,6 @@ class Chart:
                 sys.exit()
 
             # If barstack=False, need to divide each barwidth by number of bars.
-            # If total_barwidth
             if not barstack:
                 if total_barwidth is None:
                     # Set to total barwdith
@@ -1148,7 +1158,6 @@ class Chart:
                     
                 # Set each bar to be 1 / len(barcols)
                 barwidth /= len(barcols)
-
                 
         elif self.xaxis_type in ['categorical', 'numerical']:
             # Split barwidth among barcols.
@@ -1198,15 +1207,15 @@ class Chart:
             # and the bar edge color.
             # For IMF charts use this as the hatch line color
             # and draw bar again with edgecolor set to black.
-            barhatchcolor = matplotlib.rcParams['patch.edgecolor']
-            barhatch = None
-            barhatchwidth = matplotlib.rcParams['hatch.linewidth']
+            hatchcolor = matplotlib.rcParams['patch.edgecolor']
+            hatch = None
+            hatchwidth = matplotlib.rcParams['hatch.linewidth']
             # Local copy for this column, can be overwritten with attrs
-            # If baredgecolor has not been set, use default
-            if baredgecolor is None:
-                _baredgecolor = self.baredgecolor
+            # If edgecolor has not been set, use default
+            if edgecolor is None:
+                _edgecolor = self.edgecolor
             else:
-                _baredgecolor = baredgecolor
+                _edgecolor = edgecolor
 
             # Individual bar colors
             barcolors = None
@@ -1228,20 +1237,20 @@ class Chart:
                 # If any were specified, overwrite stylefile
 
                 # Hatch colors
-                if 'barhatchcolor' in _attrs:
-                    barhatchcolor = _attrs['barhatchcolor']
+                if 'hatchcolor' in _attrs:
+                    hatchcolor = _attrs['hatchcolor']
 
                 # Hatch pattern in bars
-                if 'barhatch' in _attrs:
-                    barhatch = _attrs['barhatch']
+                if 'hatch' in _attrs:
+                    hatch = _attrs['hatch']
 
                 # Line width of hatches
-                if 'barhatchwidth' in _attrs:
-                    barhatchwidth = _attrs['barhatchwidth']
+                if 'hatchwidth' in _attrs:
+                    hatchwidth = _attrs['hatchwidth']
 
                 # Color of bar edges
-                if 'baredgecolor' in _attrs:
-                    _baredgecolor = _attrs['baredgecolor']
+                if 'edgecolor' in _attrs:
+                    _edgecolor = _attrs['edgecolor']
                     
                 # If offset is specified for when barstack=False, use it
                 if 'offset' in _attrs:
@@ -1249,8 +1258,8 @@ class Chart:
                     offset_specified = True
 
                 # If barwidth is specified, use it
-                if 'barwidth' in _attrs:
-                    barwidth = _attrs['barwidth']
+                if 'width' in _attrs:
+                    width = _attrs['width']
                     
                 # Add legend entry
                 if 'legend' in _attrs:
@@ -1287,10 +1296,10 @@ class Chart:
                 if attrs is not None and barcol in attrs:
                     print('attrs:')
                     print(attrs[barcol])
-                print('barhatch = ' + str(barhatch))
-                print('barlinewidth = ' + str(_barlinewidth))
-                print('_baredgecolor = ' + str(_baredgecolor))
-                print('barhatchcolor = ' + str(barhatchcolor))
+                print('hatch = ' + str(hatch))
+                print('linewidth = ' + str(_linewidth))
+                print('_edgecolor = ' + str(_edgecolor))
+                print('hatchcolor = ' + str(hatchcolor))
                 print('color = ' + str(color))
 
             # Make copy of positive and negative parts.
@@ -1337,36 +1346,36 @@ class Chart:
             if barstack:
                 # No direct way to set hatch line widths in ax.bar,
                 # need to use plt.rc_context()
-                with plt.rc_context({"hatch.linewidth": barhatchwidth}):
+                with plt.rc_context({"hatch.linewidth": hatchwidth}):
                     if ibarcol == 0:
                         # Draw negative first
                         entry = _ax.bar(self.data.index, _df_neg[barcol],
-                                        width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                        width=barwidth, color=color, edgecolor=hatchcolor, hatch=hatch, linewidth=0,
                                         zorder=1, label=barcol)
                         # Draw positive
                         entry = _ax.bar(self.data.index, _df_pos[barcol],
-                                        width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                        width=barwidth, color=color, edgecolor=hatchcolor, hatch=hatch, linewidth=0,
                                         zorder=1, label=barcol)
                     else:
                         # Draw negative first
                         entry = _ax.bar(self.data.index, _df_neg[barcol],
                                         bottom=neg_offset,
-                                        width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                        width=barwidth, color=color, edgecolor=hatchcolor, hatch=hatch, linewidth=0,
                                         zorder=1, label=barcol)
                         # Draw positive
                         entry = _ax.bar(self.data.index, _df_pos[barcol],
                                         bottom=pos_offset,
-                                        width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                        width=barwidth, color=color, edgecolor=hatchcolor, hatch=hatch, linewidth=0,
                                         zorder=1, label=barcol)
                             
                     # Draw again with _edgecolor
                     entry2 = _ax.bar(self.data.index, _df_pos[barcol],
-                                     width=barwidth, color='none', edgecolor=_baredgecolor, linewidth=_barlinewidth,
+                                     width=barwidth, color='none', edgecolor=_edgecolor, linewidth=_linewidth,
                                      bottom=pos_offset,
                                      zorder=2)
                     _ = _ax.bar(self.data.index, _df_neg[barcol],
                                 bottom=neg_offset,
-                                width=barwidth, color='none', edgecolor=_baredgecolor, linewidth=_barlinewidth,
+                                width=barwidth, color='none', edgecolor=_edgecolor, linewidth=_linewidth,
                                 zorder=2)
                     
                     # If barcolors was specified, get all patches for this barcol,
@@ -1385,12 +1394,12 @@ class Chart:
             # end of barstack
             else:
                 entry = _ax.bar(_x, self.data[barcol],
-                                width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                width=barwidth, color=color, edgecolor=hatchcolor, hatch=hatch, linewidth=0,
                                 zorder=1, label=barcol)
                 
                 # Draw again with _baredgecolor
                 entry2 = _ax.bar(_x, self.data[barcol],
-                                 width=barwidth, color='none', edgecolor=_baredgecolor, linewidth=_barlinewidth,
+                                 width=barwidth, color='none', edgecolor=_edgecolor, linewidth=_linewidth,
                                  zorder=2)
                     
                 # Set x-axis categories from self.data.index

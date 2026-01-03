@@ -103,16 +103,20 @@ class Chart:
 
     def __init__(self, data=None, indexcol=None,
                  # plotting options
-                 linecols=None, barcols=None, rlinecols=None,
+                 linecols=None, barcols=None, rlinecols=None, areacols=None,
                  # iterable of colors for colorcycle
                  colorcycle=None,
                  # whether to remove breaks in line charts
                  linebreaks=False,
                  # bar options
-                 stack=True, area=False, barwidth=None, baraxis='left',
+                 barstack=True, barwidth=None, baraxis='left',
                  total_barwidth=None,
                  barlinewidth=None,
                  baredgecolor='black',
+                 # area options
+                 areastack=True, areaaxis='left',
+                 arealinewidth=None,
+                 areaedgecolor='none',
                  title=None,
                  subtitle = None,
                  xtitle='', ytitle='',
@@ -130,7 +134,7 @@ class Chart:
                  # individual look of each column in data
                  attrs=None,
                  xrange=None, yrange=None, ryrange=None,
-                 xmargins='auto',
+                 margins='auto',
                  width=10, height=6,
                  topxaxis='left',
                  hlines=None, vlines=None, hrects=None, vrects=None, fills=None, texts=None, arrows=None,
@@ -183,7 +187,15 @@ class Chart:
         else:
             self.barlinewidth = matplotlib.rcParams['patch.linewidth']
         self.baredgecolor = baredgecolor
-                
+
+        # If arealinewidth was specified, use it
+        if arealinewidth is not None:
+            self.arealinewidth = arealinewidth
+        # Otherwise get from style
+        else:
+            self.arealinewidth = matplotlib.rcParams['patch.linewidth']
+        self.areaedgecolor = areaedgecolor
+        
         self.width = width
         self.height = height
 
@@ -206,7 +218,7 @@ class Chart:
         self.nxticks = nxticks
 
         self.xformat = xformat
-        self.xmargins = xmargins
+        self.margins = margins
 
         self.ncol_legend = ncol_legend
         self.legend_fontsize = legend_fontsize
@@ -277,23 +289,25 @@ class Chart:
         self.linebreaks = linebreaks
 
         # ---------------------------------------------------------------------------------------------------
-        # Draw lines, bars
+        # Draw area, bars, lines
+        if areacols is not None:
+            self.add_area(self.data, areacols, indexcol=self.indexcol, colorcycle=None, areastack=areastack,
+                          areaaxis=areaaxis, xrange=self.xrange, arealinewidth=self.arealinewidth, areaedgecolor=self.areaedgecolor,
+                          attrs=attrs, debug=self.debug)
+            
         if barcols is not None:
-            barcols = _parse_cols(barcols)
-            self.add_bars(self.data, barcols, indexcol=self.indexcol, colorcycle=None, stack=stack, total_barwidth=total_barwidth,
+            self.add_bars(self.data, barcols, indexcol=self.indexcol, colorcycle=None, barstack=barstack, total_barwidth=total_barwidth,
                           baraxis=baraxis, xrange=self.xrange, barlinewidth=self.barlinewidth, baredgecolor=self.baredgecolor,
                           attrs=attrs, debug=self.debug)
             
         if linecols is not None:
-            linecols = _parse_cols(linecols)
             self.add_lines(self.data, linecols, indexcol=self.indexcol, colorcycle=None,
                            linebreaks=self.linebreaks, xrange=self.xrange, attrs=attrs, debug=self.debug)
 
         if rlinecols is not None:
-            rlinecols = _parse_cols(rlinecols)
             self.add_lines(self.data, rlinecols, indexcol=self.indexcol, axis='right', colorcycle=None,
                            linebreaks=self.linebreaks, xrange=self.xrange, attrs=attrs, debug=self.debug)
-
+            
         # If hlines, vlines, hrects, vrects, fills, texts, arrows is given, loop over.
         # Each of these should be a list of kwargs of the form
         # [{'y' : 10, 'color' : 'red'}, ...]
@@ -362,7 +376,7 @@ class Chart:
 
         # Set x-, y-axis ranges
         if self.data is not None:
-            self.set_xrange(self.xrange, self.xmargins)
+            self.set_xrange(self.xrange, self.margins)
             self.set_yrange(self.yrange)
             self.set_ryrange(self.ryrange)
 
@@ -594,7 +608,7 @@ class Chart:
         '''
 
         if debug:
-            print('start of set_xrange() for xrange = ' + str(xrange))
+            print('start of set_xrange() for xrange = ' + str(xrange) + ', margins = ' + str(margins))
         xrange = self._parse_xrange(xrange)
         if debug:
             print('xrange after calling _parse_xrange():')
@@ -818,14 +832,14 @@ class Chart:
         
         self.ax.xaxis.set_major_formatter(formatter)
 
-    def add_lines(self, data, colname, indexcol=None, axis='left', colorcycle=None, linebreaks=False, xrange=None, attrs=None,
+    def add_lines(self, data, cols, indexcol=None, axis='left', colorcycle=None, linebreaks=False, xrange=None, attrs=None,
                   debug=False):
         '''
         Add line to chart
         '''
 
         if debug:
-            print('Calling add_lines on "' + str(colname) + '"')
+            print('Calling add_lines on "' + str(cols) + '"')
 
         if indexcol is not None:
             if type(data) == pd.DataFrame:
@@ -848,7 +862,7 @@ class Chart:
             else:
                 print('WARNING: indexcol specified but data is not DataFrame')
             
-        linecols = _parse_cols(colname)
+        linecols = _parse_cols(cols)
         # Don't try to plot indexcol if it was given since this is now the index
         if indexcol is not None:
             if indexcol in linecols:
@@ -1073,15 +1087,15 @@ class Chart:
             if debug:
                 print('after calling set_xrange()')
 
-    def add_bars(self, data, colname, indexcol=None, baraxis='left', colorcycle=None,
-                 stack=True, total_barwidth=None, barlinewidth=None, baredgecolor=None, xrange=None, attrs=None,
+    def add_bars(self, data, cols, indexcol=None, baraxis='left', colorcycle=None,
+                 barstack=True, total_barwidth=None, barlinewidth=None, baredgecolor=None, xrange=None, attrs=None,
                  debug=False):
         '''
         Add bar to chart
         '''
 
         if debug:
-            print('Calling add_bars on "' + str(colname) + '"')
+            print('Calling add_bars on "' + str(cols) + '"')
             
         if indexcol is not None:
             if type(data) == pd.DataFrame:
@@ -1104,7 +1118,7 @@ class Chart:
             else:
                 print('WARNING: indexcol specified but data is not DataFrame')
                 
-        barcols = _parse_cols(colname)
+        barcols = _parse_cols(cols)
         # Don't try to plot indexcol if it was given since this is now the index
         if indexcol is not None:
             barcols.remove(indexcol)
@@ -1156,9 +1170,9 @@ class Chart:
                 print('Unknown frequency ' + freq)
                 sys.exit()
 
-            # If stack=False, need to divide each barwidth by number of bars.
+            # If barstack=False, need to divide each barwidth by number of bars.
             # If total_barwidth
-            if not stack:
+            if not barstack:
                 if total_barwidth is None:
                     # Set to total barwdith
                     total_barwidth = barwidth
@@ -1190,10 +1204,10 @@ class Chart:
         pos_offset = [0] * len(self.data)
         neg_offset = [0] * len(self.data)
 
-        # For stack=False, need offset for x-axis.
+        # For barstack=False, need offset for x-axis.
         # Default is to start from half the total barwidth and half a bar width in the negative direction,
         # this centers the bars.
-        if not stack:
+        if not barstack:
             total_offset = - total_barwidth / 2. - total_barwidth / len(barcols) / 2.
 
         # Keep track of all patches from previous barcols so that
@@ -1260,7 +1274,7 @@ class Chart:
                 if 'baredgecolor' in _attrs:
                     _baredgecolor = _attrs['baredgecolor']
                     
-                # If offset is specified for when stack=False, use it
+                # If offset is specified for when barstack=False, use it
                 if 'offset' in _attrs:
                     offset = _attrs['offset']
                     offset_specified = True
@@ -1322,9 +1336,9 @@ class Chart:
             _df_neg.loc[mask, barcol] = np.nan
 
             # Set offset when stack=False
-            if not stack:
+            if not barstack:
                 total_offset += offset
-                # If stack=False, need to set _x to be coordinates
+                # If barstack=False, need to set _x to be coordinates
                 # of where bars are.
                 if self.xaxis_type == 'categorical':
                     _x = np.arange(len(self.data)) + total_offset
@@ -1339,7 +1353,7 @@ class Chart:
                     print(_x)
             
             if baraxis == 'left':
-                if stack:
+                if barstack:
                     # No direct way to set hatch line widths in ax.bar,
                     # need to use plt.rc_context()
                     with plt.rc_context({"hatch.linewidth": barhatchwidth}):
@@ -1364,7 +1378,7 @@ class Chart:
                                                 width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
                                                 zorder=1, label=barcol)
                             
-                        # Draw again with black edgecolor
+                        # Draw again with _edgecolor
                         entry2 = self.ax.bar(self.data.index, _df_pos[barcol],
                                              width=barwidth, color='none', edgecolor=_baredgecolor, linewidth=_barlinewidth,
                                              bottom=pos_offset,
@@ -1387,13 +1401,13 @@ class Chart:
                         # Add current patches to previous_patches
                         previous_patches += patches
                     # end of plt.rc_context()
-                # end of stack
+                # end of barstack
                 else:
                     entry = self.ax.bar(_x, self.data[barcol],
                                         width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
                                         zorder=1, label=barcol)
 
-                    # Draw again with black edgecolor
+                    # Draw again with _baredgecolor
                     entry2 = self.ax.bar(_x, self.data[barcol],
                                          width=barwidth, color='none', edgecolor=_baredgecolor, linewidth=_barlinewidth,
                                          zorder=2)
@@ -1414,7 +1428,7 @@ class Chart:
                     # Add current patches to previous_patches
                     previous_patches += patches
                     
-                # end of stack=False
+                # end of barstack=False
             # end of baraxis == 'left'
                     
             elif baraxis == 'right':
@@ -1426,7 +1440,7 @@ class Chart:
                     
                 # No direct way to set hatch line widths in ax.bar,
                 # need to use plt.rc_context()
-                if stack:
+                if barstack:
                     with plt.rc_context({"hatch.linewidth": barhatchwidth}):
                         if ibarcol == 0:
                             # Draw negative first
@@ -1449,14 +1463,14 @@ class Chart:
                                                       width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
                                                       zorder=1, label=barcol)
                             
-                        # Draw again with black edgecolor
+                        # Draw again with _edgecolor
                         entry2 = self.ax_right.bar(self.data.index, _df_pos[barcol],
-                                                   width=barwidth, color='none', edgecolor='black', linewidth=_barlinewidth,
+                                                   width=barwidth, color='none', edgecolor=_baredgecolor, linewidth=_barlinewidth,
                                                    bottom=pos_offset,
                                                    zorder=2)
                         _ = self.ax_right.bar(self.data.index, _df_neg[barcol],
                                               bottom=neg_offset,
-                                              width=barwidth, color='none', edgecolor='black', linewidth=_barlinewidth,
+                                              width=barwidth, color='none', edgecolor=_baredgecolor, linewidth=_barlinewidth,
                                               zorder=2)
 
                         # If barcolors was specified, get all patches for this barcol,
@@ -1472,15 +1486,15 @@ class Chart:
                         # Add current patches to previous_patches
                         previous_patches += patches
                     # end of plt.rc_context()
-                # end of stack
+                # end of barstack
                 else:
                     entry = self.ax_right.bar(_x, self.data[barcol],
                                               width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
                                               zorder=1, label=barcol)
                     
-                    # Draw again with black edgecolor
+                    # Draw again with _edgecolor
                     entry2 = self.ax_right.bar(_x, self.data[barcol],
-                                               width=barwidth, color='none', edgecolor='black', linewidth=_barlinewidth,
+                                               width=barwidth, color='none', edgecolor=_baredgecolor, linewidth=_barlinewidth,
                                                zorder=2)
                     # Set x-axis categories from self.data.index
                     self.ax_right.set_xticks(np.arange(len(self.data)), labels=self.data.index)
@@ -1498,7 +1512,7 @@ class Chart:
                     # Add current patches to previous_patches
                     previous_patches += patches
                     
-                # end of stack=False
+                # end of barstack=False
             # end of baraxis == 'right'
             
             # Adjust offsets
@@ -1518,14 +1532,263 @@ class Chart:
         # Set x-axis range if specified
         if xrange is not None:
             self.set_xrange(xrange, debug=debug)
+
+    def add_area(self, data, cols, indexcol=None, areaaxis='left', colorcycle=None, alpha=1,
+                 areastack=True, arealinewidth=None, areaedgecolor=None, xrange=None, margins=0, attrs=None,
+                 debug=False):
+        '''
+        Add area to chart
+        '''
+
+        if debug:
+            print('Calling add_area on "' + str(cols) + '"')
+            
+        if indexcol is not None:
+            if type(data) == pd.DataFrame:
+                # Check if index has already been set for data
+                if data.index.name == indexcol:
+                    pass
+
+                # Otherwise try to set index to indexcol
+                elif indexcol not in data.columns:
+                    print('indexcol specified as "' + str(indexcol) + '" but not found in data:')
+                    print(data)
+                    sys.exit()
+                else:
+                    data.set_index(indexcol, inplace=True)
+                    # If possible, convert to datetime index
+                    try:
+                        data.index = pd.to_datetime(data.index)
+                    except Exception:
+                        pass
+            else:
+                print('WARNING: indexcol specified but data is not DataFrame')
+                
+        areacols = _parse_cols(cols)
+        # Don't try to plot indexcol if it was given since this is now the index
+        if indexcol is not None:
+            areacols.remove(indexcol)
+
+        # Line width of area borders for all areas.
+        # If specified as input arg, use
+        if arealinewidth is not None:
+            _arealinewidth = arealinewidth
+        # Otherwise use class settings
+        else:
+            _arealinewidth = self.arealinewidth
+            
+        # Set self.data to be input data
+        self.data = data
+        # Set x-axis limits and trim data as needed
+        if xrange is not None:
+            xrange = self._parse_xrange(xrange)
+            self._trim_data(xrange)
+
+        # Iterate over areacols and plot each area.
+        # Create cycle if specified.
+        if colorcycle is not None:
+            cycle = itertools.cycle([c for c in colorcycle])
+        # Otherwise use defaults
+        else:
+            cycle = self.colorcycle
+        if debug:
+            print('cycle:')
+            print(cycle)
+            
+        # Need to keep track of positive and negative offsets if stacked.
+        pos_offset = [0] * len(self.data)
+        neg_offset = [0] * len(self.data)
+
+        for iareacol, areacol in enumerate(areacols):
+            if debug:
+                print('-' * 40)
+                print('areacol = "' + areacol + '"')
+                
+            if areacol not in data.columns:
+                print('"' + areacol + '" is not in data')
+                raise ValueError
+
+            # Get default settings from stylefile
+            # The patch.edgecolor is used for both the hatch line color
+            # and the area edge color.
+            # For IMF charts use this as the hatch line color
+            # and draw area again with edgecolor set to black.
+            hatchcolor = matplotlib.rcParams['patch.edgecolor']
+            hatch = None
+            hatchwidth = matplotlib.rcParams['hatch.linewidth']
+            # Local copy for this column, can be overwritten with attrs
+            # If areaedgecolor has not been set, use default
+            if areaedgecolor is None:
+                _areaedgecolor = self.areaedgecolor
+            else:
+                _areaedgecolor = areaedgecolor
+
+            # Add legend for this entry
+            legend = True
+
+            # alpha
+            _alpha = alpha
+
+            # Get any attributes that were assigned to this column
+            if attrs is not None and areacol in attrs:
+                # This should be a dict containing attributes for this column
+                _attrs = attrs[areacol]
+                if debug:
+                    print(_attrs)
+
+                # If any were specified, overwrite stylefile
+
+                # Hatch colors
+                if 'hatchcolor' in _attrs:
+                    hatchcolor = _attrs['hatchcolor']
+
+                # Hatch pattern in area
+                if 'hatch' in _attrs:
+                    hatch = _attrs['hatch']
+
+                # Line width of hatches
+                if 'hatchwidth' in _attrs:
+                    hatchwidth = _attrs['hatchwidth']
+
+                # Color of area edges
+                if 'edgecolor' in _attrs:
+                    _areaedgecolor = _attrs['edgecolor']
+
+                # alpha
+                if 'alpha' in _attrs:
+                    _alpha = _attrs['alpha']
+                    
+                # Add legend entry
+                if 'legend' in _attrs:
+                    legend = _attrs['legend']
+
+            # end of attrs existing for this areacol
+
+            # For color, if it is specified use it,
+            # otherwise get the next color from the color cycle.
+            if attrs is not None and areacol in attrs and 'color' in attrs[areacol]:
+                color = attrs[areacol]['color']
+                if debug:
+                    print('1. setting color for ' + areacol + ' to ' + color)
+            else:
+                color = next(cycle)
+
+            if debug:
+                if attrs is not None and areacol in attrs:
+                    print('attrs:')
+                    print(attrs[areacol])
+                print('hatch = ' + str(hatch))
+                print('_areaedgecolor = ' + str(_areaedgecolor))
+                print('hatchcolor = ' + str(hatchcolor))
+                print('color = ' + str(color))
+
+            # Make copy of positive and negative parts
+            # (for area chart we should not have negative parts).
+            # Set mask to NA so that they don't show up with lines in the chart,
+            # but when saving to pos_offset and neg_offset, set values to 0.
+            _df_pos = self.data[[areacol]].copy()
+            mask = _df_pos[areacol] < 0
+            _df_pos.loc[mask, areacol] = np.nan
+                
+            _df_neg = self.data[[areacol]].copy()
+            mask = _df_neg[areacol] > 0
+            _df_neg.loc[mask, areacol] = np.nan
+
+            if areaaxis == 'left':
+                _ax = self.ax
+            else:
+                if self.ax_right is None:
+                    self.ax_right = self.ax.twinx()
+                    # Set color cycler to be common with the left y-axis.
+                    # Hack from https://github.com/matplotlib/matplotlib/issues/19479
+                    self.ax_right._get_lines = self.ax._get_lines
+                _ax = self.ax_right
+                    
+            if areastack:
+                # No direct way to set hatch line widths in ax.area,
+                # need to use plt.rc_context()
+                with plt.rc_context({"hatch.linewidth": hatchwidth}):
+                    # Draw without line edges
+                    # Draw negative first
+                    entry = _ax.fill_between(self.data.index, y1=_df_neg[areacol] + neg_offset, y2=neg_offset,
+                                             color=color, edgecolor=hatchcolor, hatch=hatch, linewidth=0, alpha=_alpha,
+                                             zorder=1, label=areacol)
+                    # Draw positive
+                    entry = _ax.fill_between(self.data.index, y1=_df_pos[areacol] + pos_offset, y2=pos_offset,
+                                             color=color, edgecolor=hatchcolor, hatch=hatch, linewidth=0, alpha=_alpha,
+                                             zorder=1, label=areacol)
+                        
+                    # Draw again with _areaedgecolor
+                    # positive
+                    entry2 = _ax.fill_between(self.data.index, y1=_df_pos[areacol] + pos_offset, y2=pos_offset,
+                                              color='none', edgecolor=_areaedgecolor, linewidth=_arealinewidth, alpha=_alpha,
+                                              zorder=2)
+                    # negative
+                    _ = _ax.fill_between(self.data.index, y1=_df_neg[areacol] + neg_offset, y2=neg_offset,
+                                         color='none', edgecolor=_areaedgecolor, linewidth=_arealinewidth, alpha=_alpha,
+                                         zorder=2)
+
+                # end of plt.rc_context()
+            # end of areastack
+            else:
+                # Draw once without edgecolor
+                entry = _ax.fill_between(self.data.index, y1=self.data[areacol], y2=0,
+                                         color=color, edgecolor=hatchcolor, hatch=hatch, linewidth=0, alpha=_alpha,
+                                         zorder=1, label=areacol)
+                
+                # Draw again with _areaedgecolor
+                entry2 = _ax.fill_between(self.data.index, y1=self.data[areacol], y2=0,
+                                          color='none', edgecolor=_areaedgecolor, linewidth=_arealinewidth, alpha=_alpha,
+                                          zorder=2)
+                    
+                # Set x-axis categories from self.data.index
+                _ax.set_xticks(np.arange(len(self.data)), labels=self.data.index)
+            # end of areastack=False
+            
+            # Adjust offsets
+            neg_offset += _df_neg[areacol].replace(np.nan, 0).values
+            pos_offset += _df_pos[areacol].replace(np.nan, 0).values
+
+            if debug:
+                print('pos_offset:')
+                print(pos_offset)
+                print('neg_offset:')
+                print(neg_offset)
+
+            # If adding to legend
+            if legend:
+                # Create a Patch that has the same characteristics
+                # that can be added to the legend entries.
+                entry = Patch(
+                    facecolor=color,
+                    edgecolor=_areaedgecolor,
+                    hatch=hatch,
+                    alpha=_alpha,
+                    label=areacols)
+                self.legend_entries.append(entry)
+                self.legend_labels.append(areacol)
+        # end of loop over areacols
+
+        # Re-create legend
+        if self.show_legend:
+            self.update_legend()
         
-    def add_scatter(self, data, colname, indexcol=None, attrs=None, debug=False):
+        # Set x-axis range if specified.
+        # For area, set margins=0 so that there the area chart
+        # does not look like it was chopped off at the edges.
+        # To have same behavior as lines etc., use margins='auto'.
+        if xrange is not None:
+            # Set self.margins so that it is reflected in other plots.
+            self.margins = margins
+            self.set_xrange(xrange, margins=margins, debug=debug)
+            
+    def add_scatter(self, data, cols, indexcol=None, attrs=None, debug=False):
         '''
         Add scatter to chart
         '''
 
         if debug:
-            print('Calling add_lines on "' + str(colname) + '"')
+            print('Calling add_lines on "' + str(cols) + '"')
 
         if indexcol is not None:
             if type(data) == pd.DataFrame:
@@ -2219,4 +2482,3 @@ def read(saved):
 
 if __name__ == '__main__':
     main(sys.argv[1:])
-

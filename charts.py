@@ -832,7 +832,8 @@ class Chart:
         
         self.ax.xaxis.set_major_formatter(formatter)
 
-    def add_lines(self, data, cols, indexcol=None, axis='left', colorcycle=None, linebreaks=False, xrange=None, attrs=None,
+    def add_lines(self, data, cols, indexcol=None, axis='left', colorcycle=None, linewidth=None, linebreaks=False,
+                  xrange=None, margins=None, attrs=None,
                   debug=False):
         '''
         Add line to chart
@@ -899,7 +900,11 @@ class Chart:
             markerfacecolor = matplotlib.rcParams['lines.markerfacecolor']
             markeredgecolor = matplotlib.rcParams['lines.markeredgecolor']
             markeredgewidth = matplotlib.rcParams['lines.markeredgewidth']
-            linewidth = matplotlib.rcParams['lines.linewidth']
+            _linewidth = matplotlib.rcParams['lines.linewidth']
+            # If linewidth was specified as function input, use it
+            if linewidth is not None:
+                _linewidth = linewidth
+            
             linestyle = matplotlib.rcParams['lines.linestyle']
             # Initialize color as None
             color = None
@@ -933,7 +938,7 @@ class Chart:
                     markeredgewidth = _attrs['markeredgewidth']
                     
                 if 'linewidth' in _attrs:
-                    linewidth = _attrs['linewidth']
+                    _linewidth = _attrs['linewidth']
 
                 if 'linestyle' in _attrs:
                     linestyle = _attrs['linestyle']
@@ -976,100 +981,60 @@ class Chart:
                 _df = self.data[[linecol]].dropna()
                 
             if axis == 'left':
-                # Allow iteration over multiple markers into one legend
-                entries = []
-                
-                if marker is None:
-                    if dashes or dash_capstyle:
-                        entry = self.ax.plot(_df.index, _df[linecol], label=linecol,
-                                             markersize=markersize, marker=marker,
-                                             markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
-                                             markeredgewidth=markeredgewidth,
-                                             linestyle=linestyle, linewidth=linewidth, color=color,
-                                             dashes=dashes, dash_capstyle=dash_capstyle)
-                    else:
-                        entry = self.ax.plot(_df.index, _df[linecol], label=linecol,
-                                             markersize=markersize, marker=marker,
-                                             markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
-                                             markeredgewidth=markeredgewidth,
-                                             linestyle=linestyle, linewidth=linewidth, color=color)
-                    entries.append(entry[0])
-                else:
-                    # Iterate over all specified markers and put in one legend entry
-                    for _marker in marker:
-                        if dashes or dash_capstyle:
-                            entry = self.ax.plot(_df.index, _df[linecol], label=linecol,
-                                                 markersize=markersize, marker=_marker,
-                                                 markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
-                                                 markeredgewidth=markeredgewidth,
-                                                 linestyle=linestyle, linewidth=linewidth, color=color,
-                                                 dashes=dashes, dash_capstyle=dash_capstyle)
-                        else:
-                            entry = self.ax.plot(_df.index, _df[linecol], label=linecol,
-                                                 markersize=markersize, marker=_marker,
-                                                 markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
-                                                 markeredgewidth=markeredgewidth,
-                                                 linestyle=linestyle, linewidth=linewidth, color=color)
-                            
-                        if legend:
-                            entries.append(entry[0])
-                    # end of loop over marker
-                
-                if legend:
-                    self.legend_entries.append(tuple(entries))
-                    self.legend_labels.append(linecol)
+                _ax = self.ax
             elif axis == 'right':
                 if self.ax_right is None:
                     self.ax_right = self.ax.twinx()
                     # Set color cycler to be common with the left y-axis.
                     # Hack from https://github.com/matplotlib/matplotlib/issues/19479
                     self.ax_right._get_lines = self.ax._get_lines
-                    
-                # Allow iteration over multiple markers into one legend
-                entries = []
-                
-                if marker is None:
-                    if dashes or dash_capstyle:
-                        entry = self.ax_right.plot(_df.index, _df[linecol], label=linecol,
-                                                   markersize=markersize, marker=marker,
-                                                   markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
-                                                   markeredgewidth=markeredgewidth,
-                                                   linestyle=linestyle, linewidth=linewidth, color=color,
-                                                   dashes=dashes, dash_capstyle=dash_capstyle)
-                    else:
-                        entry = self.ax_right.plot(_df.index, _df[linecol], label=linecol,
-                                                   markersize=markersize, marker=marker,
-                                                   markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
-                                                   markeredgewidth=markeredgewidth,
-                                                   linestyle=linestyle, linewidth=linewidth, color=color)
-                    entries.append(entry[0])
-                else:
-                    # Iterate over all specified markers and put in one legend entry
-                    for _marker in marker:
-                        if dashes or dash_capstyle:
-                            entry = self.ax_right.plot(_df.index, _df[linecol], label=linecol,
-                                                       markersize=markersize, marker=_marker,
-                                                       markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
-                                                       markeredgewidth=markeredgewidth,
-                                                       linestyle=linestyle, linewidth=linewidth, color=color,
-                                                       dashes=dashes, dash_capstyle=dash_capstyle)
-                        else:
-                            entry = self.ax_right.plot(_df.index, _df[linecol], label=linecol,
-                                                       markersize=markersize, marker=_marker,
-                                                       markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
-                                                       markeredgewidth=markeredgewidth,
-                                                       linestyle=linestyle, linewidth=linewidth, color=color)
-
-                        if legend:
-                            entries.append(entry[0])
-                    # end of loop over marker
-                        
-                if legend:
-                    self.legend_entries.append(tuple(entries))
-                    self.legend_labels.append(linecol)
+                _ax = self.ax_right
             else:
                 print('axis must be left or right, given ' + str(axis))
                 raise VaueError
+
+            # Allow iteration over multiple markers into one legend
+            entries = []
+                
+            if marker is None:
+                if dashes or dash_capstyle:
+                    entry = _ax.plot(_df.index, _df[linecol], label=linecol,
+                                     markersize=markersize, marker=marker,
+                                     markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
+                                     markeredgewidth=markeredgewidth,
+                                     linestyle=linestyle, linewidth=_linewidth, color=color,
+                                     dashes=dashes, dash_capstyle=dash_capstyle)
+                else:
+                    entry = _ax.plot(_df.index, _df[linecol], label=linecol,
+                                     markersize=markersize, marker=marker,
+                                     markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
+                                     markeredgewidth=markeredgewidth,
+                                     linestyle=linestyle, linewidth=_linewidth, color=color)
+                entries.append(entry[0])
+            else:
+                # Iterate over all specified markers and put in one legend entry
+                for _marker in marker:
+                    if dashes or dash_capstyle:
+                        entry = _ax.plot(_df.index, _df[linecol], label=linecol,
+                                         markersize=markersize, marker=_marker,
+                                         markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
+                                         markeredgewidth=markeredgewidth,
+                                         linestyle=linestyle, linewidth=_linewidth, color=color,
+                                         dashes=dashes, dash_capstyle=dash_capstyle)
+                    else:
+                        entry = _ax.plot(_df.index, _df[linecol], label=linecol,
+                                         markersize=markersize, marker=_marker,
+                                         markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
+                                         markeredgewidth=markeredgewidth,
+                                         linestyle=linestyle, linewidth=_linewidth, color=color)
+                        
+                    if legend:
+                        entries.append(entry[0])
+                # end of loop over marker
+                
+            if legend:
+                self.legend_entries.append(tuple(entries))
+                self.legend_labels.append(linecol)
         # end of loop over linecols
 
         # Re-create legend
@@ -1083,12 +1048,16 @@ class Chart:
             if debug:
                 print('before calling set_xrange()')
                 print(xrange)
-            self.set_xrange(xrange, debug=debug)
+            # If margins is specified, set it for this chart and use it.
+            if margins is not None:
+                self.margins = margins
+            self.set_xrange(xrange, margins=self.margins, debug=debug)
             if debug:
                 print('after calling set_xrange()')
 
     def add_bars(self, data, cols, indexcol=None, baraxis='left', colorcycle=None,
-                 barstack=True, total_barwidth=None, barlinewidth=None, baredgecolor=None, xrange=None, attrs=None,
+                 barstack=True, total_barwidth=None, barlinewidth=None, baredgecolor=None,
+                 xrange=None, margins=None, attrs=None,
                  debug=False):
         '''
         Add bar to chart
@@ -1353,167 +1322,94 @@ class Chart:
                     print(_x)
             
             if baraxis == 'left':
-                if barstack:
-                    # No direct way to set hatch line widths in ax.bar,
-                    # need to use plt.rc_context()
-                    with plt.rc_context({"hatch.linewidth": barhatchwidth}):
-                        if ibarcol == 0:
-                            # Draw negative first
-                            entry = self.ax.bar(self.data.index, _df_neg[barcol],
-                                                width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
-                                                zorder=1, label=barcol)
-                            # Draw positive
-                            entry = self.ax.bar(self.data.index, _df_pos[barcol],
-                                                width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
-                                                zorder=1, label=barcol)
-                        else:
-                            # Draw negative first
-                            entry = self.ax.bar(self.data.index, _df_neg[barcol],
-                                                bottom=neg_offset,
-                                                width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
-                                                zorder=1, label=barcol)
-                            # Draw positive
-                            entry = self.ax.bar(self.data.index, _df_pos[barcol],
-                                                bottom=pos_offset,
-                                                width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
-                                                zorder=1, label=barcol)
-                            
-                        # Draw again with _edgecolor
-                        entry2 = self.ax.bar(self.data.index, _df_pos[barcol],
-                                             width=barwidth, color='none', edgecolor=_baredgecolor, linewidth=_barlinewidth,
-                                             bottom=pos_offset,
-                                             zorder=2)
-                        _ = self.ax.bar(self.data.index, _df_neg[barcol],
-                                        bottom=neg_offset,
-                                        width=barwidth, color='none', edgecolor=_baredgecolor, linewidth=_barlinewidth,
-                                        zorder=2)
-
-                        # If barcolors was specified, get all patches for this barcol,
-                        # and if the index matches, set color for the corresponding bar.
-                        patches = [p for p in self.ax.patches if p not in previous_patches]
-                        if debug:
-                            print('len(patches) = ' + str(len(patches)))
-
-                        # Add individually specified colors
-                        if barcolors is not None:
-                            color_bars(barcolors, patches, self.data.index, stack=True, debug=debug)
-                        
-                        # Add current patches to previous_patches
-                        previous_patches += patches
-                    # end of plt.rc_context()
-                # end of barstack
-                else:
-                    entry = self.ax.bar(_x, self.data[barcol],
-                                        width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
-                                        zorder=1, label=barcol)
-
-                    # Draw again with _baredgecolor
-                    entry2 = self.ax.bar(_x, self.data[barcol],
-                                         width=barwidth, color='none', edgecolor=_baredgecolor, linewidth=_barlinewidth,
-                                         zorder=2)
-                    
-                    # Set x-axis categories from self.data.index
-                    self.ax.set_xticks(np.arange(len(self.data)), labels=self.data.index)
-
-                    # If barcolors was specified, get all patches for this barcol,
-                    # and if the index matches, set color for the corresponding bar.
-                    patches = [p for p in self.ax.patches if p not in previous_patches]
-                    if debug:
-                        print('len(patches) = ' + str(len(patches)))
-
-                    # Add individually specified colors
-                    if barcolors is not None:
-                        color_bars(barcolors, patches, self.data.index, stack=False, debug=debug)
-                        
-                    # Add current patches to previous_patches
-                    previous_patches += patches
-                    
-                # end of barstack=False
-            # end of baraxis == 'left'
-                    
+                _ax = self.ax
             elif baraxis == 'right':
                 if self.ax_right is None:
                     self.ax_right = self.ax.twinx()
                     # Set color cycler to be common with the left y-axis.
                     # Hack from https://github.com/matplotlib/matplotlib/issues/19479
                     self.ax_right._get_lines = self.ax._get_lines
-                    
+                _ax = self.ax_right
+            else:
+                print('baraxis must be left or right, given ' + str(baraxis))
+                raise VaueError
+                
+            if barstack:
                 # No direct way to set hatch line widths in ax.bar,
                 # need to use plt.rc_context()
-                if barstack:
-                    with plt.rc_context({"hatch.linewidth": barhatchwidth}):
-                        if ibarcol == 0:
-                            # Draw negative first
-                            entry = self.ax_right.bar(self.data.index, _df_neg[barcol],
-                                                      width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
-                                                      zorder=1, label=barcol)
-                            # Draw positive
-                            entry = self.ax_right.bar(self.data.index, _df_pos[barcol],
-                                                      width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
-                                                      zorder=1, label=barcol)
-                        else:
-                            # Draw negative first
-                            entry = self.ax_right.bar(self.data.index, _df_neg[barcol],
-                                                      bottom=neg_offset,
-                                                      width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
-                                                      zorder=1, label=barcol)
-                            # Draw positive
-                            entry = self.ax_right.bar(self.data.index, _df_pos[barcol],
-                                                      bottom=pos_offset,
-                                                      width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
-                                                      zorder=1, label=barcol)
+                with plt.rc_context({"hatch.linewidth": barhatchwidth}):
+                    if ibarcol == 0:
+                        # Draw negative first
+                        entry = _ax.bar(self.data.index, _df_neg[barcol],
+                                        width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                        zorder=1, label=barcol)
+                        # Draw positive
+                        entry = _ax.bar(self.data.index, _df_pos[barcol],
+                                        width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                        zorder=1, label=barcol)
+                    else:
+                        # Draw negative first
+                        entry = _ax.bar(self.data.index, _df_neg[barcol],
+                                        bottom=neg_offset,
+                                        width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                        zorder=1, label=barcol)
+                        # Draw positive
+                        entry = _ax.bar(self.data.index, _df_pos[barcol],
+                                        bottom=pos_offset,
+                                        width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                        zorder=1, label=barcol)
                             
-                        # Draw again with _edgecolor
-                        entry2 = self.ax_right.bar(self.data.index, _df_pos[barcol],
-                                                   width=barwidth, color='none', edgecolor=_baredgecolor, linewidth=_barlinewidth,
-                                                   bottom=pos_offset,
-                                                   zorder=2)
-                        _ = self.ax_right.bar(self.data.index, _df_neg[barcol],
-                                              bottom=neg_offset,
-                                              width=barwidth, color='none', edgecolor=_baredgecolor, linewidth=_barlinewidth,
-                                              zorder=2)
-
-                        # If barcolors was specified, get all patches for this barcol,
-                        # and if the index matches, set color for the corresponding bar.
-                        patches = [p for p in self.ax_right.patches if p not in previous_patches]
-                        if debug:
-                            print('len(patches) = ' + str(len(patches)))
-
-                        # Add individually specified colors
-                        if barcolors is not None:
-                            color_bars(barcolors, patches, self.data.index, stack=True, debug=debug)
-                        
-                        # Add current patches to previous_patches
-                        previous_patches += patches
-                    # end of plt.rc_context()
-                # end of barstack
-                else:
-                    entry = self.ax_right.bar(_x, self.data[barcol],
-                                              width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
-                                              zorder=1, label=barcol)
-                    
                     # Draw again with _edgecolor
-                    entry2 = self.ax_right.bar(_x, self.data[barcol],
-                                               width=barwidth, color='none', edgecolor=_baredgecolor, linewidth=_barlinewidth,
-                                               zorder=2)
-                    # Set x-axis categories from self.data.index
-                    self.ax_right.set_xticks(np.arange(len(self.data)), labels=self.data.index)
-
+                    entry2 = _ax.bar(self.data.index, _df_pos[barcol],
+                                     width=barwidth, color='none', edgecolor=_baredgecolor, linewidth=_barlinewidth,
+                                     bottom=pos_offset,
+                                     zorder=2)
+                    _ = _ax.bar(self.data.index, _df_neg[barcol],
+                                bottom=neg_offset,
+                                width=barwidth, color='none', edgecolor=_baredgecolor, linewidth=_barlinewidth,
+                                zorder=2)
+                    
                     # If barcolors was specified, get all patches for this barcol,
                     # and if the index matches, set color for the corresponding bar.
-                    patches = [p for p in self.ax_right.patches if p not in previous_patches]
+                    patches = [p for p in _ax.patches if p not in previous_patches]
                     if debug:
                         print('len(patches) = ' + str(len(patches)))
 
                     # Add individually specified colors
                     if barcolors is not None:
-                        color_bars(barcolors, patches, self.data.index, stack=False, debug=debug)
+                        color_bars(barcolors, patches, self.data.index, stack=True, debug=debug)
                         
                     # Add current patches to previous_patches
                     previous_patches += patches
+                # end of plt.rc_context()
+            # end of barstack
+            else:
+                entry = _ax.bar(_x, self.data[barcol],
+                                width=barwidth, color=color, edgecolor=barhatchcolor, hatch=barhatch, linewidth=0,
+                                zorder=1, label=barcol)
+                
+                # Draw again with _baredgecolor
+                entry2 = _ax.bar(_x, self.data[barcol],
+                                 width=barwidth, color='none', edgecolor=_baredgecolor, linewidth=_barlinewidth,
+                                 zorder=2)
                     
-                # end of barstack=False
-            # end of baraxis == 'right'
+                # Set x-axis categories from self.data.index
+                _ax.set_xticks(np.arange(len(self.data)), labels=self.data.index)
+
+                # If barcolors was specified, get all patches for this barcol,
+                # and if the index matches, set color for the corresponding bar.
+                patches = [p for p in _ax.patches if p not in previous_patches]
+                if debug:
+                    print('len(patches) = ' + str(len(patches)))
+
+                # Add individually specified colors
+                if barcolors is not None:
+                    color_bars(barcolors, patches, self.data.index, stack=False, debug=debug)
+                        
+                # Add current patches to previous_patches
+                previous_patches += patches
+                    
+            # end of barstack=False
             
             # Adjust offsets
             neg_offset += _df_neg[barcol].replace(np.nan, 0).values
@@ -1531,10 +1427,14 @@ class Chart:
         
         # Set x-axis range if specified
         if xrange is not None:
-            self.set_xrange(xrange, debug=debug)
+            # If margins is specified, set it for this chart and use it.
+            if margins is not None:
+                self.margins = margins
+            self.set_xrange(xrange, margins=self.margins, debug=debug)
 
     def add_area(self, data, cols, indexcol=None, areaaxis='left', colorcycle=None, alpha=1,
-                 areastack=True, arealinewidth=None, areaedgecolor=None, xrange=None, margins=0, attrs=None,
+                 areastack=True, arealinewidth=None, areaedgecolor=None,
+                 xrange=None, margins=0, attrs=None,
                  debug=False):
         '''
         Add area to chart
@@ -1696,13 +1596,16 @@ class Chart:
 
             if areaaxis == 'left':
                 _ax = self.ax
-            else:
+            elif areaaxis == 'right':
                 if self.ax_right is None:
                     self.ax_right = self.ax.twinx()
                     # Set color cycler to be common with the left y-axis.
                     # Hack from https://github.com/matplotlib/matplotlib/issues/19479
                     self.ax_right._get_lines = self.ax._get_lines
                 _ax = self.ax_right
+            else:
+                print('areaaxis must be left or right, given ' + str(areaaxis))
+                raise VaueError
                     
             if areastack:
                 # No direct way to set hatch line widths in ax.area,
@@ -1780,7 +1683,7 @@ class Chart:
         if xrange is not None:
             # Set self.margins so that it is reflected in other plots.
             self.margins = margins
-            self.set_xrange(xrange, margins=margins, debug=debug)
+            self.set_xrange(xrange, margins=self.margins, debug=debug)
             
     def add_scatter(self, data, cols, indexcol=None, attrs=None, debug=False):
         '''

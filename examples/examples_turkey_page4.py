@@ -86,7 +86,7 @@ attrs = {'Accrual spending' : {'color' : IMFBLUE},
               }
 
 # Create Chart object
-chart2 = Chart(df, barcols=df.columns, stack=False,
+chart2 = Chart(df, barcols=df.columns, barstack=False,
                attrs=attrs,
                title='Cash vs. Accrual Earthquake Spending',
                subtitle='(Percent of GDP)',

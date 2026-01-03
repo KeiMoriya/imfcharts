@@ -126,7 +126,7 @@ attrs = {'shock' : {'color' : '#BFBFBF',
 }
 
 # Create Chart object
-chart3 = Chart(df, barcols=df.columns, stack=False, # baraxis='right',
+chart3 = Chart(df, barcols=df.columns, barstack=False, # baraxis='right',
                attrs=attrs,
                barlinewidth=0, xtickangle=90, xticklength=0,
                title='Terms of Trade Shock, 2025Q2 or Latest',

@@ -437,7 +437,7 @@ if os.path.isfile(mergedfilename):
     os.remove(mergedfilename)
     
 merger = PdfWriter()
-filenames = sorted(glob.glob(outdir + '/*rects*.pdf') + glob.glob(outdir + '/*lines*.pdf'))
+filenames = sorted(glob.glob(outdir + '/*rects*.pdf') + glob.glob(outdir + '/*hlines*.pdf') + glob.glob(outdir + '/*vlines*.pdf'))
 for filename in filenames:
     merger.append(filename)
 merger.write(mergedfilename)

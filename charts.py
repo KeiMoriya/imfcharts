@@ -246,25 +246,8 @@ class Chart:
         self.legend_spacing = legend_spacing
         self.show_legend = show_legend
 
-        # Check whether index of data is datetime
-        self.xaxis_type = 'datetime'
-        if self.data is not None and type(self.data) == pd.DataFrame:
-            # Try to convert to datetime axis
-            try:
-                # Ignore pandas warnings
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                    self.data.index = pd.to_datetime(self.data.index)
-            except:
-                pass
-            
-            idx_types = {type(idx) for idx in self.data.index}
-            if idx_types in [{pd.Timestamp}, {pd.Period}]:
-                pass
-            elif idx_types in [{int}, {float}]: 
-                self.xaxis_type = 'numerical'
-            else:
-                self.xaxis_type = 'categorical'
+        # Set self.xaxis_type based on data
+        self.xaxis_type = self._set_xaxis_type()
         
         # Create figure
         self.fig, self.ax = plt.subplots(1, 1, figsize=(self.width, self.height))
@@ -287,12 +270,32 @@ class Chart:
 
         # Get xrange and trim data as needed
         self.xrange = self._parse_xrange(xrange, debug=self.debug)
-        self._trim_data(self.xrange)
+        self._trim_data(self.xrange, debug=self.debug)
 
         # Set whether to allow breaks in line charts.
         # If linebreaks is True, NA values will have a break in lines.
         self.linebreaks = linebreaks
+        
+        # Parse y-axis ranges
+        self.yrange = self._parse_yrange(yrange)
+        self.ryrange = self._parse_yrange(ryrange)
 
+        # Set x-, y-axis ranges
+        if self.data is not None:
+            self.set_xrange(self.xrange, self.margins)
+            self.set_yrange(self.yrange)
+            self.set_ryrange(self.ryrange)
+
+        # Set x-axis formatting
+        self.set_xaxis_format()
+
+        # Set number of x-axis ticks
+        if self.xaxis_type == 'datetime':
+            self.set_nxticks(self.nxticks)
+
+        # Set which x-axis is drawn on top
+        self.set_top_xaxis(self.topxaxis)
+                
         # ---------------------------------------------------------------------------------------------------
         # Draw area, bars, lines
         if areacols is not None:
@@ -377,32 +380,41 @@ class Chart:
         if self.show_legend:
             self.update_legend()
 
-        # Parse y-axis ranges
-        self.yrange = self._parse_yrange(yrange)
-        self.ryrange = self._parse_yrange(ryrange)
-
-        # Set x-, y-axis ranges
-        if self.data is not None:
-            self.set_xrange(self.xrange, self.margins)
-            self.set_yrange(self.yrange)
-            self.set_ryrange(self.ryrange)
-
-        # Set x-axis formatting
-        self.set_date_format()
-
-        # Set number of x-axis ticks
-        if self.xaxis_type == 'datetime':
-            self.set_nxticks(self.nxticks)
-
-        # Set which x-axis is drawn on top
-        self.set_top_xaxis(self.topxaxis)
-                
     def apply(self, style):
         '''
         Apply style to this Chart.
         '''
         
         pass
+
+    def _set_xaxis_type(self):
+
+        # Check whether index of data is datetime
+        if self.data is not None and type(self.data) == pd.DataFrame:
+            # Try to convert to datetime axis
+            try:
+                # Ignore pandas warnings
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    self.data.index = pd.to_datetime(self.data.index)
+                xaxis_type = 'datetime'
+            except:
+                pass
+            
+            idx_types = {type(idx) for idx in self.data.index}
+            if idx_types in [{pd.Timestamp}, {pd.Period}]:
+                xaxis_type = 'datetime'
+            elif idx_types in [{int}, {float}]: 
+                xaxis_type = 'numerical'
+            else:
+                xaxis_type = 'categorical'
+        else:
+            xaxis_type = None
+
+        self.xaxis_type = xaxis_type
+            
+        # Return so it is clear what was set
+        return xaxis_type
 
     def _parse_xrange(self, xrange, debug=False):
         '''
@@ -469,24 +481,34 @@ class Chart:
 
         return [yrange[0], yrange[1]]
 
-    def _trim_data(self, xrange):
+    def _trim_data(self, xrange, debug=False):
         '''
         Trim self.data using xrange.
         '''
+
+        if debug:
+            print('start of _trim_data() for data:')
+            print(self.data)
+            print('xrange = ' + str(xrange))
+        
         
         if type(self.data) == pd.DataFrame:
-            if self.xrange[0] is None and self.xrange[1] is None:
+            if xrange[0] is None and xrange[1] is None:
                 # Don't trim if nothing specified
                 pass
-            elif self.xrange[0] is None:
+            elif xrange[0] is None:
                 # Trim start only
-                self.data = self.data.loc[:str(self.xrange[1]), :]
-            elif self.xrange[1] is None:
+                self.data = self.data.loc[:str(xrange[1]), :]
+            elif xrange[1] is None:
                 # Trim end only
-                self.data = self.data.loc[str(self.xrange[0]):, :]
+                self.data = self.data.loc[str(xrange[0]):, :]
             else:
                 # Trim both
-                self.data = self.data.loc[str(self.xrange[0]):str(self.xrange[1]), :]
+                self.data = self.data.loc[str(xrange[0]):str(xrange[1]), :]
+
+            if debug:
+                print('After applying trim, self.data:')
+                print(self.data)
 
     def set_title(self, title, loc='left', y=1.05, fontweight='bold', fontname='Segoe UI'):
         if title is not None:
@@ -662,8 +684,10 @@ class Chart:
                 xrange[0] = self.data.index.min()
             if xrange[1] is None:
                 xrange[1] = self.data.index.max()
+        elif self.xaxis_type is None:
+            return None
         else:
-            print('self.axis_type of ' + str(self.axis_type) + ' not implemented for set_xrange()')
+            print('self.xaxis_type of ' + str(self.axis_type) + ' not implemented for set_xrange()')
             sys.exit()
             
         if debug:
@@ -746,18 +770,28 @@ class Chart:
             print('Could not apply set_ryrange() for yrange = ' + str(yrange))
             sys.exit()
 
-    def set_date_format(self, xformat='auto', debug=False):
+    def set_xaxis_format(self, xformat=None, debug=False):
         '''
         Set formatting for datetime x-axis.
         `formatter` should be something like a
         mdates.DateFormatter().
 
+        if xformat is specified, uses it to set formatting.
         If default `auto` is chosen, freq of data is used.
         Specify special options "D", "W", "M", "Q", "A" to set to these frequencies.
         '''
 
         if debug:
-            print('Start of set_date_format()')
+            print('Start of set_xaxis_format()')
+
+        # If xformat is given use it, otherwise use self.xformat
+        if xformat is not None:
+            pass
+        else:
+            xformat = self.xformat
+
+        if debug:
+            print('xformat = ' + str(xformat))
 
         # If self.xaxis_type is not "datetime", skip
         if self.xaxis_type != 'datetime':
@@ -767,6 +801,10 @@ class Chart:
 
         # If default, guess from freq of data.
         if xformat == 'auto':
+            # If no data is set, don't try to set
+            if self.data is None:
+                return
+            
              # If length of data is less than 2, cannot calculate difference,
             # use date
             if type(self.data) == pd.DataFrame:
@@ -836,15 +874,16 @@ class Chart:
                 print('Cannot specify mdates.DateFormatter with xformat ="' + xformat + '"')
                 sys.exit()
         else:
-            print('set_date_format():')
+            print('set_xaxis_format():')
             print('xformat of "' + str(xformat) + '" of type ' + str(type(xformat)) + ' not allowed')
             sys.exit()
 
         if formatter is not None:
             self.ax.xaxis.set_major_formatter(formatter)
 
-    def add_lines(self, data, cols, indexcol=None, axis='left', colorcycle=None, linewidth=None, linebreaks=False,
-                  xrange=None, margins=None, attrs=None,
+    def add_lines(self, data=None, cols=None, indexcol=None, axis='left', colorcycle=None, linewidth=None, linebreaks=False,
+                  attrs=None,
+                  xrange=None, margins=None, xformat=None, yrange=None, ryrange=None,
                   debug=False):
         '''
         Add line to chart
@@ -852,6 +891,11 @@ class Chart:
 
         if debug:
             print('Calling add_lines on "' + str(cols) + '"')
+
+        # Set data.
+        # If not specified use self.data.
+        if data is None:
+            data = self.data
 
         if indexcol is not None:
             if type(data) == pd.DataFrame:
@@ -883,12 +927,36 @@ class Chart:
             print('linecols:')
             print(linecols)
 
+        # If no data and/or linecols are available, finish.
+        if data is None:
+            if linecols == []:
+                print('WARNING: no data given to add_lines()')
+            else:
+                print('WARNING: no data given to add_lines() but linecols given as ' + str(linecols))
+            print('No lines will be added')
+            return
+
         # Set self.data to be input data
         self.data = data
-        # Set x-axis limits and trim data as needed
+        # Set self.xaxis_type from self.data
+        self.xaxis_type = self._set_xaxis_type()
+        if debug:
+            print('self.xaxis_type = ' + str(self.xaxis_type))
+            
+        # Set x-axis limits if specified, or use default
         if xrange is not None:
             xrange = self._parse_xrange(xrange, debug=debug)
-            self._trim_data(xrange)
+            self.xrange = xrange
+        else:
+            xrange = self.xrange
+        if debug:
+            print('xrange:')
+            print(xrange)
+            
+        # Trim data as needed            
+        self._trim_data(xrange, debug=debug)
+        if debug:
+            print(self.data)
 
         # Create cycle if specified.
         if colorcycle is not None:
@@ -1064,7 +1132,35 @@ class Chart:
                 self.margins = margins
             self.set_xrange(xrange, margins=self.margins, debug=debug)
             if debug:
-                print('after calling set_xrange()')
+                print('after calling set_xrange():')
+                print(self.xrange)
+
+        # Set xaxis format.
+        # If xformat was specified use it, otherwise use self.xformat
+        if xformat is None:
+            xformat = self.xformat
+        self.set_xaxis_format(xformat=xformat, debug=debug)
+        
+        # Set number of x-axis ticks
+        if self.xaxis_type == 'datetime':
+            if debug:
+                print('self.nxticks = ' + str(self.nxticks))
+            self.set_nxticks(self.nxticks)
+
+        # Set which x-axis is drawn on top
+        self.set_top_xaxis(self.topxaxis)
+
+        # If yrange is specified use it, otherwise use self.yrange
+        if axis == 'left':
+            if yrange is None:
+                yrange = self.yrange
+            self.yrange = self._parse_yrange(yrange)
+            self.set_yrange(self.yrange)
+        if axis == 'right':
+            if ryrange is None:
+                ryrange = self.ryrange
+            self.ryrange = self._parse_yrange(ryrange)
+            self.set_ryrange(self.ryrange)
 
     def add_bars(self, data, cols, indexcol=None, baraxis='left', colorcycle=None,
                  barstack=True, total_barwidth=None, linewidth=None, edgecolor=None,

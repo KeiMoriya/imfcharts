@@ -61,7 +61,7 @@ chart1 = Chart(df, linecols=df.columns,
                xrange='2017-01:', yrange=[0, 120])
 
 # Add hline
-chart1.add_hline(y=10)
+chart1.hline(y=10)
 
 # Save
 chart1.save(outdir + '/hlines_1_no_options.pdf')
@@ -77,7 +77,7 @@ chart1 = Chart(df, linecols=df.columns,
                xrange='2017-01:', yrange=[0, 120])
 
 # Add hline
-chart1.add_hline(y=10, xrange='2020-03:2025-04')
+chart1.hline(y=10, xrange='2020-03:2025-04')
 
 # Save
 chart1.save(outdir + '/hlines_2_xrange.pdf')
@@ -93,8 +93,8 @@ chart1 = Chart(df, linecols=df.columns,
                xrange='2017-01:', yrange=[0, 120])
 
 # Add hline
-chart1.add_hline(y=10, xrange='2020-03:2025-04',
-                 color='blue', linewidth=1.5, linestyle='--', alpha=0.3)
+chart1.hline(y=10, xrange='2020-03:2025-04',
+             color='blue', linewidth=1.5, linestyle='--', alpha=0.3)
 
 # Save
 chart1.save(outdir + '/hlines_3_line_options.pdf')
@@ -110,9 +110,9 @@ chart1 = Chart(df, linecols=df.columns,
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vrect
-chart1.add_hline(y=10, xrange='2020-03:2025-04',
-                 color='grey', linewidth=0.5, linestyle='--', alpha=0.9,
-                 zorder=5) # , dashes=[10, 4]
+chart1.hline(y=10, xrange='2020-03:2025-04',
+             color='grey', linewidth=0.5, linestyle='--', alpha=0.9,
+             zorder=5) # , dashes=[10, 4]
 
 # Save
 chart1.save(outdir + '/hlines_4_zorder.pdf')
@@ -128,9 +128,9 @@ chart1 = Chart(df, linecols=df.columns,
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vrect
-chart1.add_hline(y=10, xrange='2020-03:2025-04',
-                 label='horizontal line', legend=True,
-                 color='grey', linewidth=0.5, linestyle='--', alpha=0.2)
+chart1.hline(y=10, xrange='2020-03:2025-04',
+             label='horizontal line', legend=True,
+             color='grey', linewidth=0.5, linestyle='--', alpha=0.2)
 
 # Save
 chart1.save(outdir + '/hlines_5_legend.pdf')
@@ -149,7 +149,7 @@ chart1 = Chart(df, linecols=df.columns,
 kwargs = {'y' : 10, 'xrange' : '2020-03:2025-04',
           'label' : 'horizontal line', 'legend' : True,
           'color' : 'grey', 'linewidth' : 0.5, 'linestyle' : '--', 'alpha' : 0.2}
-chart1.add_hline(**kwargs)
+chart1.hline(**kwargs)
 
 # Save
 chart1.save(outdir + '/hlines_6_kwargs.pdf')
@@ -169,7 +169,7 @@ chart1 = Chart(df, linecols=df.columns,
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vline
-chart1.add_vline(x='2020-03')
+chart1.vline(x='2020-03')
 
 # Save
 chart1.save(outdir + '/vlines_1_no_options.pdf')
@@ -185,7 +185,7 @@ chart1 = Chart(df, linecols=df.columns,
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vline
-chart1.add_vline(x='2020-03', yrange=[30, 60])
+chart1.vline(x='2020-03', yrange=[30, 60])
 
 # Save
 chart1.save(outdir + '/vlines_2_xrange.pdf')
@@ -201,8 +201,8 @@ chart1 = Chart(df, linecols=df.columns,
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vline
-chart1.add_vline(x='2020-03', yrange=[30, 60],
-                 color='blue', linewidth=1.5, linestyle='--', alpha=0.3)
+chart1.vline(x='2020-03', yrange=[30, 60],
+             color='blue', linewidth=1.5, linestyle='--', alpha=0.3)
 
 # Save
 chart1.save(outdir + '/vlines_3_line_options.pdf')
@@ -218,9 +218,9 @@ chart1 = Chart(df, linecols=df.columns,
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vrect
-chart1.add_vline(x='2020-03', yrange=[30, 60],
-                 color='grey', linewidth=0.5, linestyle='--', alpha=0.9,
-                 zorder=5) # , dashes=[10, 4]
+chart1.vline(x='2020-03', yrange=[30, 60],
+             color='grey', linewidth=0.5, linestyle='--', alpha=0.9,
+             zorder=5) # , dashes=[10, 4]
 
 # Save
 chart1.save(outdir + '/vlines_4_zorder.pdf')
@@ -236,9 +236,9 @@ chart1 = Chart(df, linecols=df.columns,
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vrect
-chart1.add_vline(x='2020-03', yrange=[30, 60],
-                 label='vertical line', legend=True,
-                 color='grey', linewidth=0.5, linestyle='--', alpha=0.2)
+chart1.vline(x='2020-03', yrange=[30, 60],
+             label='vertical line', legend=True,
+             color='grey', linewidth=0.5, linestyle='--', alpha=0.2)
 
 # Save
 chart1.save(outdir + '/vlines_5_legend.pdf')
@@ -258,7 +258,7 @@ chart1 = Chart(df, linecols=df.columns,
                xrange='2017-01:', yrange=[0, 120])
 
 # Add hrect
-chart1.add_hrect(ymin=20, ymax=100)
+chart1.hrect(ymin=20, ymax=100)
 
 # Save
 chart1.save(outdir + '/hrects_1_no_options.pdf')
@@ -274,7 +274,7 @@ chart1 = Chart(df, linecols=df.columns,
                xrange='2017-01:', yrange=[0, 120])
 
 # Add hrect
-chart1.add_hrect(ymin=20, ymax=100, xrange='2020-03:2025-04')
+chart1.hrect(ymin=20, ymax=100, xrange='2020-03:2025-04')
 
 # Save
 chart1.save(outdir + '/hrects_2_xrange.pdf')
@@ -290,9 +290,9 @@ chart1 = Chart(df, linecols=df.columns,
                xrange='2017-01:', yrange=[0, 120])
 
 # Add hrect
-chart1.add_hrect(ymin=20, ymax=100, xrange='2020-03:2025-04',
-                 hatch='//',
-                 color='blue', linewidth=1.5, linecolor='red', linestyle='--', alpha=0.3)
+chart1.hrect(ymin=20, ymax=100, xrange='2020-03:2025-04',
+             hatch='//',
+             color='blue', linewidth=1.5, linecolor='red', linestyle='--', alpha=0.3)
 
 # Save
 chart1.save(outdir + '/hrects_3_line_options.pdf')
@@ -308,10 +308,10 @@ chart1 = Chart(df, linecols=df.columns,
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vrect
-chart1.add_hrect(ymin=20, ymax=100, xrange='2020-03:2025-04',
-                 hatch='++',
-                 color='grey', linewidth=0.5, linecolor='black', linestyle='--', alpha=0.9,
-                 zorder=5) # , dashes=[10, 4]
+chart1.hrect(ymin=20, ymax=100, xrange='2020-03:2025-04',
+             hatch='++',
+             color='grey', linewidth=0.5, linecolor='black', linestyle='--', alpha=0.9,
+             zorder=5) # , dashes=[10, 4]
 
 # Save
 chart1.save(outdir + '/hrects_4_zorder.pdf')
@@ -327,10 +327,10 @@ chart1 = Chart(df, linecols=df.columns,
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vrect
-chart1.add_hrect(ymin=20, ymax=100, xrange='2020-03:2025-04',
-                 hatch='++',
-                 label='horizontal rectangle', legend=True,
-                 color='grey', linewidth=0.5, linecolor='black', linestyle='--', alpha=0.2)
+chart1.hrect(ymin=20, ymax=100, xrange='2020-03:2025-04',
+             hatch='++',
+             label='horizontal rectangle', legend=True,
+             color='grey', linewidth=0.5, linecolor='black', linestyle='--', alpha=0.2)
 
 # Save
 chart1.save(outdir + '/hrects_5_legend.pdf')
@@ -350,7 +350,7 @@ chart1 = Chart(df, linecols=df.columns,
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vrect
-chart1.add_vrect(xmin='2019-06', xmax='2024-02')
+chart1.vrect(xmin='2019-06', xmax='2024-02')
 
 # Save
 chart1.save(outdir + '/vrects_1_no_options.pdf')
@@ -366,7 +366,7 @@ chart1 = Chart(df, linecols=df.columns,
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vrect
-chart1.add_vrect(xmin='2019-06', xmax='2024-02', yrange=[30, 90])
+chart1.vrect(xmin='2019-06', xmax='2024-02', yrange=[30, 90])
 
 # Save
 chart1.save(outdir + '/vrects_2_xrange.pdf')
@@ -382,9 +382,9 @@ chart1 = Chart(df, linecols=df.columns,
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vrect
-chart1.add_vrect(xmin='2019-06', xmax='2024-02', yrange=[30, 90],
-                 hatch='//',
-                 color='blue', linewidth=1.5, linecolor='red', linestyle='--', alpha=0.3)
+chart1.vrect(xmin='2019-06', xmax='2024-02', yrange=[30, 90],
+             hatch='//',
+             color='blue', linewidth=1.5, linecolor='red', linestyle='--', alpha=0.3)
 
 # Save
 chart1.save(outdir + '/vrects_3_line_options.pdf')
@@ -400,10 +400,10 @@ chart1 = Chart(df, linecols=df.columns,
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vrect
-chart1.add_vrect(xmin='2019-06', xmax='2024-02', yrange=[30, 90],
-                 hatch='++',
-                 color='grey', linewidth=0.5, linecolor='black', linestyle='--', alpha=0.9,
-                 zorder=5) # , dashes=[10, 4]
+chart1.vrect(xmin='2019-06', xmax='2024-02', yrange=[30, 90],
+             hatch='++',
+             color='grey', linewidth=0.5, linecolor='black', linestyle='--', alpha=0.9,
+             zorder=5) # , dashes=[10, 4]
 
 # Save
 chart1.save(outdir + '/vrects_4_zorder.pdf')
@@ -420,10 +420,10 @@ chart1 = Chart(df, linecols=df.columns,
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vrect
-chart1.add_vrect(xmin='2019-06', xmax='2024-02', yrange=[30, 90],
-                 hatch='++',
-                 color='grey', linewidth=0.5, linecolor='black', linestyle='--', alpha=0.2,
-                 label='vertical rectangle', legend=True)
+chart1.vrect(xmin='2019-06', xmax='2024-02', yrange=[30, 90],
+             hatch='++',
+             color='grey', linewidth=0.5, linecolor='black', linestyle='--', alpha=0.2,
+             label='vertical rectangle', legend=True)
 
 # Save
 chart1.save(outdir + '/vrects_5_legend.pdf')

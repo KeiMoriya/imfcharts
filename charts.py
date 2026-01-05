@@ -106,46 +106,45 @@ class Chart:
                  linecols=None, barcols=None, rlinecols=None, areacols=None,
                  # iterable of colors for colorcycle
                  colorcycle=None,
+                 # lines() options ----------------------------------------------
                  # Global linewidth
                  linewidth=None,
                  # whether to remove breaks in line charts
                  linebreaks=False,
                  # Set drawstyle to "steps-post" to draw step plots
                  drawstyle='default',
-                 # bar options
+                 # bars() options -----------------------------------------------
                  barstack=True, barwidth=None, baraxis='left',
                  total_barwidth=None,
                  barlinewidth=None,
                  baredgecolor='black',
-                 # area options
+                 # area() options -----------------------------------------------
                  areastack=True, areaaxis='left',
                  arealinewidth=None,
                  areaedgecolor='none',
+                 # title options ------------------------------------------------
                  title=None,
                  subtitle = None,
+                 # h/vlines, h/vrects, texts, arrows ----------------------------
+                 hlines=None, vlines=None, hrects=None, vrects=None, fills=None, texts=None, arrows=None,
                  xtitle='', ytitle='',
                  xtitlesize=14, ytitlesize=14,
                  xtickfontsize=14, ytickfontsize=14,
                  xticklength=None, yticklength=None,
                  xtickangle=0,
                  nxticks=7,
-                 xformat='auto',
-                 dict_legend=None,
-                 dict_xaxis=None,
-                 dict_yaxis=None,
-                 # style
-                 style='default',
                  # individual look of each column in data
                  attrs=None,
                  xrange=None, yrange=None, ryrange=None,
+                 xformat='auto',
                  margins='auto',
                  width=10, height=6,
                  topxaxis='left',
-                 hlines=None, vlines=None, hrects=None, vrects=None, fills=None, texts=None, arrows=None,
+                 # legend options -----------------------------------------------
                  ncol_legend=1,
                  legend_spacing=0.5,
                  legend_fontsize=14,
-                 legend_header='',
+                 legend_header='', legend_header_color='black', legend_header_fontsize=16,
                  legend_left=0.04, legend_bottom=0.85, legend_width=0.70, legend_height=0.15,
                  legend_mode='expand',
                  show_legend=True,
@@ -230,9 +229,14 @@ class Chart:
         self.xformat = xformat
         self.margins = margins
 
+        # self.legend is None while it does not exist or
+        # if show_legend=False or set_legend(show=False) is called.
+        self.legend = None
         self.ncol_legend = ncol_legend
         self.legend_fontsize = legend_fontsize
         self.legend_header = legend_header
+        self.legend_header_color = legend_header_color
+        self.legend_header_fontsize = legend_header_fontsize
 
         # Whether left or right x-axis should be drawn on top.
         # Use self.set_top_xaxis() to set.
@@ -384,7 +388,6 @@ class Chart:
                 raise RuntimeError('Could not process arrows = ' + str(arrows) + ' with exception:' + str(e))
             
         # Create legend
-        legend_header = ''
         if self.debug:
             print('self.legend_entries:')
             print(self.legend_entries)
@@ -525,6 +528,7 @@ class Chart:
 
     def set_title(self, title, loc='left', y=1.05, fontweight='bold', fontname='Segoe UI'):
         if title is not None:
+            self.title = str(title)
             self.ax.set_title(str(title), loc=loc, y=y,
                               fontweight=fontweight, fontname=fontname)
 
@@ -2466,7 +2470,8 @@ class Chart:
             
     def update_legend(self,
                       ncol_legend=None, legend_spacing=None,
-                      legend_left=None, legend_bottom=None, legend_width=None, legend_height=None, legend_mode=None):
+                      legend_left=None, legend_bottom=None, legend_width=None, legend_height=None, legend_mode=None,
+                      legend_header=None, legend_header_color=None, legend_header_fontsize=None):
         '''
         Update legend of Chart.
         Some options can be specified as inputs, if they are provided as None the class  attributes are used.
@@ -2487,6 +2492,12 @@ class Chart:
             legend_mode = self.legend_mode
         if legend_spacing is None:
             legend_spacing = self.legend_spacing
+        if legend_header is None:
+            legend_header = self.legend_header
+        if legend_header_color is None:
+            legend_header_color = self.legend_header_color
+        if legend_header_fontsize is None:
+            legend_header_fontsize = self.legend_header_fontsize
         
         self.legend = self.ax.legend(self.legend_entries, self.legend_labels,
                                      loc='upper left',
@@ -2494,9 +2505,42 @@ class Chart:
                                      bbox_transform=self.ax.transAxes,
                                      bbox_to_anchor=(legend_left,legend_bottom,legend_width,legend_height),
                                      mode=legend_mode, borderaxespad=0,
-                                     ncol=ncol_legend, fontsize=self.legend_fontsize, frameon=False, title=self.legend_header, numpoints=1
+                                     ncol=ncol_legend, fontsize=self.legend_fontsize, frameon=False,
+                                     title=self.legend_header, alignment='left', title_fontsize=self.legend_header_fontsize,
+                                     numpoints=1
         )
 
+        # Need to set legend title color
+        self.legend.get_title().set_color(self.legend_header_color)
+
+        # Need to set 
+
+    def set_legend(self, show=True):
+        '''
+        Show legend.
+        If show=False, don't show and delete existing legend.
+        '''
+
+        # Modify self.show_legend
+        if show:
+            self.show_legend = True
+
+            # Create legend if it does not exist
+            if not self.legend:
+                self.update_legend()
+                
+        else:
+            self.show_legend = False
+
+            # If a legend already exists, delete
+            if self.legend:
+                try:
+                    self.ax.get_legend().remove()
+                    self.legend = None
+                except Exception as e:
+                    print('WARNING: Could not remove existing legend with exception:')
+                    print(e)
+        
     def save(self, filename, dpi=250):
         '''
         Save information on chart.

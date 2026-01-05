@@ -154,6 +154,25 @@ chart3.lines(**kwargs)
 # Save
 chart3.save(outdir + '/bars_7_kwargs.pdf')
 
+# Switch kwargs to be for area
+chart3 = Chart(title='kwargs for area', yrange=[0, 30],
+               ncol_legend=2)
+kwargs = {'data' : df,
+          'cols' : barcols,
+          'attrs' : attrs,
+          'xrange' : '2018-01:',
+          # 'debug' : True
+          }
+chart3.area(**kwargs)
+
+kwargs = {'cols' : linecol,
+          'attrs' : {linecol : {'color' : 'black',
+                                'linewidth' : 4}}
+          }
+chart3.lines(**kwargs)
+# Save
+chart3.save(outdir + '/bars_7_kwargs_switch_to_bars.pdf')
+
 #==========================================================================================================
 # Merge all files
 #==========================================================================================================

@@ -49,7 +49,7 @@ barcols.remove(linecol)
 
 # Create Chart object
 attrs = {linecol : {'linewidth' : 4, 'color' : IMFBLACK},
-         'Personnel' : {'color' : '#004C97', 'baredgecolor' : 'red'},
+         'Personnel' : {'color' : '#004C97', 'edgecolor' : 'red'},
          'Goods & services' : {'color' : '#009CDE'},
          'Current transfers' : {'color' : '#CAEDFE'},
          'Capital exp.' : {'color' : '#FF8200'},
@@ -58,7 +58,6 @@ attrs = {linecol : {'linewidth' : 4, 'color' : IMFBLACK},
 
 chart1 = Chart(df, linecols=linecol, barcols=barcols,
                attrs=attrs,
-               baredgecolor='gold',
                topxaxis='left',
                title='Central Government: Primary Expenditure Components',
                subtitle='(Percent of GDP)',
@@ -82,7 +81,7 @@ df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 
 attrs = {'Accrual spending' : {'color' : IMFBLUE},
               'Cash spending' : {'color' : 'white', 'offset' : 30,
-                                 'barhatch' : '\\\\', 'barhatchcolor' : IMFBLACK, 'baredgecolor' : 'cyan'}
+                                 'hatch' : '\\\\', 'hatchcolor' : IMFBLACK, 'edgecolor' : 'cyan'}
               }
 
 # Create Chart object
@@ -90,7 +89,6 @@ chart2 = Chart(df, barcols=df.columns, barstack=False,
                attrs=attrs,
                title='Cash vs. Accrual Earthquake Spending',
                subtitle='(Percent of GDP)',
-               baredgecolor='gold',
                yrange=[0, 4],
                legend_left=0.40, ncol_legend=2, legend_width=0.6, legend_bottom=0.80,
                )
@@ -219,7 +217,7 @@ fig = chart2.fig
 # chart2.show()
 
 # Add a horizontal line
-# chart2.add_hline(3)
+# chart2.hline(3)
 
 # Apply style
 # chart.apply(style)

@@ -56,14 +56,14 @@ attrs = {linecol : {'linewidth' : 4,
                     'markerfacecolor' : 'white',
                     'markeredgewidth' : 4,
                     'markeredgecolor' : '#004C97'},
-         'Consumption (private)' : {'color' : '#4B8CAD', 'barhatchcolor' : IMFBLUE, 'barhatch' : '\\\\'},
-         'Consumption (public)' : {'color' : 'white', 'barhatch' : '\\\\\\', 'barhatchcolor' : IMFBLACK},
+         'Consumption (private)' : {'color' : '#4B8CAD', 'hatchcolor' : IMFBLUE, 'hatch' : '\\\\'},
+         'Consumption (public)' : {'color' : 'white', 'hatch' : '\\\\\\', 'hatchcolor' : IMFBLACK},
          'Net exports' : {'color' : IMFGREY},
          'Inventories/discrepancy' : {'color' : IMFRED},
          'Fixed investment' : {'color' : 'white',
-                               'barhatch' : '///',
-                               'barhatchcolor' : IMFGREEN,
-                               'barhatchwidth' : 10}
+                               'hatch' : '///',
+                               'hatchcolor' : IMFGREEN,
+                               'hatchwidth' : 10}
          }
 
 kw_hline = {'y' : 1.4, 'xrange' : '2023Q1:' + df.index[-1].strftime('%Y-%m'),
@@ -92,18 +92,18 @@ chart1 = Chart(df, linecols=linecol, barcols=barcols,
                arrows = [kw_arrow], # Add arrow via kwargs
                ncol_legend=2)
 
-# Add hline with add_hline()
-# chart1.add_hline(y=1.4, xrange='2023Q1:' + df.index[-1].strftime('%Y-%m'),
-#                  # xrange=[0.05, 0.95], coordinates='axis',
-#                  color=IMFBLACK, linewidth=2.5, linestyle='--', dashes=[10, 4])
+# Add hline with hline()
+# chart1.hline(y=1.4, xrange='2023Q1:' + df.index[-1].strftime('%Y-%m'),
+#              # xrange=[0.05, 0.95], coordinates='axis',
+#              color=IMFBLACK, linewidth=2.5, linestyle='--', dashes=[10, 4])
 
-# Add text with add_text()
-# chart1.add_text(pd.Timestamp('2024Q3'), 6.5, text=text, fontweight='bold', color='#004C97')
+# Add text with text()
+# chart1.text(pd.Timestamp('2024Q3'), 6.5, text=text, fontweight='bold', color='#004C97')
 
-# Add arrow with add_arrow()
-chart1.add_arrow(head=[pd.Timestamp('2025Q1'), 1.5],
-                 tail=[pd.Timestamp('2025Q1'), 5],
-                 color='#004C97')
+# Add arrow with arrow()
+chart1.arrow(head=[pd.Timestamp('2025Q1'), 1.5],
+             tail=[pd.Timestamp('2025Q1'), 5],
+             color='#004C97')
 # Save
 chart1.save(outdir + '/page1_chart1_gdp.pdf')
 
@@ -225,7 +225,7 @@ fig = chart2.fig
 # chart2.show()
 
 # Add a horizontal line
-# chart2.add_hline(3)
+# chart2.hline(3)
 
 # Apply style
 # chart.apply(style)

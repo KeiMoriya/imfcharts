@@ -233,7 +233,7 @@ fig = chart2.fig
 # chart2.show()
 
 # Add a horizontal line
-# chart2.add_hline(3)
+# chart2.hline(3)
 
 # Apply style
 # chart.apply(style)

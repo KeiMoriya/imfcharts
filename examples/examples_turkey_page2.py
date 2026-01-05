@@ -215,8 +215,8 @@ attrs = {'Jul-23' : {'linewidth' : 0,
                      'markeredgecolor' : '#3D96AE'},
 }
 
-# chart4.add_lines(df, ['Jul-23', 'Aug-24'],
-#                  attrs=attrs)
+# chart4.lines(df, ['Jul-23', 'Aug-24'],
+#              attrs=attrs)
 
 # Save
 chart4.save(outdir + '/page2_chart4_inflation_forecast.pdf')
@@ -277,7 +277,7 @@ fig = chart2.fig
 # chart2.show()
 
 # Add a horizontal line
-# chart2.add_hline(3)
+# chart2.hline(3)
 
 # Apply style
 # chart.apply(style)

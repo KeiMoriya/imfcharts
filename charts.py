@@ -299,24 +299,24 @@ class Chart:
         # ---------------------------------------------------------------------------------------------------
         # Draw area, bars, lines
         if areacols is not None:
-            self.add_area(self.data, areacols, indexcol=self.indexcol, colorcycle=None, areastack=areastack,
-                          areaaxis=areaaxis, xrange=self.xrange, arealinewidth=self.arealinewidth, areaedgecolor=self.areaedgecolor,
-                          attrs=attrs, debug=self.debug)
+            self.area(self.data, areacols, indexcol=self.indexcol, colorcycle=None, areastack=areastack,
+                      areaaxis=areaaxis, xrange=self.xrange, arealinewidth=self.arealinewidth, areaedgecolor=self.areaedgecolor,
+                      attrs=attrs, debug=self.debug)
             
         if barcols is not None:
-            self.add_bars(self.data, barcols, indexcol=self.indexcol, colorcycle=None, barstack=barstack, total_barwidth=total_barwidth,
-                          baraxis=baraxis, xrange=self.xrange, linewidth=self.barlinewidth, edgecolor=self.baredgecolor,
-                          attrs=attrs, debug=self.debug)
+            self.bars(self.data, barcols, indexcol=self.indexcol, colorcycle=None, barstack=barstack, total_barwidth=total_barwidth,
+                      baraxis=baraxis, xrange=self.xrange, linewidth=self.barlinewidth, edgecolor=self.baredgecolor,
+                      attrs=attrs, debug=self.debug)
             
         if linecols is not None:
-            self.add_lines(self.data, linecols, indexcol=self.indexcol, colorcycle=None,
-                           linewidth=self.linewidth, linebreaks=self.linebreaks,
-                           xrange=self.xrange, attrs=attrs, debug=self.debug)
+            self.lines(self.data, linecols, indexcol=self.indexcol, colorcycle=None,
+                       linewidth=self.linewidth, linebreaks=self.linebreaks,
+                       xrange=self.xrange, attrs=attrs, debug=self.debug)
 
         if rlinecols is not None:
-            self.add_lines(self.data, rlinecols, indexcol=self.indexcol, axis='right', colorcycle=None,
-                           linewidth=self.linewidth, linebreaks=self.linebreaks,
-                           xrange=self.xrange, attrs=attrs, debug=self.debug)
+            self.lines(self.data, rlinecols, indexcol=self.indexcol, axis='right', colorcycle=None,
+                       linewidth=self.linewidth, linebreaks=self.linebreaks,
+                       xrange=self.xrange, attrs=attrs, debug=self.debug)
             
         # If hlines, vlines, hrects, vrects, fills, texts, arrows is given, loop over.
         # Each of these should be a list of kwargs of the form
@@ -324,49 +324,49 @@ class Chart:
         if hlines is not None:
             try:
                 for hline in hlines:
-                    self.add_hline(**hline)
+                    self.hline(**hline)
             except Exception as e:
                 raise RuntimeError('Could not process hlines = ' + str(hlines) + ' with exception:' + str(e))
 
         if vlines is not None:
             try:
                 for vline in vlines:
-                    self.add_vline(**vline)
+                    self.vline(**vline)
             except Exception as e:
                 raise RuntimeError('Could not process vlines = ' + str(vlines) + ' with exception:' + str(e))
 
         if hrects is not None:
             try:
                 for hrect in hrects:
-                    self.add_hrect(**hrect)
+                    self.hrect(**hrect)
             except Exception as e:
                 raise RuntimeError('Could not process hrects = ' + str(hrects) + ' with exception:' + str(e))
 
         if vrects is not None:
             try:
                 for vrect in vrects:
-                    self.add_vrect(**vrect)
+                    self.vrect(**vrect)
             except Exception as e:
                 raise RuntimeError('Could not process vrects = ' + str(vrects) + ' with exception:' + str(e))
 
         if fills is not None:
             try:
                 for fill in fills:
-                    self.add_fill(**fill)
+                    self.fill(**fill)
             except Exception as e:
                 raise RuntimeError('Could not process fills = ' + str(fills) + ' with exception:' + str(e))
             
         if texts is not None:
             try:
                 for text in texts:
-                    self.add_text(**text)
+                    self.text(**text)
             except Exception as e:
                 raise RuntimeError('Could not process texts = ' + str(texts) + ' with exception:' + str(e))
 
         if arrows is not None:
             try:
                 for arrow in arrows:
-                    self.add_arrow(**arrow)
+                    self.arrow(**arrow)
             except Exception as e:
                 raise RuntimeError('Could not process arrows = ' + str(arrows) + ' with exception:' + str(e))
             
@@ -881,10 +881,10 @@ class Chart:
         if formatter is not None:
             self.ax.xaxis.set_major_formatter(formatter)
 
-    def add_lines(self, data=None, cols=None, indexcol=None, axis='left', colorcycle=None, linewidth=None, linebreaks=False,
-                  attrs=None,
-                  xrange=None, margins=None, xformat=None, yrange=None, ryrange=None,
-                  debug=False):
+    def lines(self, data=None, cols=None, indexcol=None, axis='left', colorcycle=None, linewidth=None, linebreaks=False,
+              attrs=None,
+              xrange=None, margins=None, xformat=None, yrange=None, ryrange=None,
+              debug=False):
         '''
         Add line to chart
         '''
@@ -930,9 +930,9 @@ class Chart:
         # If no data and/or linecols are available, finish.
         if data is None:
             if linecols == []:
-                print('WARNING: no data given to add_lines()')
+                print('WARNING: no data given to lines()')
             else:
-                print('WARNING: no data given to add_lines() but linecols given as ' + str(linecols))
+                print('WARNING: no data given to lines() but linecols given as ' + str(linecols))
             print('No lines will be added')
             return
 
@@ -1162,16 +1162,16 @@ class Chart:
             self.ryrange = self._parse_yrange(ryrange)
             self.set_ryrange(self.ryrange)
 
-    def add_bars(self, data, cols, indexcol=None, baraxis='left', colorcycle=None,
-                 barstack=True, total_barwidth=None, linewidth=None, edgecolor=None,
-                 xrange=None, margins=None, attrs=None,
-                 debug=False):
+    def bars(self, data, cols, indexcol=None, baraxis='left', colorcycle=None,
+             barstack=True, total_barwidth=None, linewidth=None, edgecolor=None,
+             xrange=None, margins=None, attrs=None,
+             debug=False):
         '''
         Add bar to chart
         '''
 
         if debug:
-            print('Calling add_bars on "' + str(cols) + '"')
+            print('Calling bars on "' + str(cols) + '"')
             
         if indexcol is not None:
             if type(data) == pd.DataFrame:
@@ -1537,16 +1537,16 @@ class Chart:
                 self.margins = margins
             self.set_xrange(xrange, margins=self.margins, debug=debug)
 
-    def add_area(self, data, cols, indexcol=None, areaaxis='left', colorcycle=None, alpha=1,
-                 areastack=True, arealinewidth=None, areaedgecolor=None,
-                 xrange=None, margins=0, attrs=None,
-                 debug=False):
+    def area(self, data, cols, indexcol=None, areaaxis='left', colorcycle=None, alpha=1,
+             areastack=True, arealinewidth=None, areaedgecolor=None,
+             xrange=None, margins=0, attrs=None,
+             debug=False):
         '''
         Add area to chart
         '''
 
         if debug:
-            print('Calling add_area on "' + str(cols) + '"')
+            print('Calling area on "' + str(cols) + '"')
             
         if indexcol is not None:
             if type(data) == pd.DataFrame:
@@ -1790,13 +1790,13 @@ class Chart:
             self.margins = margins
             self.set_xrange(xrange, margins=self.margins, debug=debug)
             
-    def add_scatter(self, data, cols, indexcol=None, attrs=None, debug=False):
+    def scatter(self, data, cols, indexcol=None, attrs=None, debug=False):
         '''
         Add scatter to chart
         '''
 
         if debug:
-            print('Calling add_lines on "' + str(cols) + '"')
+            print('Calling scatter on "' + str(cols) + '"')
 
         if indexcol is not None:
             if type(data) == pd.DataFrame:
@@ -1831,9 +1831,9 @@ class Chart:
             print('WARNING:')
             print('Chart.topxaxis must be "left" or "right", given ' + str(topxaxis))
 
-    def add_hline(self, y, xrange=None, coordinates='data', color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None,
-                  label='', legend=False,
-                  debug=False, **kwarg):
+    def hline(self, y, xrange=None, coordinates='data', color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None,
+              label='', legend=False,
+              debug=False, **kwarg):
         '''
         Add horizontal line across figure.
 
@@ -1901,9 +1901,9 @@ class Chart:
             if debug:
                 print('called update_legend()')
             
-    def add_vline(self, x, yrange=None, coordinates='data', width=1, color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None,
-                  label='', legend=False,
-                  debug=False, **kwarg):
+    def vline(self, x, yrange=None, coordinates='data', width=1, color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None,
+              label='', legend=False,
+              debug=False, **kwarg):
         '''
         Add vertical line across figure.
         If yrange is None, a vertical line will be drawn across the entire chart.
@@ -1966,12 +1966,12 @@ class Chart:
             if debug:
                 print('called update_legend()')
                 
-    def add_hrect(self, ymin=0, ymax=0, xrange=None, coordinates='data', color='red', linecolor='none', linewidth=0, linestyle='-', alpha=0.3,
-                  dash_capstyle=None,
-                  hatch=None, # hatchlinewidth=None,
-                  label='', legend=False,
-                  zorder=1,
-                  debug=False, **kwarg):
+    def hrect(self, ymin=0, ymax=0, xrange=None, coordinates='data', color='red', linecolor='none', linewidth=0, linestyle='-', alpha=0.3,
+              dash_capstyle=None,
+              hatch=None, # hatchlinewidth=None,
+              label='', legend=False,
+              zorder=1,
+              debug=False, **kwarg):
         '''
         Add horizontal rectangle across figure.
 
@@ -2068,12 +2068,12 @@ class Chart:
 #            # and the resulting figure will always have the hatch linewidth of rcParams.
 #            matplotlib.rcParams["hatch.linewidth"] = hatchlinewidth_rc
 
-    def add_vrect(self, xmin=0, xmax=0, yrange=None, coordinates='data', color='red', linecolor='none', linewidth=0, linestyle='-', alpha=0.3,
-                  dash_capstyle=None,
-                  hatch=None, # hatchlinewidth=None,
-                  label='', legend=False,
-                  zorder=1,
-                  debug=False, **kwarg):
+    def vrect(self, xmin=0, xmax=0, yrange=None, coordinates='data', color='red', linecolor='none', linewidth=0, linestyle='-', alpha=0.3,
+              dash_capstyle=None,
+              hatch=None, # hatchlinewidth=None,
+              label='', legend=False,
+              zorder=1,
+              debug=False, **kwarg):
         '''
         Add vertical rectangle across figure.
 
@@ -2170,9 +2170,9 @@ class Chart:
 #            # and the resulting figure will always have the hatch linewidth of rcParams.
 #            matplotlib.rcParams["hatch.linewidth"] = hatchlinewidth_rc
 
-    def add_text(self, x, y, text='', xycoords='data', color='black',
-                 fontsize=14, fontfamily='Segoe UI', fontweight='normal',
-                 va='top', ha='left', **kwargs):
+    def text(self, x, y, text='', xycoords='data', color='black',
+             fontsize=14, fontfamily='Segoe UI', fontweight='normal',
+             va='top', ha='left', **kwargs):
         '''
         Add text.
 
@@ -2191,10 +2191,10 @@ class Chart:
                      fontsize=fontsize, fontfamily=fontfamily, fontweight=fontweight,
                      va=va, ha=ha)
     
-    def add_arrow(self, head=(0, 0), tail=(1, 1),
-                  color='black', width=4, headwidth=15, headlength=15, shrink=0.05, arrowstyle='->', edgecolor=None, edgewidth=0,
-                  va='top', ha='left',
-                  text='', xycoords='data', textcoords='data', **kwargs):
+    def arrow(self, head=(0, 0), tail=(1, 1),
+              color='black', width=4, headwidth=15, headlength=15, shrink=0.05, arrowstyle='->', edgecolor=None, edgewidth=0,
+              va='top', ha='left',
+              text='', xycoords='data', textcoords='data', **kwargs):
         '''
         Add arrow and text.
 
@@ -2226,18 +2226,18 @@ class Chart:
                              va=va, ha=ha,
                              text=text, xycoords=xycoords, textcoords=textcoords)
 
-    def add_fill(self, lo, hi, data=None, indexcol=None, axis='left',
-                 color='red', linecolor='none', linewidth=0, linestyle='-', alpha=0.3,
-                 dash_capstyle=None,
-                 hatch=None, # hatchlinewidth=None,
-                 label='', legend=False,
-                 zorder=1,
-                 debug=False, **kwarg):
+    def fill(self, lo, hi, data=None, indexcol=None, axis='left',
+             color='red', linecolor='none', linewidth=0, linestyle='-', alpha=0.3,
+             dash_capstyle=None,
+             hatch=None, # hatchlinewidth=None,
+             label='', legend=False,
+             zorder=1,
+             debug=False, **kwarg):
 
         # Set data if specified
         if data is not None:
             if type(data) != pd.DataFrame:
-                raise RuntimeError('add_fill(): data must be pd.DataFrame, given ' + str(data) + ' of type ' + str(type(data)))
+                raise RuntimeError('fill(): data must be pd.DataFrame, given ' + str(data) + ' of type ' + str(type(data)))
             self.data = data
             if indexcol:
                 if indexcol not in self.data.columns:

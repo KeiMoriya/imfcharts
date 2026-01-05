@@ -1,7 +1,7 @@
 '''
-2026-01-03
+2026-01-05
 
-Example of lines.
+Example of legends.
 
 Data files are created by get_data_turkey_page2.py
 '''
@@ -52,157 +52,120 @@ chart2 = Chart(df, linecols=df.columns,
                legend_bottom=0.22, legend_left=0.55)
 
 # Save
-chart2.save(outdir + '/lines_1_no_options.pdf')
+chart2.save(outdir + '/legends_1_no_options.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
-# 2. color cycle
-# ---------------------------------------------------------------------------------------------------------
-# Create Chart object
-chart2 = Chart(df, linecols=df.columns,
-               colorcycle=['red', 'green', 'blue', 'black'],
-               title='color cycle',
-               xrange='2022-01:', yrange=[-95, 60],
-               legend_bottom=0.22, legend_left=0.55)
-
-# Save
-chart2.save(outdir + '/lines_2_colorcycle.pdf')
-
-# ---------------------------------------------------------------------------------------------------------
-# 3. linewidth
+# 2. ncol_legend
 # ---------------------------------------------------------------------------------------------------------
 # Create Chart object
 chart2 = Chart(df, linecols=df.columns,
-               title='linewidth',
-               linewidth=5,
+               title='ncol_legend = 3',
                xrange='2022-01:', yrange=[-95, 60],
-               legend_bottom=0.22, legend_left=0.55)
+               legend_bottom=0, legend_left=0, legend_width=0.90, ncol_legend=3)
 
 # Save
-chart2.save(outdir + '/lines_3_linewidth.pdf')
+chart2.save(outdir + '/legends_2_colorcycle.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
-# 4. linebreaks
-# ---------------------------------------------------------------------------------------------------------
-
-_df = df.copy()
-_df.loc['2025-07'] = np.nan
-# Create Chart object
-chart2 = Chart(_df, linecols=df.columns,
-               title='linebreaks false',
-               xrange='2022-01:', yrange=[-95, 60],
-               legend_bottom=0.22, legend_left=0.55)
-
-# Save
-chart2.save(outdir + '/lines_4_1_linebreaks_false.pdf')
-
-# Create Chart object
-chart2 = Chart(_df, linecols=df.columns,
-               title='linebreaks true',
-               linebreaks=True,
-               xrange='2022-01:', yrange=[-95, 60],
-               legend_bottom=0.22, legend_left=0.55)
-
-# Save
-chart2.save(outdir + '/lines_4_2_linebreaks_true.pdf')
-
-# ---------------------------------------------------------------------------------------------------------
-# 5. margins
+# 3. show_legend
 # ---------------------------------------------------------------------------------------------------------
 # Create Chart object
 chart2 = Chart(df, linecols=df.columns,
-               title='margins',
-               margins=60,
+               title='show_legend = False',
                xrange='2022-01:', yrange=[-95, 60],
+               show_legend=False,
                legend_bottom=0.22, legend_left=0.55)
 
 # Save
-chart2.save(outdir + '/lines_5_margins.pdf')
+chart2.save(outdir + '/legends_3_show_legend_false.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
-# 6. attrs
+# 4. set_legend
 # ---------------------------------------------------------------------------------------------------------
-attrs = {'Current account' : {'color' : IMFBLUE},
-         'Excluding fuel' : {'color' : '#009CDE'},
-         'Excluding gold' : {'color' : IMFRED},
-         'Excluding fuel & gold' : {'color' : '#BFBFBF'}}
 
+# Create Chart object
+# Draw with legend, then remove
+chart2 = Chart(df, linecols=df.columns,
+               title='set_legend = False',
+               xrange='2022-01:', yrange=[-95, 60],
+               legend_bottom=0.22, legend_left=0.55)
+# Set legend off
+chart2.set_legend(show=False)
+
+# Save
+chart2.save(outdir + '/legends_4_1_set_legend_false.pdf')
+
+# Set legend on
+chart2.set_legend(show=True)
+chart2.set_title('set_legend = True')
+
+# Save
+chart2.save(outdir + '/legends_4_2_legend_true.pdf')
+
+
+
+# Draw without legend, then turn on
+chart2 = Chart(df, linecols=df.columns,
+               title='set_legend = False',
+               xrange='2022-01:', yrange=[-95, 60],
+               legend_bottom=0.22, legend_left=0.55,
+               show_legend=False)
+# Set legend on
+chart2.set_legend(show=True)
+chart2.set_title('set_legend = True from no legend')
+
+# Save
+chart2.save(outdir + '/legends_4_3_legend_true2.pdf')
+
+# ---------------------------------------------------------------------------------------------------------
+# 5. fontsize
+# ---------------------------------------------------------------------------------------------------------
 # Create Chart object
 chart2 = Chart(df, linecols=df.columns,
-               title='attrs',
-               attrs=attrs,
+               title='fontsize',
                xrange='2022-01:', yrange=[-95, 60],
-               legend_bottom=0.22, legend_left=0.55)
+               legend_bottom=0.22, legend_left=0.55,
+               legend_fontsize=18)
 
 # Save
-chart2.save(outdir + '/lines_6_attrs.pdf')
+chart2.save(outdir + '/legends_5_fontsize.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
-# 7. kwargs
+# 6. legend header
 # ---------------------------------------------------------------------------------------------------------
 # Create Chart object
-chart3 = Chart(title='kwargs', yrange=[-95, 60],
-               legend_bottom=0.22, legend_left=0.55)
-kwargs = {'data' : df,
-          'cols' : df.columns,
-          'attrs' : attrs,
-          'xrange' : '2022-01:',
-          # 'debug' : True
-          }
-chart3.lines(**kwargs)
+chart2 = Chart(df, linecols=df.columns,
+               title='legend header',
+               xrange='2022-01:', yrange=[-95, 60],
+               legend_bottom=0.22, legend_left=0.55,
+               legend_header='This is the legend header')
+
 # Save
-chart3.save(outdir + '/lines_7_kwargs.pdf')
+chart2.save(outdir + '/legends_6_attrs.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
-# 8. steps
+# 7. legend spacing
 # ---------------------------------------------------------------------------------------------------------
-# Read in data
-infilename = 'data/turkey_page2/fig2_chart3_mp.csv'
-if not os.path.isfile(infilename):
-    print('File ' + infilename + ' does not exist')
-    sys.exit()
-df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
-
-attrs = {'Policy rate' : {'color' : IMFBLUE, 'drawstyle' : 'steps-post', 'linewidth' : 0.8},
-         'Inflation' : {'color' : IMFRED},
-         'Inflation expectation' : {'color' : IMFBLACK}}
-
 # Create Chart object
-chart3 = Chart(df, linecols=df.columns,
-               attrs=attrs,
-               title='steps',
-               xrange='2020-01:', yrange=[0, 90])
-
-# Draw data
-df['data'] = df['Policy rate']
-chart3.lines(data=df, cols='data', attrs={'data' : {'color' : 'red',
-                                                    'linewidth' : 0.8,
-                                                    'marker' : 'o',
-                                                    'markersize' : 3}
-                                          })
-
-# Draw option drawstyle='steps'
-df['steps'] = df['Policy rate']
-chart3.lines(data=df, cols='steps', attrs={'steps' : {'drawstyle' : 'steps',
-                                                      'color' : 'blue',
-                                                      'linewidth' : 0.8,
-                                                      'marker' : 'o',
-                                                      'markersize' : 3}
-                                           })
+chart2 = Chart(df, linecols=df.columns,
+               title='legend_spacing=1',
+               xrange='2022-01:', yrange=[-95, 60],
+               legend_bottom=0.22, legend_left=0.55,
+               legend_spacing=1)
 
 # Save
-chart3.save(outdir + '/lines_8_steps.pdf')
-
+chart2.save(outdir + '/legends_7_legend_spacing.pdf')
 
 #==========================================================================================================
 # Merge all files
 #==========================================================================================================
 from PyPDF2 import PdfWriter
-mergedfilename = outdir + '/lines.pdf'
+mergedfilename = outdir + '/legends.pdf'
 if os.path.isfile(mergedfilename):
     os.remove(mergedfilename)
     
 merger = PdfWriter()
-filenames = sorted([f for f in glob.glob(outdir + '/lines*.pdf') if f.find('rects') == -1])
+filenames = sorted(glob.glob(outdir + '/legends*.pdf'))
 for filename in filenames:
     merger.append(filename)
 merger.write(mergedfilename)

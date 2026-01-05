@@ -110,6 +110,8 @@ class Chart:
                  linewidth=None,
                  # whether to remove breaks in line charts
                  linebreaks=False,
+                 # Set drawstyle to "steps-post" to draw step plots
+                 drawstyle='default',
                  # bar options
                  barstack=True, barwidth=None, baraxis='left',
                  total_barwidth=None,
@@ -184,6 +186,9 @@ class Chart:
 
         # Set global linewidth, default is None.
         self.linewidth = linewidth
+
+        # Set global line drawstyle
+        self.drawstyle = drawstyle
         
         # If barlinewidth was specified, use it
         if barlinewidth is not None:
@@ -314,14 +319,14 @@ class Chart:
             
         if linecols is not None:
             self.lines(self.data, linecols, indexcol=self.indexcol, colorcycle=None,
-                       linewidth=self.linewidth, linebreaks=self.linebreaks,
+                       linewidth=self.linewidth, linebreaks=self.linebreaks, drawstyle=self.drawstyle,
                        attrs=attrs,
                        xrange=self.xrange,
                        debug=self.debug)
 
         if rlinecols is not None:
             self.lines(self.data, rlinecols, indexcol=self.indexcol, axis='right', colorcycle=None,
-                       linewidth=self.linewidth, linebreaks=self.linebreaks,
+                       linewidth=self.linewidth, linebreaks=self.linebreaks, drawstyle=self.drawstyle,
                        attrs=attrs, 
                        xrange=self.xrange,
                        debug=self.debug)
@@ -889,7 +894,7 @@ class Chart:
         if formatter is not None:
             self.ax.xaxis.set_major_formatter(formatter)
 
-    def lines(self, data=None, cols=None, indexcol=None, axis='left', colorcycle=None, linewidth=None, linebreaks=False,
+    def lines(self, data=None, cols=None, indexcol=None, axis='left', colorcycle=None, linewidth=None, linebreaks=False, drawstyle=None,
               attrs=None,
               xrange=None, margins=None, xformat=None, yrange=None, ryrange=None,
               debug=False):
@@ -991,6 +996,12 @@ class Chart:
             # If linewidth was specified as function input, use it
             if linewidth is not None:
                 _linewidth = linewidth
+
+            # If drawstyle is specified use it
+            if drawstyle is not None:
+                _drawstyle = drawstyle
+            else:
+                _drawstyle = self.drawstyle
             
             linestyle = matplotlib.rcParams['lines.linestyle']
             # Initialize color as None
@@ -1041,6 +1052,10 @@ class Chart:
                 if 'color' in _attrs:
                     color = _attrs['color']
 
+                if 'drawstyle' in _attrs:
+                    _drawstyle = _attrs['drawstyle']
+                    
+
                 if 'dashes' in _attrs:
                     dashes = _attrs['dashes']
                     
@@ -1089,6 +1104,7 @@ class Chart:
                                      markersize=markersize, marker=marker,
                                      markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
                                      markeredgewidth=markeredgewidth,
+                                     drawstyle=_drawstyle,
                                      linestyle=linestyle, linewidth=_linewidth, color=color,
                                      dashes=dashes, dash_capstyle=dash_capstyle)
                 else:
@@ -1096,6 +1112,7 @@ class Chart:
                                      markersize=markersize, marker=marker,
                                      markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
                                      markeredgewidth=markeredgewidth,
+                                     drawstyle=_drawstyle,
                                      linestyle=linestyle, linewidth=_linewidth, color=color)
                 entries.append(entry[0])
             else:
@@ -1107,12 +1124,14 @@ class Chart:
                                          markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
                                          markeredgewidth=markeredgewidth,
                                          linestyle=linestyle, linewidth=_linewidth, color=color,
+                                         drawstyle=_drawstyle,
                                          dashes=dashes, dash_capstyle=dash_capstyle)
                     else:
                         entry = _ax.plot(_df.index, _df[linecol], label=linecol,
                                          markersize=markersize, marker=_marker,
                                          markerfacecolor=markerfacecolor, markeredgecolor=markeredgecolor,
                                          markeredgewidth=markeredgewidth,
+                                         drawstyle=_drawstyle,
                                          linestyle=linestyle, linewidth=_linewidth, color=color)
                         
                     if legend:

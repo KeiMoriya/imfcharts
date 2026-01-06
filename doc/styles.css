@@ -1,0 +1,5 @@
+/* Scale all figures */
+.quarto-figure img,
+.quarto-figure svg {
+  max-width: 75%;
+}

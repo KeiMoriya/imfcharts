@@ -1,31 +1,37 @@
 
 ---
 title: "Documentation for imfcharts"
-date: today
+date: "today"
 author:
   - name: Datatools Team
     email: datatools-support@imf.org
     url: https://intlmonetaryfund.sharepoint.com/sites/fw-datatools
     department: 
       - name: ITD
-      - url; http://datatools/
+      - url: http://datatools/
 bibliography: references.bib
 number-sections: true
-page-layout: full
 code-block-bg: "#F0F0F0"
 format:
   html:
+    # styles.css is needed to scale down figure sizes.
+    # Specifying any of
+    # #| out-width: "25%"
+    # #| fig-width: 8
+    # #| fig-height: 5
+    # for individual figures does not have any effect.
+    css: styles.css
     link-external-newwindow: true
     code-fold: true
     toc: true
     toc-depth: 2
     toc-float: true
+    toc-location: left
     theme: custom-theme.scss # cyborg
     grid:
       body-width: 1200px  # Main body width
       margin-width: 150px # width of toc
-      sidebar-width: 20px # ???
-
+      sidebar-width: 300px # left side
 #  docx:
 #    toc: true
 #    number-sections: true
@@ -36,7 +42,16 @@ format:
 #    documentclass: report
 #    papersize: letter
 
-# jupyter: python3
+# Adjust title font
+include-in-header:
+  - text: |
+      <style>
+        .title {
+          font-size: 48px; /* Adjust the pixel value as needed */
+          color: #4B82AD;    /* Optional: change the color */
+        }
+      </style>
+jupyter: python3
 ---
 
 <!-- 2025-11-20                                             -->
@@ -57,6 +72,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
+
+# Set figure sizes
+plt.rcParams["figure.figsize"] = (4.74, 3)
 
 # Tables in quarto
 from itables import show
@@ -303,14 +321,14 @@ attrs = {linecol : {'linewidth' : 4,
                     'markerfacecolor' : 'white',
                     'markeredgewidth' : 4,
                     'markeredgecolor' : '#004C97'},
-         'Consumption (private)' : {'color' : '#4B8CAD', 'barhatchcolor' : IMFBLUE, 'barhatch' : '\\\\'},
-         'Consumption (public)' : {'color' : 'white', 'barhatch' : '\\\\\\', 'barhatchcolor' : IMFBLACK},
+         'Consumption (private)' : {'color' : '#4B8CAD', 'hatchcolor' : IMFBLUE, 'hatch' : '\\\\'},
+         'Consumption (public)' : {'color' : 'white', 'hatch' : '\\\\\\', 'hatchcolor' : IMFBLACK},
          'Net exports' : {'color' : IMFGREY},
          'Inventories/discrepancy' : {'color' : IMFRED},
          'Fixed investment' : {'color' : 'white',
-                               'barhatch' : '///',
-                               'barhatchcolor' : IMFGREEN,
-                               'barhatchwidth' : 10}
+                               'hatch' : '///',
+                               'hatchcolor' : IMFGREEN,
+                               'hatchwidth' : 10}
          }
 
 chart1 = Chart(df, linecols=linecol, barcols=barcols,
@@ -353,7 +371,7 @@ For most purposes it should be possible to create a `Chart` object with a single
 by specifying the data to be charted (a `pandas.DataFrame`) and the columns to be shown as lines, bars, etc.
 In some cases further modifications can be made by calling a member function on the `Chart` like `chart.set_xrange([0, 3])`.
 
-## Add Lines {#sec-basics-add_lines}
+## Add Lines {#sec-basics-lines}
 
 The most straightforward use case is to create a line chart, typically a time series chart.
 The `Chart()` function will take in a `pandas.DataFrame` and argument `linecols` which can either be a
@@ -464,7 +482,7 @@ chart2 = Chart(df, linecols=unemp, rlinecols=combined,
 chart2
 ```
 
-Internally, lines are added with the function `Chart.add_lines()`, other options for this function are
+Internally, lines are added with the function `Chart.lines()`, other options for this function are
 
 - `indexcol=None` - By default the input `pandas.DataFrame`'s index is used as the x-axis. If this is a column in the DataFrame, specify using this option.
 - `axis='left'` - Specify which y-axis to plot on.
@@ -472,7 +490,7 @@ Internally, lines are added with the function `Chart.add_lines()`, other options
 - `xrange=None` - Specify x-axis range. See @sec-basics-format_axes.
 - `debug=False` - Show information when running.
 
-## Add Bars {#sec-basics-add_bars}
+## Add Bars {#sec-basics-bars}
 
 To add bars, use the argument `barcols` in `Chart()`. This can either be a `str` specifying a single column
 or an iterable of multiple column names.
@@ -534,19 +552,18 @@ The default is to follow the color scheme that is specified in the current style
 The available options in `attrs` for bars is as follows:
 
 - `color` - The color of bars for this column.
-- `barwidth` - Specify width of bars. If time series, in units of days.
+- `width` - Specify width of bars. If time series, in units of days.
 - `offset` - Additional offset for bars. If time series, in units of days.
-- `baredgecolor` - Edge colors of bars.
-- `barhatchcolor` - Specify colors for any hatches
-- `barhatch` - Specify a valid hatch specified [here](https://matplotlib.org/stable/gallery/shapes_and_collections/hatch_style_reference.html)
-- `barhatchwidth` - Specify hatch bar width
-- `baredgecolor` - Overwrites for each column what is passed through same option in `Charts()` or `add_bars()`
+- `edgecolor` - Edge colors of bars.
+- `hatchcolor` - Specify colors for any hatches
+- `hatch` - Specify a valid hatch specified [here](https://matplotlib.org/stable/gallery/shapes_and_collections/hatch_style_reference.html)
+- `hatchwidth` - Specify hatch bar width
+- `edgecolor` - Overwrites for each column what is passed through same option in `Charts()` or `bars()`
 - `legend` - If `False`, do not add to legend.
 - `barcolors` - Specify color of individual colors of bars using the index of the data. See example below.
 
-
 Note that the default is to have the edges of bars in black. This color can be modfiied with `baredgecolor` for each column,
-and to remove use the option `barlinewidth=0` when calling `Chart()` or `Chart.add_bars()`.
+and to remove use the option `barlinewidth=0` when calling `Chart()` or `Chart.bars()`.
 
 An example with customized bar `attrs` is below.
 
@@ -584,25 +601,25 @@ chart1 = Chart(df, linecols=linecol, barcols=barcols,
 chart1
 ```
 
-Internally, bar charts are created with the function `chart.add_bars()`. Other options for this function are
+Internally, bar charts are created with the function `chart.bars()`. Other options for this function are
 
 - `indexcol=None` -By default the input `pandas.DataFrame`'s index is used as the x-axis. If this is a column in the DataFrame, specify using this option.
-- `baraxis='left'` - Specify which y-axis to plot on.
+- `axis='left'` - Specify which y-axis to plot on.
 - `stack=True` - Specify whether to stack bars. If `True`, all bars are stacked on top of each other (default), otherwise they are staggered.
 - `total_barwidth=None` - When not plotting bars as a time series, specify the width of each bar, default is 0.9.
-- `barlinewidth=None` - Width of edges of bars.
-- `baredgecolor='black'` - Edge color for bars. Can be overwritten for individual columns by `attrs`.
+- `linewidth=None` - Width of edges of bars.
+- `edgecolor='black'` - Edge color for bars. Can be overwritten for individual columns by `attrs`.
 - `xrange=None` - Specify x-axis range. See @sec-basics-format_axes.
 - `debug=False` - Show information when running.
 
-## Add Lines and Rectangles {#sec-basics-add_lines_rects}
+## Add Lines and Rectangles {#sec-basics-lines_rects}
 
-    def add_hline(self, y, xrange=None, coordinates='data', color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None,
-    def add_vline(self, x, yrange=None, coordinates='data', width=1, color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None):
-    def add_hrect(self, y0, y1, width=1, linecolor='red', fillcolor=None, dash='-', opacity=1, text=''):
-    def add_vrect(self, y0, y1, width=1, linecolor='red', fillcolor=None, dash='-', opacity=1, text=''):
-    def add_text(self, x, y, text='', xycoords='data', color='black',
-    def add_arrow(self, head=(0, 0), tail=(1, 1),
+    def hline(self, y, xrange=None, coordinates='data', color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None,
+    def vline(self, x, yrange=None, coordinates='data', width=1, color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None):
+    def hrect(self, y0, y1, width=1, linecolor='red', fillcolor=None, dash='-', opacity=1, text=''):
+    def vrect(self, y0, y1, width=1, linecolor='red', fillcolor=None, dash='-', opacity=1, text=''):
+    def text(self, x, y, text='', xycoords='data', color='black',
+    def arrow(self, head=(0, 0), tail=(1, 1),
 
 Add hlines
 Add vlines
@@ -615,7 +632,7 @@ Add vrect
 ### Adding Titles, Subtitles, axis titles.
 
 The `Chart()` function has arguments `title` and `subtitle` which allow specifying titles and subtitles, respectively.
-Internally these call `Chart.add_title()` and `Chart.add_subtitle()`.
+Internally these call `Chart.title()` and `Chart.subtitle()`.
 
 Axes titles are set within `Chart()` with arguments `xtitle` and `yttile`, together with `xtitlesize`, `ytitlesize`.
 Internally these call `Chart.set_xtitle(xtitle, xtitlesize)` and `Chart.set_ytitle(ytitle, ytitlesize)`.

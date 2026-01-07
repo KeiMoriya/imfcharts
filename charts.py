@@ -285,16 +285,27 @@ class Chart:
         # If linebreaks is True, NA values will have a break in lines.
         self.linebreaks = linebreaks
         
-        # Parse y-axis ranges
-        self.yrange = self._parse_yrange(yrange)
-        self.ryrange = self._parse_yrange(ryrange)
-
-        # Set x-, y-axis ranges
+        # Set x-axis range.
         if self.data is not None:
             self.set_xrange(self.xrange, self.margins)
-            self.set_yrange(self.yrange)
-            self.set_ryrange(self.ryrange)
 
+        # Set y-axis ranges if specified.
+        # If yrange is None, keep as None instead of passing through _parse_yrange()
+        # which will set it to (None, None), and when used set the y-axis range to
+        # Matplotlib's default (0, 1).
+        # Below, self.yrange and self.ryrange are always set,
+        # and if None is passed in, they remain None.
+        self.yrange = yrange
+        if yrange is not None:
+            self.yrange = self._parse_yrange(yrange)
+            self.set_yrange(self.yrange)
+
+        self.ryrange = ryrange
+        if ryrange is not None:
+            self.ryrange = self._parse_yrange(ryrange)
+            self.set_ryrange(self.ryrange)
+            
+            
         # Set x-axis formatting
         self.set_xaxis_format()
 
@@ -386,7 +397,7 @@ class Chart:
                     self.arrow(**arrow)
             except Exception as e:
                 raise RuntimeError('Could not process arrows = ' + str(arrows) + ' with exception:' + str(e))
-            
+
         # Create legend
         if self.debug:
             print('self.legend_entries:')
@@ -1184,14 +1195,20 @@ class Chart:
         # If yrange is specified use it, otherwise use self.yrange
         if axis == 'left':
             if yrange is None:
-                yrange = self.yrange
-            self.yrange = self._parse_yrange(yrange)
-            self.set_yrange(self.yrange)
+                if getattr(self, 'yrange', None) is not None:
+                    yrange = self.yrange
+
+            if yrange is not None:
+                self.yrange = self._parse_yrange(yrange)
+                self.set_yrange(self.yrange)
         if axis == 'right':
             if ryrange is None:
-                ryrange = self.ryrange
-            self.ryrange = self._parse_yrange(ryrange)
-            self.set_ryrange(self.ryrange)
+                if getattr(self, 'ryrange', None) is not None:
+                    ryrange = self.ryrange
+                    
+            if ryrange is not None:
+                self.ryrange = self._parse_yrange(ryrange)
+                self.set_ryrange(self.ryrange)
 
     def bars(self, data=None, cols=None, indexcol=None, axis='left', colorcycle=None,
              stack=True, total_barwidth=None, linewidth=None, edgecolor=None,
@@ -1626,14 +1643,20 @@ class Chart:
         # If yrange is specified use it, otherwise use self.yrange
         if axis == 'left':
             if yrange is None:
-                yrange = self.yrange
-            self.yrange = self._parse_yrange(yrange)
-            self.set_yrange(self.yrange)
+                if getattr(self, 'yrange', None) is not None:
+                    yrange = self.yrange
+
+            if yrange is not None:
+                self.yrange = self._parse_yrange(yrange)
+                self.set_yrange(self.yrange)
         if axis == 'right':
             if ryrange is None:
-                ryrange = self.ryrange
-            self.ryrange = self._parse_yrange(ryrange)
-            self.set_ryrange(self.ryrange)
+                if getattr(self, 'ryrange', None) is not None:
+                    ryrange = self.ryrange
+                    
+            if ryrange is not None:
+                self.ryrange = self._parse_yrange(ryrange)
+                self.set_ryrange(self.ryrange)
 
     def area(self, data=None, cols=None, indexcol=None, axis='left', colorcycle=None, alpha=1,
              stack=True, linewidth=None, edgecolor=None,
@@ -1736,6 +1759,10 @@ class Chart:
         pos_offset = [0] * len(self.data)
         neg_offset = [0] * len(self.data)
 
+        # Keep track of whether any negative area exists.
+        # If no negative area exists, then set min yrange to 0 at end.
+        has_negative = False
+
         for iareacol, areacol in enumerate(areacols):
             if debug:
                 print('-' * 40)
@@ -1830,6 +1857,9 @@ class Chart:
             _df_neg = self.data[[areacol]].copy()
             mask = _df_neg[areacol] > 0
             _df_neg.loc[mask, areacol] = np.nan
+
+            if len(_df_neg[areacol].dropna()) > 0:
+                has_negative = True
 
             if axis == 'left':
                 _ax = self.ax
@@ -1947,15 +1977,32 @@ class Chart:
         # If yrange is specified use it, otherwise use self.yrange
         if axis == 'left':
             if yrange is None:
-                yrange = self.yrange
-            self.yrange = self._parse_yrange(yrange)
-            self.set_yrange(self.yrange)
+                if getattr(self, 'yrange', None) is not None:
+                    yrange = self.yrange
+
+            if yrange is not None:
+                self.yrange = self._parse_yrange(yrange)
+                self.set_yrange(self.yrange)
+
+            # If no yrange is given and data is all above 0,
+            # set y-axis min to 0
+            if yrange is None and not has_negative:
+                self.ax.set_ylim(bottom=0)
+                
         if axis == 'right':
             if ryrange is None:
-                ryrange = self.ryrange
-            self.ryrange = self._parse_yrange(ryrange)
-            self.set_ryrange(self.ryrange)
-            
+                if getattr(self, 'ryrange', None) is not None:
+                    ryrange = self.ryrange
+                    
+            if ryrange is not None:
+                self.ryrange = self._parse_yrange(ryrange)
+                self.set_ryrange(self.ryrange)
+
+            # If no yrange is given and data is all above 0,
+            # set y-axis min to 0
+            if ryrange is None and not has_negative:
+                self.ax_right.set_ylim(bottom=0)
+                
     def scatter(self, data, cols, indexcol=None, attrs=None, debug=False):
         '''
         Add scatter to chart
@@ -2504,7 +2551,6 @@ class Chart:
         if adjust:
             if legend_left + legend_width > 1:
                 legend_width = 1 - legend_left
-                print('warning: adjusting legend width...')
                 self.legend_width = legend_width
         
         self.legend = self.ax.legend(self.legend_entries, self.legend_labels,

@@ -2470,7 +2470,7 @@ class Chart:
             
     def update_legend(self,
                       ncol_legend=None, legend_spacing=None,
-                      legend_left=None, legend_bottom=None, legend_width=None, legend_height=None, legend_mode=None,
+                      legend_left=None, legend_bottom=None, legend_width=None, legend_height=None, legend_mode=None, adjust=True,
                       legend_header=None, legend_header_color=None, legend_header_fontsize=None):
         '''
         Update legend of Chart.
@@ -2498,6 +2498,14 @@ class Chart:
             legend_header_color = self.legend_header_color
         if legend_header_fontsize is None:
             legend_header_fontsize = self.legend_header_fontsize
+
+        # Make sure legend_left + legend_width is less than 1,
+        # otherwise we are left with long white margin on right side.
+        if adjust:
+            if legend_left + legend_width > 1:
+                legend_width = 1 - legend_left
+                print('warning: adjusting legend width...')
+                self.legend_width = legend_width
         
         self.legend = self.ax.legend(self.legend_entries, self.legend_labels,
                                      loc='upper left',
@@ -2541,7 +2549,7 @@ class Chart:
                     print('WARNING: Could not remove existing legend with exception:')
                     print(e)
         
-    def save(self, filename, dpi=250):
+    def save(self, filename, dpi=250, pad_inches=0.02):
         '''
         Save information on chart.
         '''
@@ -2561,7 +2569,7 @@ class Chart:
                 print('Could not create dir ' + dirname + ' for filename ' + filename)
 
         try:
-            self.fig.savefig(filename, dpi=dpi)
+            self.fig.savefig(filename, dpi=dpi, bbox_inches="tight", pad_inches=pad_inches)
         except Exception as e:
             print('WARNING: Could not create file ' + filename + ' with exception:')
             print(e)

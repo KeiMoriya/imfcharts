@@ -32,12 +32,12 @@ format:
       body-width: 1200px  # Main body width
       margin-width: 150px # width of toc
       sidebar-width: 300px # left side
-#  docx:
-#    toc: true
-#    number-sections: true
-#    execute:
-#      echo: false
-#
+  docx:
+    toc: true
+    number-sections: true
+    execute:
+      echo: false
+
 #  pdf:
 #    documentclass: report
 #    papersize: letter
@@ -68,13 +68,14 @@ jupyter: python3
 import os
 import sys
 
+# Create data dir
+if not os.path.isdir('data'):
+    os.makedirs('data')
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
-
-# Set figure sizes
-plt.rcParams["figure.figsize"] = (4.74, 3)
 
 # Tables in quarto
 from itables import show
@@ -91,19 +92,25 @@ set_style('imf-articleiv')
 This is the documentation for the `imfcharts` package.
 The goal of this package is simple, to allow easy (re)production of IMF charts for publications.
 The technology to do this has been available for decades, our goal is to make this as simple as it should be.
+Furthermore, the technology we utilize is open source, meaning that the technology will be available for use
+independent of any commercial entities. This will become increasingly important in the age of AI, as this provides
+the Fund with a way of integrating with such systems but at the same time retaining the core technology in-house
+so that we are not locked into one platform.
 
 The authors wish to thank the [Process Modernization Challenge](https://imf.brightidea.com/Process){target="_blank"}
 committee for their support and encouragement. The project started out as an [idea](https://imf.brightidea.com/D1580){target="_blank"}
 for the Challenge, and in Feb 2025 the project [received First Place in the Challenge event](https://imf.brightidea.com/Process){target="_blank"}.
 
-The documentation is orgnaized as follows. In the next subsections @sec-quickstart is a Quick Start,
-and motivation, examples are provided in @sec-motivation. The sections that follow are @sec-basics, followed by @sec-styles, and
-integration with other systems are shown in @sec-R, @sec-stata and @sec-aida.
+This document is orgnaized as follows.
+In the next subsections @sec-quickstart is a Quick Start on how to install,
+followed by  @sec-motivation Motivation, and examples are provided in @sec-gallery.
+The following sections show the basics of chart creation in  @sec-basics, followed by how to switch styles in @sec-styles,
+and integration with other systems are shown in @sec-R for R, @sec-stata for Stata and @sec-ai for AI.
 
 ## Quick Start and Installation {#sec-quickstart}
 
 The library is written in the Python language, but can be called from R (and perhaps in the future) Stata.
-In all cases the Python library must be installed. This library is based on the well-known [Matplotlib](https://matplotlib.org/){target="_blank"}
+In all cases the Python library must be installed. This library is based on the well-known open source [Matplotlib](https://matplotlib.org/){target="_blank"}
 library which is the basis for most Python visualization libraries.
 Beyond Matplotlib the only dependencies are `numpy` and `pandas` so the library should be usable in any environment.
 
@@ -111,13 +118,13 @@ To install the library,
 
 1. Install Python from the Software Center
 
-2. Copy the folder `\\ecnswn12p\ems_shared\pub\datatools\dev\imfcharts` to your computer's `C:\ProgramData\Python3\Lib\site-packages` folder.
+2. Copy the folder `\\ecnswn12p\ems_shared\pub\datatools\dev\imfcharts` to your computer's `C:\ProgramData\Python3\Lib\site-packages` folder
 
 3. Open Command Prompt and run the following:
     a. `ipython` Open ipython session
     b. `from imfcharts import *` If no error message appears the installation is complete
 
-Note that importing the library should create a copy of style files in your computer's `C:\User\[username]\.matplotlib\stylelib` folder.
+Note that importing the library should create a copy of style files in your computer's `C:\User\[username]\.matplotlib\stylelib` folder so they can be accessed by `Matplotlib`.
 
 To create a chart, prepare a `pandas.DataFrame` with your data and set the index to be what you want your x-axis to be.
 For example, in most cases a time series is plotted, so the index should be set to the dates.
@@ -133,11 +140,11 @@ import pandas as pd
 from imfcharts import *
 
 # Create data
-data = {'dates' : ['2024Q1', '2024Q2', '2024Q3', '2024Q4', '2025Q1'],
-        'Consumption' : [2.5, 3, 2.8, 2.7, 1.3],
-	'Gov' : [1.2, 1.1, 0.8, 0.3, -0.2],
-	'Net exports' : [-0.5, 0.3, 1.2, 0.3, -1.5],
-	'Fixed capital formation' : [0.2, 0.3, -0.2, -0.3, -0.3]}
+data = {'dates'                   : ['2024Q1', '2024Q2', '2024Q3', '2024Q4', '2025Q1'],
+        'Consumption'             : [2.5, 3, 2.8, 2.7, 1.3],
+        'Gov'                     : [1.2, 1.1, 0.8, 0.3, -0.2],
+        'Net exports'             : [-0.5, 0.3, 1.2, 0.3, -1.5],
+        'Fixed capital formation' : [0.2, 0.3, -0.2, -0.3, -0.3]}
 df = pd.DataFrame(data).set_index('dates')
 df['GDP'] = df.sum(axis=1)
 
@@ -152,15 +159,17 @@ chart = Chart(df, linecols='GDP', barcols=barcols)
 chart
 ```
 
-As can be seen, the code needed to generate the chart is one line,
+As can be seen, the code needed to generate the chart is the following single line:
 
-
-```
+```{python}
+#| label: quickstart-chart
+#| code-fold: show
+#| eval: false
 chart = Chart(df, linecols='GDP', barcols=barcols)
 ```
 
 The chart automatically uses the default IMF Article IV colors, which is set by the library as the default colors.
-Adding a few options will make the chart presentable:
+Adding a few options will make the chart more presentable:
 
 ```{python}
 #| label: quickstart-better
@@ -183,7 +192,7 @@ The differences with the first chart are:
 - Moved legend bottom, specified number of columns in legend
 
 All of these options and more are explained in @sec-basics.
-The `chart` object can then be saved with commands
+The `chart` object can be saved with the command:
 
 ```{python}
 #| label: quickstart-save
@@ -191,11 +200,20 @@ The `chart` object can then be saved with commands
 #| eval: false
 
 chart.save('GDP.pdf') # change extention to png etc.
+```
+
+and can be shown on screen with the command:
+
+```{python}
+#| label: quickstart-show
+#| code-fold: show
+#| eval: false
+
 chart.show()
 ```
 
 The `chart` variable is a `Chart` object within the library, and provides a direct interface with the underlying
-`matplotlib.pyplot.Figure` and `matplotlib.pyplot.Axes` objects so that they can be modified further.
+`matplotlib.pyplot.Figure` (`chart.fig`) and `matplotlib.pyplot.Axes` (`chart.ax`) objects so that they can be modified further.
 For example,  the popular [`seaborn`](https://seaborn.pydata.org/){target="_blank"} library is built on top of `Matplotlib`
 so it can be called on the created `Chart`.
 
@@ -203,40 +221,58 @@ so it can be called on the created `Chart`.
 
 ## Motivation {#sec-motivation}
 
-The Fund wastes enormous time and effort by not provding a standard program to generate charts[^chart-programs],
-and this hurts in the Fund in multiple ways.
+Un until now the Fund has wasted enormous resources and time by not provding a standard program to generate charts[^chart-programs],
+and this has hurt the Fund in multiple ways:
 
 1. People (especially young ones) are forced to repeat menial tasks ad nauseam
-2. The mindset is stuck in Excel and people do not understand that technology can mitigate these efforts
+2. The mindset is stuck in Excel and people do not understand that technology can reduce these efforts significantly
 3. The standards of visualization are stuck with outdated standards and terrible aesthetics
 
 [^chart-programs]: The ITD CATS team provides the Excel PCF tool for this purpose, but this is still contained within Excel. Furthermore, it has not been updated for many years.
 
-Therefore goals of this project are:
+Therefore the goals of this project are:
 
-1. Provide a package to easily generate IMF charts
+1. Provide a package to easily generate existing IMF charts
 2. Provide templates that allow users to easily switch to a new style
 
 This allows Fund users (especially young ones) to realize that menial tasks can be automated and done with much less effort.
+Once a standard library is available and widely used, code written using it can then be reused.
 It also incentivizes the Fund to move to better standards of visualization since the transition is now much easier and
 does not require editing every single Excel chart that has been created previously.
+The `imfcharts` library currently provides a "classic" IMF Article IV style (`imf-articleiv.mplstyle`)
+but this can easily be expanded to other styles such as for WEO, GFSR, REO, etc.
 
-While the main library we provide is written in Python, it can be used from R (and in the future possibly from Stata),
-and  given the recent advances in AI, it may be possible to use these tools through AI, see @sec-aida which will broaden the audience further.
+While the main library we provide is written in Python, it can also be called from R using a simple syntax transformation (in the future possibly from Stata),
+which expands the user base.
+Given recent advances in AI systems, it is also possible to use these tools through AI, so that even without any knowledge of Python or R,
+users can use the library through generative AI tools.
+The crucial point with AI is that although the AI system can be the one calling the library, the library itself is maintained in-house and
+the Fund retains full control of it. The use of open source, particularly Python ensures that any AI system can use it.
+See @sec-ai on further details of usage with AI systems.
 
-For users of Python and R, combining with the [datatools](http://datatools){target="_blank"} now provides an end-to-end solution for
+Finally, for users of Python and R, combining this library with the [datatools](http://datatools){target="_blank"} provides an end-to-end solution for
+the analysis lifecycle:
 
 1. data collection
 2. data transformation
-3. visualizatoin
+3. visualization/publication
 
-all in very accessible libraries. This allows **fully reproducible and automated workstreams**
+all in very accessible and simple-to-use libraries. This is a  **fully reproducible and automated workstream**
 which should greatly reduce the need to redo simple tasks over and over.
+
+## Gallery {#sec-gallery}
 
 Below are several examples along with the code used to generate them.
 
+::: {.panel-tabset}
+
+### Simple line chart
+
+This is a simple line chart that is created with one command.
+It uses the default IMF Article IV color scheme, so no line colors need to be specified.
+
 ```{python}
-#| label: fig_lines
+#| label: gallery_lines
 #| fig-cap: "Simple line chart."
 
 # Get data from Haver (need imf_datatools)
@@ -244,16 +280,20 @@ col1, col2 = 'Unemployment rate', 'Combined rate of underemployment and unemploy
 dict_series = {'S186ELUR@EMERGEMA' : col1,
 	       'S186EUDR@EMERGEMA' : col2
                }
-df = None
-for series in dict_series:
-    _df = imf_datatools.get_haver_data(series)
-    _df.columns = [dict_series[series]]
-    # Merge
-    if df is None:
-        df = _df
-    else:
-        df = df.merge(_df, left_index=True, right_index=True, how='outer')
-
+datafilename = 'data/unemp.csv'
+if not os.path.isfile(datafilename):
+    df = None
+    for series in dict_series:
+        _df = imf_datatools.get_haver_data(series)
+        _df.columns = [dict_series[series]]
+        # Merge
+        if df is None:
+            df = _df
+        else:
+            df = df.merge(_df, left_index=True, right_index=True, how='outer')
+    df.to_csv(datafilename)
+else:
+    df = pd.read_csv(datafilename, index_col=0, parse_dates=[0])
 # Create Chart object
 chart = Chart(df, linecols=df.columns[0], rlinecols=df.columns[1],
                title='Labor Utilization', subtitle='(Percent)',
@@ -263,22 +303,121 @@ chart = Chart(df, linecols=df.columns[0], rlinecols=df.columns[1],
 chart
 ```
 
+### Chart with line and bars
+
+A chart that has a line and stacked bars.
+
 ```{python}
-#| label: fig_lines_bars
+#| label: gallery_lines_bars
+#| fig-cap: "A chart with a line and bars."
+infilename = 'data/turkey_page4/fig4_chart1_exp.csv'
+if not os.path.isfile(infilename):
+    print('File ' + infilename + ' does not exist')
+    sys.exit()
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+cols = df.columns
+linecol = 'Primary exp.'
+barcols = list(df.columns)
+barcols.remove(linecol)
+
+# Create Chart object
+attrs = {linecol             : {'linewidth' : 4, 'color' : IMFBLACK},
+         'Personnel'         : {'color' : '#004C97', 'edgecolor' : 'red'},
+         'Goods & services'  : {'color' : '#009CDE'},
+         'Current transfers' : {'color' : '#CAEDFE'},
+         'Capital exp.'      : {'color' : '#FF8200'},
+         'Other' : {'color'  : '#DA291C'},                         
+         }
+
+chart1 = Chart(df, linecols=linecol, barcols=barcols,
+               attrs=attrs,
+               topxaxis='left',
+               title='Central Government: Primary Expenditure Components',
+               subtitle='(Percent of GDP)',
+               xrange='2018-01:', yrange=[0, 30],
+               ncol_legend=2)
+chart1
+```
+
+### Area chart
+
+An area chart along with a line.
+
+```{python}
+#| label: gallery_area
+#| fig-cap: "A chart with a line and bars."
+infilename = 'data/turkey_page5/fig5_chart6_gross_international_reserves.csv'
+if not os.path.isfile(infilename):
+    print('File ' + infilename + ' does not exist')
+    sys.exit()
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+gircol = 'Gross International Reserves (GIR)'
+df.rename({gircol + ' (rhs)' :  gircol}, axis=1, inplace=True)
+
+# Create Chart object
+attrs = {gircol  : {'color' : '#416FA6'},
+         'Gold'  : {'color' : '#CAEDFE'},
+         'FX'    : {'color' : '#009CDE'}}
+
+chart6 = Chart(df, linecols=gircol, areacols=['FX', 'Gold'],
+               attrs=attrs,
+               topxaxis='right',
+               title='Gross International Reserves',
+               subtitle='(Billions USD)',
+               xrange='2022-01:', yrange=[0, 200], ryrange=[-120, 40])
+```
+
+### Step chart
+
+When drawing lines, set the option `drawstyle` to `steps-post` to set the line style to be steps.
+This is useful for example when plotting the monetary policy rate.
+
+```{python}
+#| label: gallery_steps
+#| fig-cap: "Line chart shown as steps."
+
+infilename = 'data/turkey_page2/fig2_chart3_mp.csv'
+if not os.path.isfile(infilename):
+    print('File ' + infilename + ' does not exist')
+    sys.exit()
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+
+attrs = {'Policy rate' : {'color' : IMFBLUE,
+                          'drawstyle' : 'steps-post'},
+         'Inflation'   : {'color' : IMFRED},
+        }
+
+# Create Chart object
+chart3 = Chart(df, linecols=['Policy rate', 'Inflation'],
+               attrs=attrs,
+               title='steps',
+               xrange='2023-01:', yrange=[0, 90])
+```
+
+### Chart with bars and right lines
+
+A chart with bars on the left y-axis and a line on the right y-axis.
+
+```{python}
+#| label: gallery_lines_bars_right
 #| fig-cap: "Chart with bars on left y-axis, lines on right y-axis."
 
 # Get data
 dict_series = {'N186FPAP@EMERGEMA' : 'Return to asset',
                'N186FNIE@EMERGEMA' : 'Return to equity'}
-df = None
-for series in dict_series:
-    _df = imf_datatools.get_haver_data(series)
-    _df.columns = [dict_series[series]]
-    if df is None:
-        df = _df
-    else:
-        df = df.merge(_df, left_index=True, right_index=True, how='outer')
-
+datafilename = 'data/banks.csv'
+if not os.path.isfile(datafilename):
+    df = None
+    for series in dict_series:
+        _df = imf_datatools.get_haver_data(series)
+        _df.columns = [dict_series[series]]
+        if df is None:
+            df = _df
+        else:
+            df = df.merge(_df, left_index=True, right_index=True, how='outer')
+    df.to_csv(datafilename)
+else:
+    df = pd.read_csv(datafilename, index_col=0, parse_dates=[0])
 # Take 12-month rolling mean
 df = df.rolling(12).mean()
 
@@ -298,13 +437,194 @@ chart = Chart(df, barcols='Return to asset', rlinecols='Return to equity',
 chart
 ```
 
-```{python}
-#| label: fig1_chart1_gdp
-#| fig-cap: "A complicated plot with lines, bars and arrow, text."
+### Scatter chart
 
-infilename = '../data/turkey_page1/fig1_chart1_gdp.csv'
+```{python}
+#| label: gallery_scatter
+#| fig-cap: "A complicated plot with lines, bars and arrow, text."
+infilename = 'data/turkey_page2/fig2_chart4_inflation_forecast.csv'
 if not os.path.isfile(infilename):
     print('File ' + infilename + ' does not exist')
+    sys.exit()
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+
+attrs = {'Jul-23' : {'linewidth' : 0,
+                     'color' : IMFBLACK,
+                     # 'linestyle' : '--',
+                     'marker' : 'o',
+                     'markersize' : 10,
+                     'markerfacecolor' : AXISGRAY,
+                     'markeredgewidth' : 0,
+                     'markeredgecolor' : AXISGRAY},
+         'Nov-23' : {'linewidth' : 4,
+                     'color' : IMFRED,
+                     # 'linestyle' : '--',
+                     'marker' : 'o',
+                     'markersize' : 10,
+                     'markerfacecolor' : IMFRED,
+                     'markeredgewidth' : 0,
+                     'markeredgecolor' : IMFRED},
+         'Feb-24' : {'linewidth' : 0,
+                     'color' : '#89A54E',
+                     # 'linestyle' : '--',
+                     'marker' : '^',
+                     'markersize' : 10,
+                     'markerfacecolor' : '#89A54E',
+                     'markeredgewidth' : 0,
+                     'markeredgecolor' : '#89A54E'},
+         'May-24' : {'linewidth' : 0,
+                     'color' : '#6E548D',
+                     # 'linestyle' : '--',
+                     'marker' : 'x',
+                     'markersize' : 10,
+                     'markerfacecolor' : '#6E548D',
+                     'markeredgewidth' : 2,
+                     'markeredgecolor' : '#6E548D'},
+         'Aug-24' : {'linewidth' : 0,
+                     'color' : '#3D96AE',
+                     # 'linestyle' : '--',
+                     'marker' : 'x|',
+                     'markersize' : 10,
+                     'markerfacecolor' : '#3D96AE',
+                     'markeredgewidth' : 2,
+                     'markeredgecolor' : '#3D96AE'},
+         'Nov-24' : {'linewidth' : 4,
+                     'color' : '#FFC000',
+                     # 'linestyle' : '--',
+                     'marker' : 'o',
+                     'markersize' : 10,
+                     'markerfacecolor' : '#FFC000',
+                     'markeredgewidth' : 0,
+                     'markeredgecolor' : '#FFC000'},
+         'Feb-25' : {'linewidth' : 0,
+                     'color' : IMFBLACK,
+                     # 'linestyle' : '--',
+                     'marker' : '+',
+                     'markersize' : 10,
+                     'markerfacecolor' : IMFBLACK,
+                     'markeredgewidth' : 2,
+                     'markeredgecolor' : IMFBLACK},
+         'May-25' : {'linewidth' : 0,
+                     'color' : '#FFC000',
+                     # 'linestyle' : '--',
+                     'marker' : '_',
+                     'markersize' : 10,
+                     'markerfacecolor' : '#C55A11',
+                     'markeredgewidth' : 1,
+                     'markeredgecolor' : '#C55A11'},
+         'Aug-25' : {'linewidth' : 4,
+                     'color' : '#7030A0',
+                     # 'linestyle' : '--',
+                     'marker' : 's',
+                     'markersize' : 10,
+                     'markerfacecolor' : '#7030A0',
+                     'markeredgewidth' : 0,
+                     'markeredgecolor' : '#7030A0'},
+}
+
+# Create Chart object
+chart4 = Chart(df, linecols=df.columns,
+               attrs=attrs,
+               title="CBRT's Inflation Forecast",
+               subtitle='(Percent, end-year inflation)',
+               ncol_legend=2, legend_left=0.45, legend_width=0.40,
+               yrange=[0, 70])
+chart4
+```
+
+### Categorical bar chart
+
+```{python}
+#| label: gallery_categorical_bars
+#| fig-cap: "A complicated plot with lines, bars and arrow, text."
+# Read in data
+infilename = 'data/turkey_page5/fig5_chart3_terms_of_trade.csv'
+if not os.path.isfile(infilename):
+    print('File ' + infilename + ' does not exist')
+    sys.exit()
+df = pd.read_csv(infilename, index_col=0)
+attrs = {'shock' : {'color' : '#BFBFBF',
+                    'barcolors' : [{'TUR' : 'red'},
+                                  ]
+                   }
+        }
+# Create Chart object
+chart3 = Chart(df, barcols=df.columns, barstack=False, # baraxis='right',
+               attrs=attrs,
+               barlinewidth=0, xtickangle=90, xticklength=0,
+               title='Terms of Trade Shock, 2025Q2 or Latest',
+               subtitle='(Percent change from 2023 average)',
+               yrange=[-15, 15],
+               show_legend=False)
+chart3
+```
+
+### Chart with lines, shading, fill
+
+```{python}
+#| label: gallery_extras
+#| fig-cap: "A chart with lines, shading, and filling."
+
+# Read in data
+infilename = 'data/turkey_page1/fig1_chart1_gdp.csv'
+if not os.path.isfile(infilename):
+    print('File ' + infilename + ' does not exist')
+    sys.exit()
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+cols = df.columns
+gdpcol = cols[0]
+
+# Add "forecast" around gdpcol
+df['25'] = df[gdpcol] - 1.0 * np.random.rand(len(df))
+df['75'] = df[gdpcol] + 1.0 * np.random.rand(len(df))
+df['5']  = df['25'] - 4.  * np.random.rand(len(df))
+df['95'] = df['75'] + 4.  * np.random.rand(len(df))
+
+df.loc[:'2022Q1', ['5', '25', '75', '95']] = np.nan
+
+attrs = {gdpcol : {'linewidth' : 2,
+                   'color' : '#004C97',
+                   'marker' : 'o',
+                   'markersize' : 4}
+         }
+kw_hline = {'y' : 1.4, 'xrange' : '2023Q1:' + df.index[-1].strftime('%Y-%m'),
+            'color' : IMFBLACK, 'linewidth' : 1.5, 'linestyle' : '--', 'dashes' : [10, 4]}
+
+kw_vline = {'x' : '2020-03',
+            'color' : IMFRED, 'linewidth' : 1.5, 'linestyle' : '--'}
+
+kw_fills  = [{'lo' : '25',   'hi' : gdpcol, 'color' : '#CAEDFE'},
+             {'lo' : gdpcol, 'hi' : '75',   'color' : '#CAEDFE'},
+             {'lo' : '5',   'hi' : '25',    'color' : '#004C97'},
+             {'lo' : '75', 'hi' : '95',     'color' : '#004C97'},
+            ]
+
+kw_vrect = {'xmin' : '2021Q1', 'xmax' : '2022Q1', 'color' : 'grey', 'alpha' : 0.3}
+
+chart1 = Chart(df, linecols=gdpcol,
+               attrs=attrs,
+               title='Real GDP Growth and Forecast',
+               subtitle='(Percent, q/q)',
+               xrange='2020Q1:', yrange=[-12, 18],
+               hlines=[kw_hline],
+               vlines=[kw_vline],
+               vrects=[kw_vrect],
+               fills=kw_fills,
+               )
+chart1
+```
+
+### Chart with lines, bars, arrows, text
+
+```{python}
+#| label: gallery_gdp
+#| fig-cap: "A complicated plot with lines, bars and arrow, text."
+
+# This file has a lot of transformations so copy the data file into the repository.
+# To re-generate run examples/get_data_turkey_page1.py and examples/examples_turkey_page1.py.
+infilename = 'data/turkey_page1/fig1_chart1_gdp.csv'
+if not os.path.isfile(infilename):
+    print('File ' + infilename + ' does not exist, run example files for Turkey page 1')
     sys.exit()
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 cols = df.columns
@@ -338,10 +658,24 @@ chart1 = Chart(df, linecols=linecol, barcols=barcols,
                subtitle='(Percent, q/q)',
                xrange='2023Q1:', yrange=[-5, 9.5], ryrange=[-5, 9.5],
                ncol_legend=2)
+
+# Add hline
+chart1.hline(y=1.4, xrange='2023Q1:' + df.index[-1].strftime('%Y-%m'),
+             # xrange=[0.05, 0.95], coordinates='axis',
+             color=IMFBLACK, linewidth=2.5, linestyle='--', dashes=[10, 4])
+
+# Add text
+text = '''Real GDP growth\nlong-run average\n(1.4 q/q)'''
+chart1.text(pd.Timestamp('2024Q3'), 6.5, text=text, fontweight='bold', color='#004C97')
+
+# Add arrow
+chart1.arrow(head=[pd.Timestamp('2025Q1'), 1.5],
+             tail=[pd.Timestamp('2025Q1'), 5],
+             color='#004C97')
 chart1
 ```
 
-But with a simple switch of style...
+:::
 
 ## About this Document
 
@@ -349,11 +683,10 @@ This document was generated by [Quarto](https://quarto.org/){target="_blank"}, a
 To generate this document yourself, open Command Prompt and do the following.
 It is assumed you have R and RStudio installed from the Software Center, which installs Quarto.
 
-```
+```bash
 cd C:\ProgramData\Python3\Lib\site-packages\imfcharts\doc
 # If necessary specify full path to quarto
 # C:\Program Files\RStudio\resources\app\bin\quarto\bin\quarto.exe render imfcharts.qmd
-
 quarto render imfcharts.qmd
 ```
 
@@ -361,7 +694,7 @@ and this will generate the HTML and Word output files.
 
 All of the code used to generate the output charts are embedded in the HTML version
 of this document, and can be pasted and used directly (as long as the corresponding data is also copied appropriately).
-See @sec-quickstart for installation instructions, and for guidance on the `imf_datatools` see [the website](http://datatools/){target="_blank"}.
+To download the data, the `imf_datatools` library is needed, see [the website](http://datatools) for instructions.
 
 <!------------------------------------------------------------------------------------------------------------------------------------>
 # Basic Usage {#sec-basics}
@@ -809,9 +1142,9 @@ How to use in Stata
 
 
 <!------------------------------------------------------------------------------------------------------------------------------------>
-# Usage in AIDA {#sec-aida}
+# Usage in AI {#sec-ai}
 
-How to use in AIDA
+How to use in AI
 
 
 

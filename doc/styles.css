@@ -3,3 +3,8 @@
 .quarto-figure svg {
   max-width: 75%;
 }
+
+/* Center figure captions */
+figure figcaption {
+  text-align: center;
+}

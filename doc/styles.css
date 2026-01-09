@@ -8,3 +8,8 @@
 figure figcaption {
   text-align: center;
 }
+
+/* Color every other row in tables */
+table tr:nth-child(even) {
+  background-color: #f0ffff;
+}

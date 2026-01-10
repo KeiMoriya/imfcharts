@@ -122,6 +122,7 @@ class Chart:
                  areastack=True, areaaxis='left',
                  arealinewidth=None,
                  areaedgecolor='none',
+                 alpha=1,
                  # title options ------------------------------------------------
                  title=None,
                  subtitle = None,
@@ -204,6 +205,8 @@ class Chart:
         else:
             self.arealinewidth = matplotlib.rcParams['patch.linewidth']
         self.areaedgecolor = areaedgecolor
+
+        self.alpha = alpha
         
         self.width = width
         self.height = height
@@ -319,8 +322,8 @@ class Chart:
         # ---------------------------------------------------------------------------------------------------
         # Draw area, bars, lines
         if areacols is not None:
-            self.area(self.data, areacols, indexcol=self.indexcol, colorcycle=None, stack=areastack,
-                      axis=areaaxis, linewidth=self.linewidth, edgecolor=self.areaedgecolor,
+            self.area(self.data, areacols, indexcol=self.indexcol, axis=areaaxis, , colorcycle=None, alpha=self.alpha,
+                      stack=areastack, linewidth=self.linewidth, edgecolor=self.areaedgecolor,
                       attrs=attrs,
                       xrange=self.xrange,
                       debug=self.debug)
@@ -1791,7 +1794,10 @@ class Chart:
             legend = True
 
             # alpha
-            _alpha = alpha
+            if alpha is None:
+                _alpha = self.alpha
+            else:
+                _alpha = alpha
 
             # Get any attributes that were assigned to this column
             if attrs is not None and areacol in attrs:

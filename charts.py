@@ -2078,7 +2078,7 @@ class Chart:
                                         dashes=dashes, dash_capstyle=dash_capstyle, zorder=zorder)
             # no dashes or dash_capstyle specified
             else:
-                entry = self.ax.axhline(y=y, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha, , zorder=zorder)
+                entry = self.ax.axhline(y=y, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha, zorder=zorder)
 
         # xrange given
         else:
@@ -2107,7 +2107,7 @@ class Chart:
             # no dashes or dash_capstyle specified
             else:
                 entry = self.ax.axhline(y=y, xmin=xrange[0], xmax=xrange[1],
-                                        color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha, , zorder=zorder)
+                                        color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha, zorder=zorder)
 
         # If adding to legend
         if legend:

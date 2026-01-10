@@ -2051,7 +2051,7 @@ class Chart:
             print('Chart.topxaxis must be "left" or "right", given ' + str(topxaxis))
 
     def hline(self, y, xrange=None, coordinates='data', color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None,
-              label='', legend=False,
+              label='', legend=False, zorder=1,
               debug=False, **kwarg):
         '''
         Add horizontal line across figure.
@@ -2075,10 +2075,10 @@ class Chart:
             # dashes or dash_capstyle specified
             if dashes or dash_capstyle:
                 entry = self.ax.axhline(y=y, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha,
-                                        dashes=dashes, dash_capstyle=dash_capstyle)
+                                        dashes=dashes, dash_capstyle=dash_capstyle, zorder=zorder)
             # no dashes or dash_capstyle specified
             else:
-                entry = self.ax.axhline(y=y, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha)
+                entry = self.ax.axhline(y=y, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha, , zorder=zorder)
 
         # xrange given
         else:
@@ -2103,11 +2103,11 @@ class Chart:
             if dashes or dash_capstyle:
                 entry = self.ax.axhline(y=y, xmin=xrange[0], xmax=xrange[1],
                                         color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha,
-                                        dashes=dashes, dash_capstyle=dash_capstyle)
+                                        dashes=dashes, dash_capstyle=dash_capstyle, zorder=zorder)
             # no dashes or dash_capstyle specified
             else:
                 entry = self.ax.axhline(y=y, xmin=xrange[0], xmax=xrange[1],
-                                        color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha)
+                                        color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha, , zorder=zorder)
 
         # If adding to legend
         if legend:
@@ -2121,7 +2121,7 @@ class Chart:
                 print('called update_legend()')
             
     def vline(self, x, yrange=None, coordinates='data', width=1, color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None,
-              label='', legend=False,
+              label='', legend=False, zorder=1,
               debug=False, **kwarg):
         '''
         Add vertical line across figure.
@@ -2156,10 +2156,10 @@ class Chart:
             # dashes or dash_capstyle specified
             if dashes or dash_capstyle:
                 entry = self.ax.axvline(x=x, color=color, linewidth=linewidth, linestyle=linestyle, dashes=dashes, alpha=alpha,
-                                        dash_capstyle=dash_capstyle)
+                                        dash_capstyle=dash_capstyle, zorder=zorder)
                 # no dashes or dash_capstyle specified
             else:
-                entry = self.ax.axvline(x=x, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha)
+                entry = self.ax.axvline(x=x, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha, zorder=zorder)
 
         # yrange given
         else:
@@ -2167,11 +2167,11 @@ class Chart:
             if dashes or dash_capstyle:
                 entry = self.ax.axvline(x=x, ymin=yrange[0], ymax=yrange[1],
                                         color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha,
-                                        dashes=dashes, dash_capstyle=dash_capstyle)
+                                        dashes=dashes, dash_capstyle=dash_capstyle, zorder=zorder)
                 # no dashes or dash_capstyle specified
             else:
                 entry = self.ax.axvline(x=x, ymin=yrange[0], ymax=yrange[1],
-                                        color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha)
+                                        color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha, zorder=zorder)
 
 
         # If adding to legend

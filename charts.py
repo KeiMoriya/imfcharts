@@ -322,7 +322,7 @@ class Chart:
         # ---------------------------------------------------------------------------------------------------
         # Draw area, bars, lines
         if areacols is not None:
-            self.area(self.data, areacols, indexcol=self.indexcol, axis=areaaxis, , colorcycle=None, alpha=self.alpha,
+            self.area(self.data, areacols, indexcol=self.indexcol, axis=areaaxis, colorcycle=None, alpha=self.alpha,
                       stack=areastack, linewidth=self.linewidth, edgecolor=self.areaedgecolor,
                       attrs=attrs,
                       xrange=self.xrange,

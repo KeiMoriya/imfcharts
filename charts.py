@@ -2051,7 +2051,7 @@ class Chart:
             print('Chart.topxaxis must be "left" or "right", given ' + str(topxaxis))
 
     def hline(self, y, xrange=None, coordinates='data', color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None,
-              label='', legend=False, zorder=1,
+              label='', legend=False, zorder=0,
               debug=False, **kwarg):
         '''
         Add horizontal line across figure.
@@ -2121,7 +2121,7 @@ class Chart:
                 print('called update_legend()')
             
     def vline(self, x, yrange=None, coordinates='data', width=1, color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None,
-              label='', legend=False, zorder=1,
+              label='', legend=False, zorder=0,
               debug=False, **kwarg):
         '''
         Add vertical line across figure.
@@ -2189,7 +2189,7 @@ class Chart:
               dash_capstyle=None,
               hatch=None, # hatchlinewidth=None,
               label='', legend=False,
-              zorder=1,
+              zorder=0,
               debug=False, **kwarg):
         '''
         Add horizontal rectangle across figure.
@@ -2291,7 +2291,7 @@ class Chart:
               dash_capstyle=None,
               hatch=None, # hatchlinewidth=None,
               label='', legend=False,
-              zorder=1,
+              zorder=0,
               debug=False, **kwarg):
         '''
         Add vertical rectangle across figure.

@@ -260,6 +260,14 @@ the analysis lifecycle:
 all in very accessible and simple-to-use libraries. This is a  **fully reproducible and automated workstream**
 which should greatly reduce the need to redo simple tasks over and over.
 
+The library has also been designed so that charts can be exported and imported for example in json format.
+This would allow abstracting the features contained in the chart (such as colors, widths, etc.) and writing them to a file,
+then later on when the data has been updated, to generate the chart using those features.
+For this purpose many of the functions like `lines()` are able to receive the inputs in a `dict` format.
+Full use of this feature would allow this library to be integrated into various data formats such as DMXe, etc.
+
+<span style="color:red;">TODO: EXPAND ON</span>
+
 ## Gallery {#sec-gallery}
 
 Below are several examples along with the code used to generate them.
@@ -701,10 +709,97 @@ To download the data, the `imf_datatools` library is needed, see [the website](h
 
 Below basic usage of the `imfcharts` package are shown.
 For most purposes it should be possible to create a `Chart` object with a single call to the `Chart()` function
-by specifying the data to be charted (a `pandas.DataFrame`) and the columns to be shown as lines, bars, etc.
-In some cases further modifications can be made by calling a member function on the `Chart` like `chart.set_xrange([0, 3])`.
+by specifying the data to be charted (a `pandas.DataFrame`) and the columns to be shown as lines, bars, area, fills, along with
+arguments to specify the title, axis ranges, etc.
+It is possible to modify a generated chart by calling additional functions on it such as
 
-## Add Lines {#sec-basics-lines}
+```{python}
+#| label: basics-first
+#| code-fold: show
+#| eval: false
+
+# Add bars
+chart.bars(data=df, cols='Inflation')
+
+# Set x-axis range
+chart.set_xrange([0, 3])
+
+# Set title
+chart.set_title('Domestic Growth (Annual)')
+
+# Add horizontal band
+chart.hrect(y0=0, y1=3, color='grey', alpha=0.3)
+```
+
+In all functions there is a natural and default order of how style features are determined.
+The initial settings are determined by the style being used, which will default to `imf-articleiv.mplstyle` and
+can also be set manually with
+
+```python
+from imfcharts import *
+set_style('imf-articleiv')
+```
+
+This is a [`Matplotlib` style sheet](https://matplotlib.org/stable/users/explain/customizing.html){target="_blank"}
+which specifies chart defaults like title fonts, default colors, tick lengths, etc.
+When no options are specified, options specified in this style sheet will be used, so switching to
+another style sheet like that for WEO would change to the default WEO color scheme.
+
+The second level, if available is by specifying a characteristic for a specific chart, typically at creation.
+For example, to keep all of the Article IV style except the default colors used, create a `Chart` with
+```python
+chart = Chart(colorcycle=['red', 'green', 'blue'], linewidth=3)
+````
+and this will generate a chart that cycles through the specified red, green, blue colors for each object plotted,
+and set all line charts to have a linewidth of 3 instead of the default `axes.linewidth: 1` specified in the Article IV style file.
+
+The third level is to specify each characteristic at the individual level, typically using the `attrs` argument:
+```python
+chart = Chart(df, linecols='GDP',, rlinecols='Unemployment',
+              linewidth=3,
+              attrs={'GDP'          : {'color' : 'black'}},
+                     'Unemployment' : {'color' : 'red', 'linewidth' : 1}}
+                    }
+```
+which will override the style settings and any class-level settings if specified.
+For example in the above, the style file specifies a linewidth of 1, but this is overridden by
+the class-level settings of `linewidth=3`, and this is further overridden by the `attrs` argument
+for each line. The line for `'GDP'` will therefore have a linewidth of 2, and `'Unemployment'` will have a linewidth of 1.
+
+While the `Chart()` creation function conveniently provides a way to specify almost all possible input parameters
+so that a chart can be created with one call, internally it will call functions like `lines()` and `bars()` which
+ensures that the output is consistent between specifying the lines and bars at creation time or adding them later.
+
+It should also be noted that when creating a `Chart` object and adding lines, bars, and area,
+the order in which these are drawn is
+
+1. area
+2. bars
+3. lines
+
+since this is the natural way these would be shown (i.e., area graphs would be in the background,
+bars would be shown on top, and lines are shown on top of both so they are not obstructed).
+The `colorcycle` argument specifies the colors to cycle through as each component is drawn,
+and is shared by lines, bars and area graphs. So for example in the following:
+```python
+chart = Chart(df, linecols='line', barcols=['bar1', 'bar2'], area=['area1', 'area2'])
+```
+the first two colors of the color cycle will be used for the area graph columns `'area1'` and `'area2'`,
+and the third and fourth colors will be used for the bar columns `'bar1'` and `'bar2'`,
+and lastly the fifth color will be used for the line column `'line'`.
+Since it is a color cycle, if the number of colors specified is less than the total number of columns
+the colors will be recycled. In general the `colorcycle` argument which can be provided when creating
+the `Chart` object should have at least as many colors as the number of columns to be shown.
+The order of plotting for a variable like `linecols` will be as it is specified, regardless of any order
+within the original `pandas.DataFrame` column order.
+
+The below subsections first explain the basics of creating lines, bars and area charts.
+In each of these cases they can be specified directly when creating the `Chart` object,
+or can be called later with functions like `chart.lines()`. Next, adding annotations such as
+horizontal/vertical lines and rectangles are shown in @sec-basics-lines_rects, followed by
+adjusting titles, legends, and showing, saving the chart in sec-basics-additional.
+
+## Line Charts {#sec-basics-lines}
 
 The most straightforward use case is to create a line chart, typically a time series chart.
 The `Chart()` function will take in a `pandas.DataFrame` and argument `linecols` which can either be a
@@ -715,10 +810,7 @@ The `Chart()` function will take in a `pandas.DataFrame` and argument `linecols`
 #| fig-cap: "A plot with lines"
 #| code-fold: show
 # Read in data
-infilename = '../data/turkey_page1/fig1_chart2_labor.csv'
-if not os.path.isfile(infilename):
-    print('File ' + infilename + ' does not exist')
-    sys.exit()
+infilename = 'data/turkey_page1/fig1_chart2_labor.csv'
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 unemp = df.columns[0]
 combined = df.columns[1]
@@ -734,7 +826,9 @@ chart2
 ```
 
 Note that in the above example, the argument `linecols` and `rlinecols` are used
-to specify the columns to be plotted on the left and right y-axes, respectively.
+to specify the columns to be plotted on the left and right y-axes, respectively,
+and they are plotted with different scales.
+Furthermore, the colors have defaulted to the IMF Article IV style, showing as the usual red and blue colors.
 
 To further customize the lines, the `attrs` option can be used which is a `dict` between each
 column to be plotted and its attributes. For example, to change the line colors from the defaults, do
@@ -747,7 +841,7 @@ column to be plotted and its attributes. For example, to change the line colors 
 # Create Chart object
 chart2 = Chart(df, linecols=unemp, rlinecols=combined,
                attrs={unemp : {'color' : 'magenta'},
-	              combined : {'color' : '#00ffff'}},
+                      combined : {'color' : 'skyblue'}},
                title='Labor Utilization',
                subtitle='(Percent)',
                xrange='2023-01:2025-08',
@@ -758,27 +852,24 @@ chart2
 
 In the above the variable `attrs` is a `dict` with keys corresponding to the line columns.
 The colors of each line are specified with the key `color` and corresponding color.
-
-Colors can be specified as
-
-- A valid `matplotlib` color (see [List of named colors](https://matplotlib.org/stable/gallery/color/named_colors.html){target="_blank"}
-- A color hex code specified as a `str` with format "#RRGGBB" where each of RR, GG, BB are hexadecimal values from "00" to "FF".
-- An RGBA string of the form (r, g, b, t) where r, g, b are values between 0 - 1 and t is the transparency, also 0 - 1.
-- Several colors are defined as `IMFBLUE`, `IMFRED`, `IMFGREEN`, `IMFGREY`, `IMFBLACK` and are imported from `imfcharts`.
+For a list of valid numbers see @sec-basics-misc-colors.
 
 The available keys for a column within `attrs` are:
 
-- `linewidth` - Line width of marker
-- `linestyle` - A valid `Matplotlib` line style specified [here](https://matplotlib.org/stable/gallery/lines_bars_and_markers/linestyles.html).
-  Special implementations such as "imfdash", "imfround" are implemented which mimic Excel styles.
-- `dashes`, `dash_capstyle` - Advanced options to specify cap styles.
-- `legend` - If `False`, do not show this entry in the legend.
-- `marker` - Specify the marker (default no marker) using one of symbols [here](https://matplotlib.org/stable/api/markers_api.html).
-  Specifying multiple symbols together like "x|" will combine the symbols in the legend.
-- `markersize` - Size of marker
-- `markerfacecolor` - Face color of marker
-- `markeredgecolor` - Edge color of marker
-- `markeredgewidth` - Edge width of marker
+| Variable | Description |
+|---|---|
+| color | Line color, specify as valid color given in @sec-basics-misc-colors |
+| linewidth | Line width of marker |
+| dashes | Line style, default is `'-'` for solid lines, specify a [valid line style](https://matplotlib.org/stable/gallery/lines_bars_and_markers/linestyles.html){target="_blank"} |
+| linestyle | A valid `Matplotlib` line style specified [here](https://matplotlib.org/stable/gallery/lines_bars_and_markers/linestyles.html){target="_blank"}. Special implementations such as "imfdash", "imfround" are implemented which mimic Excel styles. |
+| marker | Specify the marker (default no marker) using one of symbols [here](https://matplotlib.org/stable/api/markers_api.html){target="_blank"}. Specifying multiple symbols together like "x\|" will combine the symbols in the legend. |
+| markersize | Size of marker |
+| markerfacecolor | Face color of marker |
+| markeredgecolor | Edge color of marker |
+| markeredgewidth | Edge width of marker |
+| drawstyles | Can be used to draw step-like lines which are used for example for policy rates, options are 'default', 'steps', 'steps-pre', 'steps-mid', 'steps-post'; typically for a policy rate chart the option 'steps-pre' would be used. |
+| dashes, dash_capstyle | Advanced options to specify cap styles |
+| legend | If `False`, do not show this entry in the legend |
 
 A fuller example is below.
 ```{python}
@@ -788,10 +879,11 @@ A fuller example is below.
 
 attrs = {unemp : {'color' : (0.22, 0.5, 0.9, 0.7),
                   'linestyle' : 'dashed',
-		  'marker' : 'x|', # combine markers
-		  'markeredgecolor' : 'green',
-		  'markersize' : 12,
-		  'markeredgewidth' : 2,
+                  'linewidth' : 3,
+                  'marker' : 'x|', # combine markers
+                  'markeredgecolor' : 'purple',
+                  'markersize' : 12,
+                  'markeredgewidth' : 2,
                  },
          combined : {'color' : 'salmon',
                      'linestyle' : 'dotted',
@@ -815,39 +907,165 @@ chart2 = Chart(df, linecols=unemp, rlinecols=combined,
 chart2
 ```
 
-Internally, lines are added with the function `Chart.lines()`, other options for this function are
+Internally, lines are added with the function `Chart.lines()`, options for this function are
 
-- `indexcol=None` - By default the input `pandas.DataFrame`'s index is used as the x-axis. If this is a column in the DataFrame, specify using this option.
-- `axis='left'` - Specify which y-axis to plot on.
-- `linebreaks=False` - If `linebreaks=False`, then connect the lines even if there are NA values.
-- `xrange=None` - Specify x-axis range. See @sec-basics-format_axes.
-- `debug=False` - Show information when running.
+| Argument | Default | Description |
+|---|---|---|
+| data | None | Data to use, in the form of a `pandas.DataFrame`. If no data is specified, will try to use any data that was previously specified to create this chart |
+| cols | None | The columns in the data to be charted as lines. Note that when calling `Chart()`, this option is `barcols`. An iterable of column names, or if a single column can use a `str`.|
+| indexcol | None | By default the input `pandas.DataFrame`'s index is used as the x-axis. If this is a column in the DataFrame, specify using this option. |
+| axis | 'left' | Specify which y-axis to plot on, choose either 'left' or 'right' |
+| colorcycle | None | Specify an iterable of valid colors to be used as the color cycle, if not specified will default to what is specified in the current style |
+| linewidth | None | If specified, override what is specified in the current style and apply as default to all lines drawn in this call |
+| linebreaks | False | If `linebreaks=False`, then connect the lines even if there are NA values. |
+| drawstyle | None | Set all lines to use the specified drawstyle for example to create step charts, see example [here](https://matplotlib.org/stable/gallery/lines_bars_and_markers/step_demo.html){target="_blank"} |
+| attrs | None | Attributes for individual columns. |
+| xrange | None | Specify x-axis range. See @sec-basics-format_axes. |
+| margins | None | If specified, set how additional margins are added. Default is 'auto' which will automatically adjust. Can also specify number of days as integers. |
+| xformat | None | Specify how x-axis is formatted for a time series plot. Default is to check the frequency of the data and automatically determine. Otherwise specify a frequency like 'D', 'W', 'M', 'Q', 'A' for daily, weekly, monthly, quarterly or annual frequency. |
+| yrange | None | Override existing `yrange` of this object and set y-axis range |
+| ryrange | None | Override existing `ryrange` of this object and set right y-axis range |
+| debug | False | Show information when running. |
+
+When drawing lines, set the option `drawstyle` to `steps-post` to set the line style to be steps.
+This is useful for example when plotting the monetary policy rate.
+
+Below is a gallery of various line charts and options.
+
+::: {.panel-tabset}
+
+### No options (Article IV style)
+
+```{python}
+#| label: gallery_lines_nooptions
+#| fig-cap: "Line chart (no options)."
+#| code-fold: show
+
+infilename = 'data/turkey_page2/fig2_chart3_mp.csv'
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+
+chart = Chart(df, linecols=df.columns,
+              title='No Options')
+```
+
+### Class-level options
+
+```{python}
+#| label: gallery_lines_classoptions
+#| fig-cap: "Line chart with class-level options."
+#| code-fold: show
+
+infilename = 'data/turkey_page2/fig2_chart3_mp.csv'
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+
+chart = Chart(df, linecols=df.columns,
+              title='Class-level Options',
+              colorcycle=['red', 'green', 'blue'],
+              linewidth=3,
+              xrange='2023-01:', yrange=[0, 90])
+```
+
+### Attributes
+
+```{python}
+#| label: gallery_lines_attrs
+#| fig-cap: "Line chart with individual attributes specified."
+#| code-fold: show
+
+infilename = 'data/turkey_page2/fig2_chart3_mp.csv'
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+attrs = {'Policy rate' : {'color' : IMFBLUE, 'linewidth' : 2},
+         'Inflation' : {'color' : IMFRED, 'marker' : 'o', 'markersize' : 3, 'markerfacecolor' : 'red', 'markeredgecolor' : 'black'},
+         'Inflation expectation' : {'color' : IMFBLACK, 'linestyle' : '--'}}
+
+chart = Chart(df, linecols=df.columns,
+              title='Attributes',
+              attrs=attrs,
+              xrange='2023-01:', yrange=[0, 90])
+```
+
+### Add to existing `Chart` with `lines()`
+
+```{python}
+#| label: gallery_lines_calllines
+#| fig-cap: "Add lines to existing chart."
+#| code-fold: show
+
+infilename = 'data/turkey_page2/fig2_chart3_mp.csv'
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+chart = Chart(title='Class-level Options')
+
+# Call lines on existing chart
+attrs = {'Policy rate' : {'color' : IMFBLUE, 'linewidth' : 2},
+         'Inflation' : {'color' : IMFRED, 'marker' : 'o', 'markersize' : 3, 'markerfacecolor' : 'red', 'markeredgecolor' : 'black'},
+         'Inflation expectation' : {'color' : IMFBLACK, 'linestyle' : '--'}}
+chart.lines(data=df, cols=df.columns,
+            attrs=attrs,
+            xrange='2023-01:', yrange=[0, 90])
+```
+
+### Step chart
+
+When drawing lines, set the option `drawstyle` to `steps-post` to set the line style to be steps.
+This is useful for example when plotting the monetary policy rate.
+
+```{python}
+#| label: gallery_lines_steps
+#| fig-cap: "Line chart shown as steps."
+#| code-fold: show
+
+infilename = 'data/turkey_page2/fig2_chart3_mp.csv'
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+
+attrs = {'Policy rate' : {'color' : IMFBLUE,
+                          'drawstyle' : 'steps-post'},
+         'Inflation'   : {'color' : IMFRED},
+        }
+
+# Create Chart object
+chart = Chart(df, linecols=['Policy rate', 'Inflation'],
+              attrs=attrs,
+              title='steps',
+              xrange='2023-01:', yrange=[0, 90])
+```
+
+### Use `dict` as Input to `lines()`
+
+```{python}
+#| label: gallery_lines_kwargs
+#| fig-cap: "Add lines to existing chart using `dict`."
+#| code-fold: show
+
+infilename = 'data/turkey_page2/fig2_chart3_mp.csv'
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+chart = Chart(title='Class-level Options')
+
+# Call lines on existing chart
+attrs = {'Policy rate' : {'color' : IMFBLUE, 'linewidth' : 2},
+         'Inflation' : {'color' : IMFRED, 'marker' : 'o', 'markersize' : 3, 'markerfacecolor' : 'red', 'markeredgecolor' : 'black'},
+         'Inflation expectation' : {'color' : IMFBLACK, 'linestyle' : '--'}}
+kwargs = {'data' : df, 'cols' : df.columns,
+          'attrs' : attrs,
+          'xrange' : '2023-01:', 'yrange' : [0, 90]}
+chart.lines(**kwargs)
+```
+
+:::
+
 
 ## Add Bars {#sec-basics-bars}
 
-To add bars, use the argument `barcols` in `Chart()`. This can either be a `str` specifying a single column
-or an iterable of multiple column names.
+To add bars, use the argument `barcols` in `Chart()` or use the function `Chart.bars()` on an existing `Chart` with the argument `cols`.
+The argument can either be a `str` specifying a single column or an iterable of multiple column names,
+and the default is to have all bars stacked.
+
 An example is shown below.
 
 ```{python}
-#| label: data_barchart
+#| label: basics_barchart
 #| fig-cap: "Generate bar chart data."
-dict_series = {'S186NGPC@EMERGEMA' : 'Real GDP growth',
-               'S186NCYC@EMERGEMA' : 'Consumption1', # resident household
-               'S186NCNC@EMERGEMA' : 'Consumption2', # nonprofit serving household
-               'S186NCGC@EMERGEMA' : 'Consumption (public)',
-               'S186NFC@EMERGEMA'  : 'Fixed investment',
-               'S186NXC@EMERGEMA'  : 'Exports',
-               'S186NMC@EMERGEMA'  : 'Imports'}
-
-df = None
-for series in dict_series:
-    _df = imf_datatools.get_haver_data(series)
-    _df.columns = [dict_series[series]]
-    if df is None:
-        df = _df
-    else:
-        df = df.merge(_df, left_index=True, right_index=True, how='outer')
+datafilename = 'data/gdp.csv'
+df = pd.read_csv(datafilename, index_col=0, parse_dates=[0])
 df['Consumption (private)'] = df['Consumption1'] + df['Consumption2']
 df['Net exports'] = df['Exports'] - df['Imports']
 df['Inventories/discrepancy'] = df['Real GDP growth'] - df['Consumption (private)'] - df['Consumption (public)'] - df['Fixed investment'] - df['Net exports']
@@ -880,22 +1098,30 @@ chart1
 ```
 
 Similar to plotting lines, an option `attrs` can be passed in to specify the attributes of each bar.
-The default is to follow the color scheme that is specified in the current style.
+The default is to follow the color scheme that is specified in the current style, and we see the bars
+having the familiar Article IV colors.
+
 
 The available options in `attrs` for bars is as follows:
 
-- `color` - The color of bars for this column.
-- `width` - Specify width of bars. If time series, in units of days.
-- `offset` - Additional offset for bars. If time series, in units of days.
-- `edgecolor` - Edge colors of bars.
-- `hatchcolor` - Specify colors for any hatches
-- `hatch` - Specify a valid hatch specified [here](https://matplotlib.org/stable/gallery/shapes_and_collections/hatch_style_reference.html)
-- `hatchwidth` - Specify hatch bar width
-- `edgecolor` - Overwrites for each column what is passed through same option in `Charts()` or `bars()`
-- `legend` - If `False`, do not add to legend.
-- `barcolors` - Specify color of individual colors of bars using the index of the data. See example below.
+| Variable | Description |
+|---|---|
+| color | The color of bars for this column. |
+| width | Specify width of bars. If time series, in units of days. |
+| offset | Additional offset for bars. If time series, in units of days. |
+| edgecolor | Edge colors of bars. |
+| hatchcolor | Specify colors for any hatches |
+| hatch | Specify a valid hatch specified [here](https://matplotlib.org/stable/gallery/shapes_and_collections/hatch_style_reference.html){target="_blank"} |
+| hatchwidth | Specify hatch bar width |
+| edgecolor | Specify color of lines for the edges of the bars. |
+| legend | If `False`, do not add to legend. |
+| barcolors | Specify color of individual colors of bars using the index of the data. See example below. |
+| offset | If `stack=False`, specify custom offset of x-axis position for this column. |
 
-Note that the default is to have the edges of bars in black. This color can be modfiied with `baredgecolor` for each column,
+The `attrs` keywords are set so that when possible, for example for `color` it is the same as with those for when calling `lines()`,
+so that it is easy to switch from a line chart to a bar chart using the same `attrs` if the attributes are the same.
+
+Also note that the default is to have the edges of bars in black. This color can be modfiied with `baredgecolor` for each column,
 and to remove use the option `barlinewidth=0` when calling `Chart()` or `Chart.bars()`.
 
 An example with customized bar `attrs` is below.
@@ -903,7 +1129,6 @@ An example with customized bar `attrs` is below.
 ```{python}
 #| label: barchart_options
 #| fig-cap: "Example bar chart."
-#| code-fold: show
 
 # Create Chart object
 attrs = {linecol : {'linewidth' : 4,
@@ -914,14 +1139,11 @@ attrs = {linecol : {'linewidth' : 4,
                     'markerfacecolor' : 'white',
                     'markeredgewidth' : 4,
                     'markeredgecolor' : '#004C97'},
-         'Consumption (private)' : {'color' : '#4B8CAD', 'barhatchcolor' : IMFBLUE, 'barhatch' : '\\\\'},
-         'Consumption (public)' : {'color' : 'white', 'barhatch' : '\\\\\\', 'barhatchcolor' : IMFBLACK},
-         'Net exports' : {'color' : IMFGREY},
+         'Consumption (private)'   : {'color' : '#4B8CAD', 'barhatchcolor' : IMFBLUE, 'barhatch' : '\\\\'},
+         'Consumption (public)'    : {'color' : 'white', 'barhatch' : '\\\\\\', 'barhatchcolor' : IMFBLACK},
+         'Net exports'             : {'color' : IMFGREY},
          'Inventories/discrepancy' : {'color' : IMFRED},
-         'Fixed investment' : {'color' : 'white',
-                               'barhatch' : '///',
-                               'barhatchcolor' : IMFGREEN,
-                               'barhatchwidth' : 10}
+         'Fixed investment'        : {'color' : 'white', 'barhatch' : '///','barhatchcolor' : IMFGREEN, 'barhatchwidth' : 10}
          }
 
 chart1 = Chart(df, linecols=linecol, barcols=barcols,
@@ -934,31 +1156,868 @@ chart1 = Chart(df, linecols=linecol, barcols=barcols,
 chart1
 ```
 
-Internally, bar charts are created with the function `chart.bars()`. Other options for this function are
+Internally, bar charts are created with the function `chart.bars()`.
+As with `lines()`, the attributes of each bar are determined in the order of
 
-- `indexcol=None` -By default the input `pandas.DataFrame`'s index is used as the x-axis. If this is a column in the DataFrame, specify using this option.
-- `axis='left'` - Specify which y-axis to plot on.
-- `stack=True` - Specify whether to stack bars. If `True`, all bars are stacked on top of each other (default), otherwise they are staggered.
-- `total_barwidth=None` - When not plotting bars as a time series, specify the width of each bar, default is 0.9.
-- `linewidth=None` - Width of edges of bars.
-- `edgecolor='black'` - Edge color for bars. Can be overwritten for individual columns by `attrs`.
-- `xrange=None` - Specify x-axis range. See @sec-basics-format_axes.
-- `debug=False` - Show information when running.
+1. Style options
+2. Class-level options specified either when calling `Chart()` or `Chart.bars()`
+3. Individual column level using `attrs`.
 
-## Add Lines and Rectangles {#sec-basics-lines_rects}
+Options for `Chart.bars()` are:
 
-    def hline(self, y, xrange=None, coordinates='data', color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None,
-    def vline(self, x, yrange=None, coordinates='data', width=1, color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None):
-    def hrect(self, y0, y1, width=1, linecolor='red', fillcolor=None, dash='-', opacity=1, text=''):
-    def vrect(self, y0, y1, width=1, linecolor='red', fillcolor=None, dash='-', opacity=1, text=''):
+| Argument | Default | Description |
+|---|---|---|
+| data | None | Data to use, in the form of a `pandas.DataFrame`. If no data is specified, will try to use any data that was previously specified to create this chart |
+| cols | None | The columns in the data to be charted as lines. Note that when calling `Chart()`, this option is `linecols` and `rlinecols` to distinguish from columns for bars and area graphs. An iterable of column names, or if a single column can use a `str`.|
+| indexcol | None | By default the input `pandas.DataFrame`'s index is used as the x-axis. If this is a column in the DataFrame, specify using this option. |
+| axis | None | Specify which y-axis to plot on. Note that when calling `Chart()` this is specified as `baraxis` |
+| stack | True | Specify whether to stack bars. If `True`, all bars are stacked on top of each other (default), otherwise they are staggered. when calling `Chart()` this is specified as `barstack`. |
+| total_barwidth |None | When not plotting bars as a time series, specify the width of each bar, default is 0.9. |
+| linewidth |None | Width of edges of bars. When calling `Chart()` this is specified as `barlinewidth`. |
+| edgecolor | None | Edge color for bars. If not specified defaults to style default (black for Article IV). When calling `Chart()` this is specified as `baredgecolor`. |
+| attrs | None | Attributes for individual columns. |
+| xrange | None | Specify x-axis range. See @sec-basics-format_axes. |
+| margins | None | If specified, set how additional margins are added. Default is 'auto' which will automatically adjust. Can also specify number of days as integers. |
+| xformat | None | Specify how x-axis is formatted for a time series plot. Default is to check the frequency of the data and automatically determine. Otherwise specify a frequency like 'D', 'W', 'M', 'Q', 'A' for daily, weekly, monthly, quarterly or annual frequency. |
+| yrange | None | Override existing `yrange` of this object and set y-axis range |
+| ryrange | None | Override existing `ryrange` of this object and set right y-axis range |
+| debug | False | Show information when running. |
+
+Again, note that many options are the same as for `Chart.lines()`.
+Below is a gallery of bar charts with various options.
+
+::: {.panel-tabset}
+
+### No options (Article IV style)
+
+```{python}
+#| label: gallery_bars_nooptions
+#| fig-cap: "Bar chart (no options)."
+#| code-fold: show
+infilename = 'data/turkey_page4/fig4_chart1_exp.csv'
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+cols = df.columns
+linecol = 'Primary exp.'
+barcols = list(df.columns)
+barcols.remove(linecol)
+chart1 = Chart(df, linecols=linecol, barcols=barcols,
+               title='no options',
+               xrange='2018-01:', yrange=[0, 30],
+               ncol_legend=2)
+```
+
+### Color Cycle
+
+```{python}
+#| label: gallery_bars_colorcycle
+#| fig-cap: "Color cycle."
+#| code-fold: show
+chart1 = Chart(df, linecols=linecol, barcols=barcols,
+               title='color cycle',
+               colorcycle=['red', 'green', 'blue', 'black'],
+               xrange='2018-01:', yrange=[0, 30],
+               ncol_legend=2)
+```
+
+### Axis Right
+
+```{python}
+#| label: gallery_bars_axis_right
+#| fig-cap: "Axis right."
+#| code-fold: show
+chart1 = Chart(df, linecols=linecol, barcols=barcols,
+               title='axis right',
+               baraxis='right',
+               xrange='2018-01:', ryrange=[0, 30],
+               ncol_legend=2)
+```
+
+### Bar Edge Color/Width
+
+In the below `baredgecolor` is set to `'gold'` and the edge line width is given with `barlinewidth=3`.
+
+```{python}
+#| label: gallery_bars_edges
+#| fig-cap: ":Edge color and width."
+#| code-fold: show
+chart1 = Chart(df, linecols=linecol, barcols=barcols,
+               title='bar edges',
+               baredgecolor='gold',
+               barlinewidth=3,
+               xrange='2018-01:', yrange=[0, 30],
+               ncol_legend=2)
+```
+
+### Margins
+
+In the below `margins` is set to 170 days.
+Since for annual frequency data the bar is set by default to 335 days,
+this removes most of the side margin for the chart.
+
+```{python}
+#| label: gallery_bars_margins
+#| fig-cap: "Specify margins."
+#| code-fold: show
+# Create Chart object
+chart1 = Chart(df, linecols=linecol, barcols=barcols,
+               title='margins',
+               margins=120,
+               xrange='2018-01:', yrange=[0, 30],
+               ncol_legend=2)
+```
+
+### Attributes
+
+In the below a `dict` called `attrs` is passed in to specify the colors of each bar.
+
+```{python}
+#| label: gallery_bars_attrs
+#| fig-cap: "Specify attributes."
+#| code-fold: show
+attrs = {linecol : {'linewidth' : 4, 'color' : IMFBLACK},
+         'Personnel' : {'color' : '#004C97'},
+         'Goods & services' : {'color' : '#009CDE'},
+         'Current transfers' : {'color' : '#CAEDFE'},
+         'Capital exp.' : {'color' : '#FF8200'},
+         'Other' : {'color' : '#DA291C'},                         
+         }
+
+# Create Chart object
+chart1 = Chart(df, linecols=linecol, barcols=barcols,
+               title='attrs',
+               attrs=attrs,
+               xrange='2018-01:', yrange=[0, 30],
+               ncol_legend=2)
+```
+
+### Add Bars From a `dict`
+
+In the below the function `bars()` is called with a `dict` which is passed in as `**kwargs**`.
+
+```{python}
+#| label: gallery_bars_kwargs
+#| fig-cap: "Create from `dict`."
+#| code-fold: show
+chart1 = Chart(title='kwargs',
+               xrange='2018-01:', yrange=[0, 30],
+               ncol_legend=2)
+
+# Add line using dict
+kwargs_lines = {'data' : df,
+                'cols' : linecol,
+                'attrs' : attrs}
+chart1.lines(**kwargs_lines)
+
+# Add bars using dict
+kwargs = {'data' : df,
+          'cols' : barcols,
+          'attrs' : attrs,
+          }
+chart1.bars(**kwargs)
+```
+
+### Unstacked
+
+In the below the option `stack=False` is passed in.
+
+```{python}
+#| label: gallery_bars_unstacked
+#| fig-cap: "Unstacked."
+#| code-fold: show
+chart1 = Chart(df, linecols=linecol, barcols=barcols,
+               barstack=False,
+               attrs=attrs,
+               title='stack=False',
+               xrange='2018-01:', yrange=[0, 30],
+               ncol_legend=2)
+```
+
+### Specify individual colors
+
+To specify colors for individaul bars, set them in `attrs` by
+specifying for that column the key `"barcolor"` and passing in a `list` of `dicts` between
+the index and the color.
+
+In the below example, the column "Personnel" will get a red color for the periods 2022 and 2024.
+
+```{python}
+#| label: gallery_bars_individual_colors
+#| fig-cap: "Individual colors."
+#| code-fold: show
+
+attrs = {linecol : {'linewidth' : 4, 'color' : IMFBLACK},
+         'Personnel' : {'color' : '#004C97', 'baredgecolor' : 'red',
+                        'barcolors' : [{'2022' : 'red'}, {'2024' : 'red'}]},
+         'Goods & services' : {'color' : '#009CDE'},
+         'Current transfers' : {'color' : '#CAEDFE'},
+         'Capital exp.' : {'color' : '#FF8200'},
+         'Other' : {'color' : '#DA291C'},                         
+         }
+
+chart1 = Chart(df, linecols=linecol, barcols=barcols,
+               attrs=attrs,
+               title='individual colors',
+               xrange='2018-01:', yrange=[0, 30],
+               ncol_legend=2)
+```
+
+### Categorical, unstacked
+
+In the below a `pandas.DataFrame` with a categorical index is shown as a bar chart that has `stack=False`.
+
+```{python}
+#| label: gallery_bars_categorical
+#| fig-cap: "Categorical."
+#| code-fold: show
+infilename = 'data/turkey_page5/fig5_chart3_terms_of_trade.csv'
+df = pd.read_csv(infilename, index_col=0)
+
+chart3 = Chart(df, barcols=df.columns, barstack=False,
+               xtickangle=90, xticklength=0,
+               title='categorical, no stack',
+               yrange=[-15, 15])
+```
+
+### Categorical, unstacked individual colors
+
+In the below, the bar color for "TUR" is set to red.
+
+```{python}
+#| label: gallery_bars_categorical_colors
+#| fig-cap: "Categorical with individual colors"
+#| code-fold: show
+attrs = {'shock' : {'color' : '#BFBFBF',
+                    'barcolors' : [{'TUR' : 'red'}]}
+        }
+chart3 = Chart(df, barcols=df.columns, barstack=False,
+               attrs=attrs,
+               xtickangle=90, xticklength=0,
+               title='categorical, no stack with colors',
+               yrange=[-15, 15],
+               show_legend=False)
+```
+
+:::
+
+## Add Area {#sec-basics-area}
+
+An area graph is very similar to a bar graph, and can be drawn with either the `areacols` option for `Chart()`
+or with `Chart.area()` with the `cols` option. As with `lines()` and `bars()`, the option can
+be a `str` for a single column or an iterable of multiple column names.
+
+An example is shown below.
+
+```{python}
+#| label: basics_areachart
+#| fig-cap: "Generate bar chart data."
+infilename = 'data/turkey_page4/fig4_chart1_exp.csv'
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+cols = df.columns
+linecol = 'Primary exp.'
+areacols = list(df.columns)
+areacols.remove(linecol)
+```
+
+```{python}
+#| label: areachart
+#| fig-cap: "Example area chart."
+#| code-fold: show
+# Create Chart object
+chart1 = Chart(df, linecols=linecol, areacols=areacols,
+               title='Central Government: Primary Expenditure Components',
+               subtitle='(Percent of GDP)',
+               xrange='2018-01:', yrange=[0, 30],
+               ncol_legend=2)
+chart1
+```
+
+The chart is identical to that of the chart for no options in the Bar chart gallery (@sec-basics-bars),
+except that the stacked bars have been replaced with stacked areas.
+Most of the options for area charts are the same as for bar charts, but to allow them to be specified together
+when calling from `Chart()`, some input parameters are slightly different, for example the columns are
+`areacols` when calling `Chart()` but `cols` when calling `Chart.area()`:
+```python
+Chart(df, areacols=cols)
+```
+and
+```python
+chart = Chart()
+chart.area(data=df, cols=cols)
+```
+
+One further difference is that since area charts are expected to fill the entire x-axis range,
+the `margins` are automatically set to 0 when an area graph is drawn.
+
+Similar to `lines()` and `bars()`, the keyword `attrs` provides a way to control the attributes for each column.
+Below are the options for an area graph, many are similar to that for bar graphs.
+
+| Variable | Description |
+|---|---|
+| color | The color of bars for this column. |
+| edgecolor | Edge colors of bars. |
+| hatchcolor | Specify colors for any hatches |
+| hatch | Specify a valid hatch specified [here](https://matplotlib.org/stable/gallery/shapes_and_collections/hatch_style_reference.html){target="_blank"} |
+| hatchwidth | Specify hatch bar width |
+| alpha | Apply transparency to color of area, specify as float between 0 and 1. |
+| edgecolor | Specify color of lines for the edges of the bars. |
+| legend | If `False`, do not add to legend. |
+
+All of these options are the same as for `bars()` except for `alpha`.
+
+An example with customized area attrs is below.
+
+```{python}
+#| label: area_custom
+#| fig-cap: "Customized area chart."
+
+infilename = 'data/turkey_page5/fig5_chart6_gross_international_reserves.csv'
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+df.dropna(axis=0, how='all', inplace=True)
+
+# Create Chart object
+gircol = 'Gross International Reserves (GIR) (rhs)'
+attrs = {gircol : {'color' : '#416FA6'},
+         'Gold'  : {'color' : '#CAEDFE',
+                   'hatch' : 'blue',
+                   'hatch' : '\\\\',
+                   'hatchwidth' : 2,
+                   'edgecolor' : 'brown',
+                   'alpha' : 0.3},
+         'FX'    : {'color' : '#009CDE',
+                    'hatchcolor' : 'red',
+                    'hatch' : '////',
+                    'hatchwidth' : 3,
+                    'edgecolor' : 'purple'},
+        }
+
+chart = Chart(df, linecols=gircol,
+              areacols=['FX', 'Gold'],
+              attrs=attrs,
+              title='Area chart',
+              xrange='2022-01:', yrange=[-0.5, 200])
+```
+
+Internally, area graphs are created with the function `chart.area()`. As with `lines()` and `bars()`, the attributes of each area
+are determined in the order of
+
+1. Style options
+2. Class-level options specified either when calling `Chart()` or `Chart.bars()`
+3. Individual column level using `attrs`.
+
+| Argument | Default | Description |
+|---|---|---|
+| data | None | Data to use, in the form of a `pandas.DataFrame`. If no data is specified, will try to use any data that was previously specified to create this chart |
+| cols | None | The columns in the data to be charted as lines. Note that when calling `Chart()`, this option is `areacols` to distinguish from columns for lines and bars. An iterable of column names, or if a single column can use a `str`.|
+| indexcol | None | By default the input `pandas.DataFrame`'s index is used as the x-axis. If this is a column in the DataFrame, specify using this option. |
+| axis | None | Specify which y-axis to plot on. Note that when calling `Chart()` this is specified as `areaaxis` |
+| stack | True | Specify whether to stack bars. If `True`, all bars are stacked on top of each other (default), otherwise they are staggered. when calling `Chart()` this is specified as `areastack`. |
+| linewidth |None | Width of edges of bars. When calling `Chart()` this is specified as `arealinewidth`. |
+| edgecolor | None | Edge color for bars. If not specified defaults to style default (black for Article IV). When calling `Chart()` this is specified as `areaedgecolor`. |
+| attrs | None | Attributes for individual columns. |
+| xrange | None | Specify x-axis range. See @sec-basics-format_axes. |
+| margins | None | If specified, set how additional margins are added. Default is 'auto' which will automatically adjust. Can also specify number of days as integers. |
+| xformat | None | Specify how x-axis is formatted for a time series plot. Default is to check the frequency of the data and automatically determine. Otherwise specify a frequency like 'D', 'W', 'M', 'Q', 'A' for daily, weekly, monthly, quarterly or annual frequency. |
+| yrange | None | Override existing `yrange` of this object and set y-axis range |
+| ryrange | None | Override existing `ryrange` of this object and set right y-axis range |
+| debug | False | Show information when running. |
+
+Again, note that many options are the same as for `Chart.lines()` and especially `Chart.bars()`, so that switching
+between bars and area graphs based on aesthetics is easy to do.
+Below is a gallery of area charts with various options.
+
+```{python}
+#| label: area_data
+infilename = 'data/turkey_page5/fig5_chart6_gross_international_reserves.csv'
+if not os.path.isfile(infilename):
+    print('File ' + infilename + ' does not exist')
+    sys.exit()
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+df.dropna(axis=0, how='all', inplace=True)
+
+# Create Chart object
+gircol = 'Gross International Reserves (GIR) (rhs)'
+areacols = ['FX', 'Gold']
+```
+
+::: {.panel-tabset}
+
+### No options (Article IV style)
+
+No options are passed in.
+For area charts the margins are by default set to 0 so there is no space outside the plotted range.
+
+```{python}
+#| label: gallery_area_nooptions
+#| fig-cap: "No options"
+#| code-fold: show
+# Create Chart object
+chart = Chart(df, areacols=areacols,
+              title='no options')
+chart	      
+```
+
+### Color cycle
+
+A color cycle is provided of red, green, blue.
+Note that the first two colors are used for the area graphs,
+and the third color blue is then used for the line.
+
+```{python}
+#| label: gallery_area_colorcycle
+#| fig-cap: "Color cycle"
+#| code-fold: show
+# Create Chart object
+chart = Chart(df, linecols=gircol, areacols=areacols,
+              colorcycle=['red', 'green', 'blue'],
+              title='color cycle')
+chart
+```
+
+### Axis Right
+
+The area chart is drawn on the right.
+Since no y-axis range is specified for either the left or right y-axis,
+the ranges do not agree exactly.
+
+```{python}
+#| label: gallery_area_axis_right
+#| fig-cap: "Axis right."
+#| code-fold: show
+chart1 = Chart(df, linecols=gircol, areacols=areacols,
+               title='axis right',
+               areaaxis='right',
+               ncol_legend=2)
+```
+
+### Area Edge Color/Width
+
+In the below `areaedgecolor` is set to `'gold'` and the edge line width is given with `arealinewidth=3`.
+
+```{python}
+#| label: gallery_area_edges
+#| fig-cap: "Edge color and width."
+#| code-fold: show
+chart1 = Chart(df, linecols=gircol, areacols=areacols,
+               title='area edges',
+               areaedgecolor='gold',
+               arealinewidth=3,
+               xrange='2022-01:', yrange=[0, 200],
+               ncol_legend=2)
+```
+
+### Attributes
+
+In the below a `dict` called `attrs` is passed in to specify the colors of each area.
+
+```{python}
+#| label: gallery_area_attrs
+#| fig-cap: "Specify attributes."
+#| code-fold: show
+attrs = {gircol : {'color' : '#416FA6'},
+         'FX' : {'color' : 'yellow',
+                 'hatchcolor' : 'red',
+                 'hatch' : '////',
+                 'hatchwidth' : 3,
+                 'edgecolor' : 'purple'},
+         'Gold' : {'color' : 'grey',
+                   'hatch' : 'blue',
+                   'hatch' : '\\\\',
+                   'hatchwidth' : 2,
+                   'edgecolor' : 'brown',
+                   'alpha' : 0.3}
+         }
+
+# Create Chart object
+chart1 = Chart(df, linecols=gircol, areacols=areacols,
+               title='attrs',
+               attrs=attrs,
+               xrange='2022-01:', yrange=[0, 200],
+               ncol_legend=2)
+```
+
+### Add Area From a `dict`
+
+In the below the function `area()` is called with a `dict` which is passed in as `**kwargs**`.
+
+```{python}
+#| label: gallery_area_kwargs
+#| fig-cap: "Create from `dict`."
+#| code-fold: show
+chart1 = Chart(title='kwargs',
+               xrange='2022-01:', yrange=[0, 200],
+               ncol_legend=2)
+
+attrs = {linecol : {'linewidth' : 4, 'color' : IMFBLACK},
+         'Personnel' : {'color' : '#004C97'},
+         'Goods & services' : {'color' : '#009CDE'},
+         'Current transfers' : {'color' : '#CAEDFE'},
+         'Capital exp.' : {'color' : '#FF8200'},
+         'Other' : {'color' : '#DA291C'},                         
+         }
+
+# Add area using dict
+kwargs = {'data' : df,
+          'cols' : areacols,
+          'attrs' : attrs,
+          }
+chart1.area(**kwargs)
+```
+
+### Unstacked
+
+In the below the option `stack=False` is passed in.
+To make the area graphs easier to see, `alpha=0.3` is also set for all areas.
+
+```{python}
+#| label: gallery_area_unstacked
+#| fig-cap: "Unstacked."
+#| code-fold: show
+chart1 = Chart(df, linecols=gircol, areacols=areacols,
+              colorcycle=['red', 'yellow'],
+	       alpha=0.3,
+               areastack=False,
+               title='stack=False',
+               xrange='2022-01:', yrange=[0, 200],
+               ncol_legend=2)
+```
+
+:::
+
+## Add Horizontal/Vertical Lines and Rectangles {#sec-basics-lines_rects}
+
+In many cases it is convenient to be able to add various auxiliary objects to a chart, such as horizontal, vertical lines and shaded areas (rectangles).
+The `imfcharts` provides simple functions to provide these.
+
+```python
+chart = Chart(df, linecols=linecols)
+
+# Draw a horizontal line at 3
+chart.hline(3)
+
+# Draw a vertical line at 2020-03
+chart.vline('2020-03')
+
+# Draw a shaded target range between y = 0 and 1
+chart.hrect(0, 1)
+
+# Draw a shaded region between 2020-03 and 2021-06
+chart.vrect('2020-03', '2021-06')
+```
+
+For horizontal lines and rectangles, the default is to span the entire width of the chart, these are useful for showing a target value or a target band.
+For vertical lines and rectangles, the default is to span the entire height of the chart, these are useful for showing a specific date or category, or
+a specific period (such are recessions). Under the hood, `hline` and `vline` use `Matplotlib`'s `ax.hline` and `ax.vline`, and `hrect` and `vrect` use
+`ax.axhspan` and `ax.axvspan`.
+
+Below are the options for each of these, and a gallery is provided with use cases.
+
+### Horizontal Lines
+
+Horizontal lines can be added to an existing `Chart` object with
+```python
+chart.hline(y)
+```
+which will draw a horizontal line at `y` across the entire chart.
+Further options listed below allows customization.
+
+| Argument | Default | Description |
+|---|---|---|
+|y       |      | Specify y position where line is drawn in coordinates of data being plotted. |
+| xrange | None | Specify x-axis range for horizontal line. If `coordinates` is `'data'` for time series data, this converts the passed in `xrange` into coordinates of the chart. Otherwise the values are fractions of the chart from 0 to 1. |
+| coordinates | 'data' | If this is `data` and the chart is plotting a time series, `xrange` will be interpreted as time ranges. |
+| color | 'red' | Specify color of line, see sec-basics-misc-colors for valid colors. |
+| linewidth |None | Width of edges of line. |
+| linestyle | A valid `Matplotlib` line style specified [here](https://matplotlib.org/stable/gallery/lines_bars_and_markers/linestyles.html){target="_blank"}. Special implementations such as "imfdash", "imfround" are implemented which mimic Excel styles. |
+| alpha | 1 | Apply transparency to color of area, specify as float between 0 and 1. |
+| dashes, dash_capstyle | Advanced options to specify cap styles |
+| label | '' | When `legend` is `True`, a legend entry is created using this label.  |
+| legend | `False` | If `False`, do not show this entry in the legend |
+| zorder | 0 | Specify the drawing order, higher values are shown on top of other objects. |
+| debug | False | Show information when running. |
+
+### Horizontal Rectangles
+
+Horizontal rectangles (shades) have similar options as `hline` objects, a difference being that instead of one `y` value
+one must specify two values of `ymin` and `ymax` of where the shade is drawn.
+
+In the simplest case
+```python
+chart.hrect(0, 1)
+```
+will draw a shaded region between 0 and 1 in the data coordinates.
+Additional options are below.
+
+| Argument | Default | Description |
+|---|---|---|
+|ymin | 0 | Specify lower y position where shade is drawn in coordinates of data being plotted. |
+|ymax | 0 | Specify higher y position where shade is drawn in coordinates of data being plotted. |
+| xrange | None | Specify x-axis range for horizontal line. If `coordinates` is `'data'` for time series data, this converts the passed in `xrange` into coordinates of the chart. Otherwise the values are fractions of the chart from 0 to 1. |
+| coordinates | 'data' | If this is `data` and the chart is plotting a time series, `xrange` will be interpreted as time ranges. |
+| color | 'red' | Specify color of line, see sec-basics-misc-colors for valid colors. |
+| linecolor | 'none' | Specify color of outline of shade. |
+| linewidth | 0 | Width of edges of shade. |
+| linestyle | A valid `Matplotlib` line style specified [here](https://matplotlib.org/stable/gallery/lines_bars_and_markers/linestyles.html){target="_blank"}. Special implementations such as "imfdash", "imfround" are implemented which mimic Excel styles. |
+| alpha | 0.3 | Apply transparency to color of area, specify as float between 0 and 1. |
+| dashes, dash_capstyle | Advanced options to specify cap styles |
+| hatch | None | Specify hatches to draw |
+| label | '' | When `legend` is `True`, a legend entry is created using this label.  |
+| legend | `False` | If `False`, do not show this entry in the legend |
+| zorder | 0 | Specify the drawing order, higher values are shown on top of other objects. |
+| debug | False | Show information when running. |
+
+### Vertical Lines
+
+Horizontal lines can be added to an existing `Chart` object with
+```python
+chart.vline(x)
+```
+which will draw a vertical line at `x` for the entire chart.
+Further options listed below allows customization.
+
+| Argument | Default | Description |
+|---|---|---|
+|y       |      | Specify y position where line is drawn in coordinates of data being plotted. |
+| yrange | None | Specify y-axis range for horizontal line. If `coordinates` is `'data'`, this interprets the values as coordinates of the chart, otherwise the values are fractions of the chart from 0 to 1. |
+| coordinates | 'data' | If this is `data`, `yrange` will be interpreted as coordinates of the chart, otherwise as fractions of the chart. |
+| color | 'red' | Specify fill color of shade, see sec-basics-misc-colors for valid colors. |
+| linewidth | 1 | Width of edges of line. |
+| linestyle | '-' | A valid `Matplotlib` line style specified [here](https://matplotlib.org/stable/gallery/lines_bars_and_markers/linestyles.html){target="_blank"}. Special implementations such as "imfdash", "imfround" are implemented which mimic Excel styles. |
+| alpha | 1 | Apply transparency to color of area, specify as float between 0 and 1. |
+| dashes, dash_capstyle | Advanced options to specify cap styles |
+| label | '' | When `legend` is `True`, a legend entry is created using this label.  |
+| legend | `False` | If `False`, do not show this entry in the legend |
+| zorder | 0 | Specify the drawing order, higher values are shown on top of other objects. |
+| debug | False | Show information when running. |
+
+### Vertical Shades
+
+Vertical rectangles (shades) have similar options as `hrect` objects, a difference being that instead of one `y` value
+one must specify two values of `ymin` and `ymax` of where the shade is drawn.
+
+In the simplest case
+```python
+chart.vrect(0, 1)
+```
+will draw a shaded region between 0 and 1 in the data coordinates.
+Additional options are below.
+
+| linecolor | 'none' | Specify color of outline of shade. |
+
+| Argument | Default | Description |
+|---|---|---|
+|ymin | 0 | Specify lower y position where shade is drawn in coordinates of data being plotted. |
+|ymax | 0 | Specify higher y position where shade is drawn in coordinates of data being plotted. |
+| yrange | None | Specify y-axis range for horizontal line. If `coordinates` is `'data'`, this interprets the values as coordinates of the chart, otherwise the values are fractions of the chart from 0 to 1. |
+| coordinates | 'data' | If this is `data`, `yrange` will be interpreted as coordinates of the chart, otherwise as fractions of the chart. |
+| color | 'red' | Specify color of line, see sec-basics-misc-colors for valid colors. |
+| linecolor | 'none' | Specify color of outline of shade. |
+| linewidth |0 | Width of edges of shade. |
+| linestyle | A valid `Matplotlib` line style specified [here](https://matplotlib.org/stable/gallery/lines_bars_and_markers/linestyles.html){target="_blank"}. Special implementations such as "imfdash", "imfround" are implemented which mimic Excel styles. |
+| alpha | 0.3 | Apply transparency to color of area, specify as float between 0 and 1. |
+| dashes, dash_capstyle | Advanced options to specify cap styles |
+| hatch | None | Specify hatches to draw |
+| label | '' | When `legend` is `True`, a legend entry is created using this label.  |
+| legend | `False` | If `False`, do not show this entry in the legend |
+| zorder | 0 | Specify the drawing order, higher values are shown on top of other objects. |
+| debug | False | Show information when running. |
+
+Below is a gallery showing how to add lines and shades.
+
+::: {.panel-tabset}
+
+```{python}
+
+# Read in data
+infilename = 'data/turkey_page2/fig2_chart1_inflation.csv'
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+```
+
+### No options
+
+No options are passed in for the `hline`, `vline`, `hrect` or `vrect`.
+
+```{python}
+#| label: gallery_lines_rects_nooptions
+#| fig-cap: "No options"
+#| code-fold: show
+chart1 = Chart(df, linecols=df.columns, attrs=attrs,
+               title='no options',
+               xrange='2017-01:', yrange=[0, 120])
+
+# Add hline
+chart1.hline(y=20)
+
+# Add vline
+chart1.vline(x='2018-03')
+
+# Add hrect
+chart1.hrect(ymin=40, ymax=60)
+
+chart1.vrect(xmin='2020-03', xmax='2022-06')
+```
+
+### Plot Options
+
+Various plot options are passed into the  `hline`, `vline`, `hrect` and `vrect` objects.
+
+```{python}
+#| label: gallery_lines_rects_options
+#| fig-cap: "With options"
+#| code-fold: show
+chart1 = Chart(df, linecols=df.columns, attrs=attrs,
+               title='with options',
+               xrange='2017-01:', yrange=[0, 120])
+
+# Add hline
+chart1.hline(y=20, xrange='2020-03:2025-04',
+             color='blue', linewidth=1.5, linestyle='--', alpha=0.8)
+
+# Add vline
+chart1.vline(x='2018-03', yrange=[30, 100],
+             color='green', linewidth=1.5, linestyle='--', alpha=0.8)
+
+# Add hrect
+chart1.hrect(ymin=40, ymax=60, xrange='2020-03:2025-04',
+             hatch='\\\\', color='yellow', linewidth=1.5, linecolor='orange', linestyle='--', alpha=0.3)
+
+chart1.vrect(xmin='2020-03', xmax='2022-06', yrange=[30, 60],
+             hatch='//', color='blue', linewidth=1.5, linecolor='purple', linestyle='dotted', alpha=0.3)
+```
+
+### zorder, Legend Entry
+
+The `zorder` of each `hline`, `vline`, `hrect` and `vrect` object are set to 5 so that they are above the data lines,
+and a legend entry is added for each object.
+
+```{python}
+#| label: gallery_lines_rects_zorder
+#| fig-cap: "zorder, legend"
+#| code-fold: show
+chart1 = Chart(df, linecols=df.columns, attrs=attrs,
+               title='zorder, legend',
+               xrange='2017-01:', yrange=[0, 120])
+
+# Add hline
+chart1.hline(y=20, xrange='2020-03:2025-04',
+             color='blue', linewidth=1.5, linestyle='--', alpha=0.8,
+             zorder=5, label='target', legend=True)
+
+# Add vline
+chart1.vline(x='2018-03',
+             color='blue', linewidth=1.5, linestyle='--', alpha=0.8,
+             zorder=5, label='reference period', legend=True)
+
+# Add hrect
+chart1.hrect(ymin=40, ymax=60,
+             hatch='\\\\', color='yellow', linewidth=1.5, linecolor='orange', linestyle='--', alpha=0.2,
+             zorder=5, label='target band', legend=True)
+
+chart1.vrect(xmin='2020-01', xmax='2021-10',
+             hatch='//', color='blue', linewidth=1.5, linecolor='purple', linestyle='--', alpha=0.4,
+             zorder=5, label='stable period', legend=True)
+```
+
+### Creating with `dict`
+
+Each `hline`, `vline`, `hrect` and `vrect` object is created using a `dict` as input.
+
+```{python}
+#| label: gallery_lines_rects_kwargs
+#| fig-cap: "Using `dict`"
+#| code-fold: show
+chart1 = Chart(df, linecols=df.columns, attrs=attrs,
+               title='create with dict',
+               xrange='2017-01:', yrange=[0, 120])
+
+# Add hline
+kwargs = {'y' : 20, 'xrange' : '2020-03:2025-04',
+          'label' : 'horizontal line', 'legend' : True,
+          'color' : 'grey', 'linewidth' : 0.5, 'linestyle' : '--', 'alpha' : 0.8}
+chart1.hline(**kwargs)
+
+# Add vline
+kwargs = {'x' : '2020-03', 'yrange' : [30, 60],
+          'label' : 'vertical line', 'legend' : True,
+          'color' : 'grey', 'linewidth' : 0.5, 'linestyle' : '--', 'alpha' : 0.8}
+chart1.vline(**kwargs)
+
+# Add hrect
+kwargs = {'ymin' : 80, 'ymax' : 100,
+          'hatch' : '++',
+          'label' : 'horizontal rectangle', 'legend' : True,
+          'color' : 'grey', 'linecolor' : 'skyblue', 'linewidth' : 0.5, 'linestyle' : '--', 'alpha' : 0.8}
+chart1.hrect(**kwargs)
+
+# Add vrect
+kwargs = {'xmin' : '2022-01', 'xmax' : '2023-01',
+          'hatch' : '////',
+          'label' : 'vertical rectangle', 'legend' : True,
+          'color' : 'pink', 'linecolor' : 'red', 'linewidth' : 0.5, 'linestyle' : '--', 'alpha' : 0.8}
+chart1.vrect(**kwargs)
+```
+
+### Adding Directly in `Chart()`
+
+Each `hline`, `vline`, `hrect` and `vrect` object is added to `Chart()` using a `list` of `dict`s.
+
+```{python}
+#| label: gallery_lines_rects_chart
+#| fig-cap: "Adding directly in `Chart()`"
+#| code-fold: show
+
+# dicts for each object
+kwargs_hline1 = {'y' : 10,
+                 'label' : 'low horizontal line', 'legend' : True,
+                 'color' : 'grey', 'linewidth' : 1.5, 'linestyle' : '--', 'alpha' : 0.7}
+
+kwargs_hline2 = {'y' : 110,
+                 'label' : 'high horizontal line', 'legend' : True,
+                 'color' : 'blue', 'linewidth' : 1.5, 'linestyle' : '-', 'alpha' : 0.7}
+
+kwargs_vline = {'x' : '2020-03',
+                'label' : 'vertical line', 'legend' : True,
+                'color' : 'red', 'linewidth' : 0.5, 'linestyle' : '--', 'alpha' : 0.7}
+
+kwargs_hrect = {'ymin' : 80, 'ymax' : 100,
+                'hatch' : '++',
+                'label' : 'horizontal rectangle', 'legend' : True,
+                'color' : 'yellow', 'linecolor' : 'red', 'linewidth' : 0.5, 'linestyle' : '--', 'alpha' : 0.7}
+
+kwargs_vrect = {'xmin' : '2024-01', 'xmax' : '2024-05',
+                'hatch' : '//',
+                'label' : 'vertical rectangle', 'legend' : True,
+                'color' : 'green', 'linecolor' : 'blue', 'linewidth' : 0.5, 'linestyle' : '--', 'alpha' : 0.7}
+
+# Create `Chart` using kwargs of each object
+chart1 = Chart(df, linecols=df.columns, attrs=attrs,
+               title='zorder, legend',
+               xrange='2017-01:', yrange=[0, 120],
+               hlines=[kwargs_hline1, kwargs_hline2],
+               vlines=[kwargs_vline],
+               hrects=[kwargs_hrect],
+               vrects=[kwargs_vrect])
+```
+
+:::
+
+
+## Add Text, Arrows, Fill
+
     def text(self, x, y, text='', xycoords='data', color='black',
+             fontsize=14, fontfamily='Segoe UI', fontweight='normal',
+             va='top', ha='left', **kwargs):
     def arrow(self, head=(0, 0), tail=(1, 1),
+              color='black', width=4, headwidth=15, headlength=15, shrink=0.05, arrowstyle='->', edgecolor=None, edgewidth=0,
+              va='top', ha='left',
+              text='', xycoords='data', textcoords='data', **kwargs):
 
-Add hlines
-Add vlines
-
-Add hrect
-Add vrect
+    def fill(self, lo, hi, data=None, indexcol=None, axis='left',
+             color='red', linecolor='none', linewidth=0, linestyle='-', alpha=0.3,
+             dash_capstyle=None,
+             hatch=None, # hatchlinewidth=None,
+             label='', legend=False,
+             zorder=1,
+             debug=False, **kwarg):
 
 ## Additional Options{#sec-basics-additional}
 
@@ -1026,13 +2085,23 @@ format axes
                 def quarter_formatter(x, pos):
     def set_date_format(self, xformat='auto', debug=False):
 
-## Miscellaneous Topics
+## Miscellaneous Topics {#sec-basics-misc}
 
 Set which y-axis comes on top with chart.set_top_xaxis('left')
 
 By default, if NA values are in a column, the chart will connect all line segments.
 This may be misleading though as there is no data for some parts of the line.
 To show breaks in the line charts, set linebreaks=True.
+
+### Note on Available Colors {#sec-basics-misc-colors}
+
+Colors can be specified as one of the following:
+
+- A valid `matplotlib` color (see [List of named colors](https://matplotlib.org/stable/gallery/color/named_colors.html){target="_blank"}.
+  This includes basic colors like `'red'`, `'black'` as well as named HTML colors such as `'dodgerblue'`, `'lime'` and even [XKCD colors](https://xkcd.com/color/rgb/){target="_blank"}
+- A color hex code specified as a `str` with format "#RRGGBB" where each of RR, GG, BB are hexadecimal values from "00" to "FF".
+- An RGBA string of the form (r, g, b, t) where r, g, b are values between 0 - 1 and t is the transparency, also 0 - 1.
+- Several colors are defined as `IMFBLUE`, `IMFRED`, `IMFGREEN`, `IMFGREY`, `IMFBLACK` and are imported from `imfcharts`.
 
 <!------------------------------------------------------------------------------------------------------------------------------------>
 # Switching Styles {#sec-styles}
@@ -1138,8 +2207,12 @@ How to use in R
 <!------------------------------------------------------------------------------------------------------------------------------------>
 # Usage in Stata {#sec-stata}
 
-How to use in Stata
+Stata has its own powerful visualization library, and this can also be used for official Fund publications.
+For code to create custom Article IV charts, contact [the datatools team](mailto:datatools-support@imf.org).
 
+Currently the `imfcharts` library is not callable from Stata, but in the future it may be possible.
+The `imfcharts` library can be called from any AI system, but due to license constraints, it is not easy to use Stata within these systems.
+This document will be updated iff a solution is found where Stata users can easily integrate this into their workflow.
 
 <!------------------------------------------------------------------------------------------------------------------------------------>
 # Usage in AI {#sec-ai}

@@ -2389,7 +2389,7 @@ class Chart:
 #            # and the resulting figure will always have the hatch linewidth of rcParams.
 #            matplotlib.rcParams["hatch.linewidth"] = hatchlinewidth_rc
 
-    def text(self, x, y, text='', xycoords='data', color='black',
+    def text(self, x, y, text='', color='black',
              fontsize=14, fontfamily='Segoe UI', fontweight='normal',
              va='top', ha='left', **kwargs):
         '''
@@ -2432,18 +2432,18 @@ class Chart:
             except Exception:
                 print('WARNING: Could not convert ' + str(tail) + ' to pd.Timestamp')
                 
-            self.ax.annotate(xy=head, xytext=tail,
-                             arrowprops=dict(
-                                 facecolor=color,      # Color of the arrow
-                                 edgecolor=edgecolor,  # Color of arrow outline
-                                 linewidth=edgewidth,  # Width of arrow edges
-                                 shrink=shrink,        # Distance from point and text
-                                 width=width,          # Width of the arrow tail in points
-                                 headwidth=headwidth,  # Width of the arrow head base in points
-                                 headlength=headlength # Length of the arrow head in points
-                             ),
-                             va=va, ha=ha,
-                             text=text, xycoords=xycoords, textcoords=textcoords)
+        self.ax.annotate(xy=head, xytext=tail,
+                         arrowprops=dict(
+                             facecolor=color,      # Color of the arrow
+                             edgecolor=edgecolor,  # Color of arrow outline
+                             linewidth=edgewidth,  # Width of arrow edges
+                             shrink=shrink,        # Distance from point and text
+                             width=width,          # Width of the arrow tail in points
+                             headwidth=headwidth,  # Width of the arrow head base in points
+                             headlength=headlength # Length of the arrow head in points
+                         ),
+                         va=va, ha=ha,
+                         text=text, xycoords=xycoords, textcoords=textcoords)
 
     def fill(self, lo, hi, data=None, indexcol=None, axis='left',
              color='red', linecolor='none', linewidth=0, linestyle='-', alpha=0.3,

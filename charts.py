@@ -2391,7 +2391,7 @@ class Chart:
 
     def text(self, x, y, text='', color='black',
              fontsize=14, fontfamily='Segoe UI', fontweight='normal',
-             va='top', ha='left', **kwargs):
+             va='top', ha='left', zorder=1, **kwargs):
         '''
         Add text.
 
@@ -2408,17 +2408,14 @@ class Chart:
         self.ax.text(x, y, text,
                      color=color,
                      fontsize=fontsize, fontfamily=fontfamily, fontweight=fontweight,
-                     va=va, ha=ha)
+                     va=va, ha=ha, zorder=zorder)
     
-    def arrow(self, head=(0, 0), tail=(1, 1),
-              color='black', width=4, headwidth=15, headlength=15, edgecolor=None, edgewidth=0,
-              va='top', ha='left',
-              coords='data', **kwargs):
+    def arrow(self, head=(0, 0), tail=(1, 1), coords='data',
+              color='black', edgecolor=None, edgewidth=0,
+              width=4, headwidth=15, headlength=15, shrink=0.05,
+              zorder=1, **kwargs):
         '''
         Add arrow and text.
-
-        va='top' will align the top of the arrow to the specified value.
-        ha='left' will align the left of the arrow to the specified value.
         '''
 
         if self.xaxis_type == 'datetime' and coords=='data':
@@ -2437,13 +2434,12 @@ class Chart:
                              facecolor=color,      # Color of the arrow
                              edgecolor=edgecolor,  # Color of arrow outline
                              linewidth=edgewidth,  # Width of arrow edges
-                             shrink=0,             # Distance from point and text
+                             shrink=shrink,        # Distance from point and text
                              width=width,          # Width of the arrow tail in points
                              headwidth=headwidth,  # Width of the arrow head base in points
                              headlength=headlength # Length of the arrow head in points
                          ),
-                         va=va, ha=ha,
-                         text='', xycoords=coords, textcoords=coords)
+                         text='', xycoords=coords, textcoords=coords, zorder=zorder)
 
     def fill(self, lo, hi, data=None, indexcol=None, axis='left',
              color='red', linecolor='none', linewidth=0, linestyle='-', alpha=0.3,

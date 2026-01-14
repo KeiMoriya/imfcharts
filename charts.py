@@ -2411,7 +2411,7 @@ class Chart:
                      va=va, ha=ha)
     
     def arrow(self, head=(0, 0), tail=(1, 1),
-              color='black', width=4, headwidth=15, headlength=15, shrink=0.05, arrowstyle='->', edgecolor=None, edgewidth=0,
+              color='black', width=4, headwidth=15, headlength=15, arrowstyle='->', edgecolor=None, edgewidth=0,
               va='top', ha='left',
               coords='data', **kwargs):
         '''
@@ -2437,7 +2437,7 @@ class Chart:
                              facecolor=color,      # Color of the arrow
                              edgecolor=edgecolor,  # Color of arrow outline
                              linewidth=edgewidth,  # Width of arrow edges
-                             shrink=shrink,        # Distance from point and text
+                             shrink=0,             # Distance from point and text
                              width=width,          # Width of the arrow tail in points
                              headwidth=headwidth,  # Width of the arrow head base in points
                              headlength=headlength # Length of the arrow head in points

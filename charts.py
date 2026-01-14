@@ -2443,7 +2443,7 @@ class Chart:
                              headlength=headlength # Length of the arrow head in points
                          ),
                          va=va, ha=ha,
-                         text=text, xycoords=coords, textcoords=coords)
+                         text='', xycoords=coords, textcoords=coords)
 
     def fill(self, lo, hi, data=None, indexcol=None, axis='left',
              color='red', linecolor='none', linewidth=0, linestyle='-', alpha=0.3,

@@ -2413,7 +2413,7 @@ class Chart:
     def arrow(self, head=(0, 0), tail=(1, 1),
               color='black', width=4, headwidth=15, headlength=15, shrink=0.05, arrowstyle='->', edgecolor=None, edgewidth=0,
               va='top', ha='left',
-              text='', xycoords='data', textcoords='data', **kwargs):
+              coords='data', **kwargs):
         '''
         Add arrow and text.
 
@@ -2421,7 +2421,7 @@ class Chart:
         ha='left' will align the left of the arrow to the specified value.
         '''
 
-        if self.xaxis_type == 'datetime' and xycoords=='data':
+        if self.xaxis_type == 'datetime' and coords=='data':
             try:
                 head[0] = pd.Timestamp(head[0])
             except Exception:
@@ -2443,7 +2443,7 @@ class Chart:
                              headlength=headlength # Length of the arrow head in points
                          ),
                          va=va, ha=ha,
-                         text=text, xycoords=xycoords, textcoords=textcoords)
+                         text=text, xycoords=coords, textcoords=coords)
 
     def fill(self, lo, hi, data=None, indexcol=None, axis='left',
              color='red', linecolor='none', linewidth=0, linestyle='-', alpha=0.3,

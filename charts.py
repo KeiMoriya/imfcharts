@@ -2411,7 +2411,7 @@ class Chart:
                      va=va, ha=ha)
     
     def arrow(self, head=(0, 0), tail=(1, 1),
-              color='black', width=4, headwidth=15, headlength=15, arrowstyle='->', edgecolor=None, edgewidth=0,
+              color='black', width=4, headwidth=15, headlength=15, edgecolor=None, edgewidth=0,
               va='top', ha='left',
               coords='data', **kwargs):
         '''
@@ -2601,7 +2601,7 @@ class Chart:
                     print('WARNING: Could not remove existing legend with exception:')
                     print(e)
         
-    def save(self, filename, dpi=250, pad_inches=0.02):
+    def save(self, filename, dpi=250, bbox_inches='tight', pad_inches=0.02):
         '''
         Save information on chart.
         '''
@@ -2621,7 +2621,7 @@ class Chart:
                 print('Could not create dir ' + dirname + ' for filename ' + filename)
 
         try:
-            self.fig.savefig(filename, dpi=dpi, bbox_inches="tight", pad_inches=pad_inches)
+            self.fig.savefig(filename, dpi=dpi, bbox_inches=bbox_inches, pad_inches=pad_inches)
         except Exception as e:
             print('WARNING: Could not create file ' + filename + ' with exception:')
             print(e)

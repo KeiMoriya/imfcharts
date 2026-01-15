@@ -1801,8 +1801,6 @@ chart.vrect(0, 1)
 will draw a shaded region between 0 and 1 in the data coordinates.
 Additional options are below.
 
-| linecolor | 'none' | Specify color of outline of shade. |
-
 | Argument | Default | Description |
 |---|---|---|
 |ymin | 0 | Specify lower y position where shade is drawn in coordinates of data being plotted. |
@@ -2003,21 +2001,375 @@ chart1 = Chart(df, linecols=df.columns, attrs=attrs,
 
 ## Add Text, Arrows, Fill
 
-    def text(self, x, y, text='', xycoords='data', color='black',
-             fontsize=14, fontfamily='Segoe UI', fontweight='normal',
-             va='top', ha='left', **kwargs):
-    def arrow(self, head=(0, 0), tail=(1, 1),
-              color='black', width=4, headwidth=15, headlength=15, shrink=0.05, arrowstyle='->', edgecolor=None, edgewidth=0,
-              va='top', ha='left',
-              text='', xycoords='data', textcoords='data', **kwargs):
+Similar to horizontal/vertical lines and shades, text, arrows and fill reigons can be specified.
+Below is an example of
 
-    def fill(self, lo, hi, data=None, indexcol=None, axis='left',
-             color='red', linecolor='none', linewidth=0, linestyle='-', alpha=0.3,
-             dash_capstyle=None,
-             hatch=None, # hatchlinewidth=None,
-             label='', legend=False,
-             zorder=1,
-             debug=False, **kwarg):
+```{python}
+#| label: text_arrow_fill_data
+#| fig-cap: "Chart with text, arrow, fill."
+
+infilename = 'data/turkey_page1/fig1_chart1_gdp.csv'
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+cols = df.columns
+linecol = cols[0]
+
+# Create a forecast for the next 4 quarters
+p = df.index.max() + 3 * pd.offsets.MonthBegin()
+lastval = df.loc[df.index.max(), linecol]
+dates = pd.date_range(start=p, freq='3MS', end=p + pd.Timedelta(days=600))
+for idate, date in enumerate(dates):
+    forecast = lastval + 0.5 + np.random.normal(scale=0.3)
+    df.loc[date, 'forecast'] = forecast
+    df.loc[date, 'lower']    = forecast - 1.5 - (0.3 + 0.8 * idate) * np.random.random()
+    df.loc[date, 'higher']   = forecast + 1.5 + (0.3 + 0.8 * idate) * np.random.random()
+```
+
+```{python}
+#| label: text_arrow_fill
+#| fig-cap: "Example of text, arrow, fill"
+#| code-fold: show
+attrs = {linecol : {'linewidth' : 4, 'color' : '#004C97',
+                    'marker' : 'o', 'markersize' : 10,
+                    'markerfacecolor' : 'white', 'markeredgewidth' : 4,
+                    'markeredgecolor' : '#004C97'},
+         'forecast' : {'marker' : 'x',
+                       'markersize' : 12,
+                       'linestyle' : '--',
+                       'linewidth' : 0.8,
+                       'color' : 'red'}
+         }
+
+chart1 = Chart(df, linecols=[linecol, 'forecast'],
+               attrs=attrs,
+               title='Contributions to Real GDP Growth',
+               xrange='2023Q1:', yrange=[-5, 9.5])
+
+# Add hline
+chart1.hline(y=1.4, xrange='2023Q1:' + df.index[-1].strftime('%Y-%m'),
+             color=IMFBLACK, linewidth=2.5, linestyle='--', dashes=[10, 4])
+
+# Add fill for two columns in data.
+chart1.fill('lower', 'higher')
+
+# Add text
+text = '''Real GDP growth\nlong-run average\n(1.4 q/q)'''
+chart1.text(pd.Timestamp('2024Q3'), 6.5, text=text, fontweight='bold', color='#004C97')
+
+# Add arrow
+chart1.arrow(head=[pd.Timestamp('2025Q1'), 1.5], tail=[pd.Timestamp('2025Q1'), 5],
+             color='#004C97')
+```
+
+The syntax is straightforward, text is added by specifying the x, y coordinates as well as the text to show.
+Arrows need coordinates for a head and a tail. Fill is added by specifying columns of a `pandas.DataFrame` that
+specify the region to be filled. For all of these, the usual attributes such as `color` etc. can be specified.
+Internally, text is added with `Matplotlib`'s `ax.text()`, arrows are added with `ax.annotate()`,
+and fill is added with `ax.fill_between()`.
+
+The options available for `text()` are below.
+
+| Argument | Default | Description |
+|---|---|---|
+| x | | x coordinate of text. |
+| y | | y coordinate of text. |
+| text | '' | The text to be shown. |
+| color | 'black' | Color of text |
+| fontsize | 14 | Font size of text |
+| fontfamily | 'Segoe UI' | Text font |
+| fontweight | 'normal' | Choose font weight from [options](https://matplotlib.org/stable/users/explain/text/text_props.html){target="_blank"} available |
+| va | 'top' | Vertical alignment of text |
+| ha | 'left' | Horizontal alignment of text |
+| zorder | 1 | Specify the drawing order, higher values are shown on top of other objects. |
+
+The options available for `arrow()` are below.
+
+| Argument | Default | Description |
+|---|---|---|
+| 'head' | `(0, 0)` | Head position of arrow. |
+| 'tail' | `(0, 0)` | Tail position of arrow. |
+| color | 'black' | Color of arrow |
+| headwidth | 15 | Width of arrow head |
+| headlength | 15 | Length of arrow head |
+| edgecolor | `None` | Edge color of arrow |
+| edgewidth | 0 | Edge width of arrow |
+| va | 'top' | Vertical alignment of text |
+| ha | 'left' | Horizontal alignment of text |
+| coords | 'data' |Coordinates of `head` and `tail`. Can specify `'axes fraction'` instead of `'data'` if setting position irrespective of charting data. |
+| zorder | 1 | Specify the drawing order, higher values are shown on top of other objects. |
+
+The options available for `fill` are below.
+
+| Argument | Default | Description |
+|---|---|---|
+| lo |  | Column name in data for the lower bound of filled area. |
+| hi |  | Column name in data for the higher bound of filled area. |
+| data | None | Data to use, in the form of a `pandas.DataFrame`. If no data is specified, will try to use any data that was previously specified to create this chart |
+| indexcol | None | By default the input `pandas.DataFrame`'s index is used as the x-axis. If this is a column in the DataFrame, specify using this option. |
+| axis | 'left' | Specify which y-axis to plot on |
+| color | 'red' | Color of arrow |
+| linecolor |'none' | Color of edges. |
+| linewidth |0 | Width of edges. |
+| linestyle |'-' | Line style of edges, specify a [valid line style](https://matplotlib.org/stable/gallery/lines_bars_and_markers/linestyles.html){target="_blank"} |
+| alpha | 0.3 | Apply transparency to color of area, specify as float between 0 and 1. |
+| dashes, dash_capstyle | Advanced options to specify cap styles |
+| label | '' | When `legend` is `True`, a legend entry is created using this label.  |
+| legend | `False` | If `False`, do not show this entry in the legend |
+| zorder | 0 | Specify the drawing order, higher values are shown on top of other objects. |
+| debug | False | Show information when running. |
+
+Below is a gallery of various options to add text, arrow, and fills.
+
+```{python}
+#| label: text_arrow_fill_data2
+#| fig-cap: "Chart with text, arrow, fill."
+
+infilename = 'data/turkey_page1/fig1_chart1_gdp.csv'
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+cols = df.columns
+linecol = cols[0]
+
+# Create a forecast for the next 4 quarters
+p = df.index.max() + 3 * pd.offsets.MonthBegin()
+lastval = df.loc[df.index.max(), linecol]
+dates = pd.date_range(start=p, freq='3MS', end=p + pd.Timedelta(days=600))
+for idate, date in enumerate(dates):
+    forecast = lastval + 0.5 + np.random.normal(scale=0.3)
+    df.loc[date, 'forecast'] = forecast
+    df.loc[date, '25%'] = forecast - 1.5 - (0.3 + 0.8 * idate) * np.random.random()
+    df.loc[date, '75%'] = forecast + 1.5 + (0.3 + 0.8 * idate) * np.random.random()
+    df.loc[date, '10%'] = forecast - 4.5 - (0.3 + 0.5 * idate) * np.random.random()
+    df.loc[date, '90%'] = forecast + 4.5 + (0.3 + 0.5 * idate) * np.random.random()
+```
+
+::: {.panel-tabset}
+
+### No options
+
+```{python}
+#| label: gallery_text_arrow_fill_nooptions
+#| fig-cap: "No options"
+#| code-fold: show
+
+chart1 = Chart(df, linecols=[linecol, 'forecast'],
+               title='No options',
+               xrange='2023Q1:', yrange=[-5, 9.5])
+
+# Add hline
+chart1.hline(y=1.4)
+
+# Add fill for two columns in data.
+chart1.fill('25%', '75%')
+
+# Add text
+text = '''Real GDP growth\nlong-run average\n(1.4 q/q)'''
+chart1.text(pd.Timestamp('2024Q3'), 6.5, text=text)
+
+# Add arrow
+chart1.arrow(head=[pd.Timestamp('2025Q1'), 1.5], tail=[pd.Timestamp('2025Q1'), 5])
+```
+
+### With Options
+
+In the below each object is multiple attributes set.
+Notice that for `arrow()` the `coords='axes fraction'` so that the `head` and `tail`
+are specified in coordinates of the axes where the bottom left is (0, 0) and the top right is (1, 1).
+
+```{python}
+#| label: gallery_text_arrow_fill_options
+#| fig-cap: "With options"
+#| code-fold: show
+
+chart1 = Chart(df, linecols=[linecol, 'forecast'],
+               title='With options',
+               xrange='2023Q1:', yrange=[-5, 9.5])
+
+# Add hline
+chart1.hline(y=1.4, xrange='2023Q1:' + df.index[-1].strftime('%Y-%m'),
+             color=IMFGREEN, linewidth=2.5, linestyle='-.', dashes=[10, 4])
+
+# Add fill for two columns in data.
+chart1.fill('25%', '75%', color='yellow', alpha=0.3, linecolor='orange', linewidth=1.5, linestyle='--')
+
+# Add text
+text = '''Real GDP growth\nlong-run average\n(1.4 q/q)'''
+chart1.text(pd.Timestamp('2024Q3'), 6.5, text=text, fontsize=10, fontfamily='monospace', fontweight='bold')
+
+# Add arrow
+chart1.arrow(head=[pd.Timestamp('2025Q1'), 1.5],
+             tail=[pd.Timestamp('2025Q1'), 5],
+             color='#004C97',
+             edgecolor='red', edgewidth=1,
+             width=6, headwidth=7, headlength=20)
+```
+
+### Coordinates in `'axes fraction'`
+
+In the below each object is multiple attributes set.
+For `arrow()` we set `coords='axes fraction'` so that the `head` and `tail`
+are specified in coordinates of the axes where the bottom left is (0, 0) and the top right is (1, 1).
+This allows adding the arrow irrespective of the data being charted.
+
+```{python}
+#| label: gallery_text_arrow_fill_axesfraction
+#| fig-cap: "Axes fractions"
+#| code-fold: show
+
+chart1 = Chart(df, linecols=[linecol, 'forecast'],
+               title='Specify position with "axes fraction"',
+               xrange='2023Q1:', yrange=[-5, 9.5])
+
+# Add hline
+chart1.hline(y=1.4, xrange='2023Q1:' + df.index[-1].strftime('%Y-%m'),
+             color=IMFGREEN, linewidth=2.5, linestyle='-.', dashes=[10, 4])
+
+# Add fill for two columns in data.
+chart1.fill('25%', '75%', color='yellow', alpha=0.3, linecolor='orange', linewidth=1.5, linestyle='--')
+
+# Add text
+text = '''Real GDP growth\nlong-run average\n(1.4 q/q)'''
+chart1.text(pd.Timestamp('2024Q3'), 6.5, text=text, fontsize=14, fontfamily='monospace', fontweight='bold')
+
+# Add arrow
+chart1.arrow(head=[0.60, 0.5], tail=[0.60, 0.6], coords='axes fraction',
+             width=6, headwidth=7, headlength=20)
+```
+
+### Arrow Options
+
+Each `arrow` that spans a year each is accompanied by `text` displaying its options.
+The default is to use `width=4, headwidth=15, headlength=15, shrink=0.05`
+so that the arrow is shrunk by 5% to the specified `head` and `tail`.
+Other arrows demonstrate setting `shrink=0`, changing the `headwidth` and `headlength`,
+and arrow width with `width`. For the rightmost blue arrow, `zorder=-1` is set so that
+the arrow appears underneath the vertical lines.
+
+```{python}
+#| label: gallery_text_arrow_fill_arrowoptions
+#| fig-cap: "Options for Arrows"
+#| code-fold: show
+
+chart1 = Chart(df, linecols=[linecol, 'forecast'],
+               title='arrow options',
+               xrange='2023Q1:', yrange=[-5, 9.5])
+
+# Add hline
+chart1.hline(y=1.4, xrange='2023Q1:' + df.index[-1].strftime('%Y-%m'),
+             color=IMFGREEN, linewidth=2.5, linestyle='-.', dashes=[10, 4])
+
+# Add fill for two columns in data.
+chart1.fill('25%', '75%', color='yellow', alpha=0.3, linecolor='orange', linewidth=1.5, linestyle='--')
+
+# Add vertical lines at each year
+for year in range(2023, 2027+1):
+    chart1.vline(x=str(year)+'-01', color='red', alpha=0.7, linestyle='--')
+
+# Add arrow
+chart1.arrow(tail=['2023Q1', -4], head=['2024Q1', -4], coords='data')
+chart1.text(pd.Timestamp('2023Q1'), -4.5, 'default',
+            fontsize=6)
+    
+# Add arrow
+chart1.arrow(tail=['2023Q1', -2], head=['2024Q1', -2], coords='data',
+             color='pink', edgecolor='red', edgewidth=1, 
+             width=1, headwidth=5, headlength=5, shrink=0)
+chart1.text(pd.Timestamp('2023Q1'), -1.5, 'width=1, headwidth=5, headlength=5, shrink=0',
+            fontsize=6)
+
+# Add arrow
+chart1.arrow(tail=['2024Q1', -2], head=['2025Q1', -2], coords='data',
+             color='pink', edgecolor='yellow', edgewidth=1, 
+             width=1, headwidth=15, headlength=5, shrink=0.05)
+chart1.text(pd.Timestamp('2024Q1'), -2.5, 'width=1, headwidth=15, headlength=5, shrink=0.05',
+            fontsize=6)
+
+# Add arrow
+chart1.arrow(tail=['2025Q1', -2], head=['2026Q1', -2], coords='data',
+             color='pink', edgecolor='green', edgewidth=2,
+             width=2, headwidth=5, headlength=15, shrink=0)
+chart1.text(pd.Timestamp('2025Q1'), -1.5, 'width=2, headwidth=5, headlength=15, shrink=0',
+            fontsize=6)
+
+# Add arrow
+chart1.arrow(tail=['2026Q1', -2], head=['2027Q1', -2], coords='data',
+             color='pink', edgewidth=0,
+             width=2, headwidth=5, headlength=15, shrink=0, zorder=-1)
+chart1.text(pd.Timestamp('2026Q1'), -2.5, 'edgewidth=0, width=2, headwidth=5, headlength=15, shrink=0',
+            fontsize=6)
+```
+
+### Multiple Bands
+
+An example showing how to have multiple bands.
+
+```{python}
+#| label: gallery_text_arrow_fill_multiple
+#| fig-cap: "Multiple Fills"
+#| code-fold: show
+
+chart1 = Chart(df, linecols=[linecol, 'forecast'],
+               title='Multiple bands',
+               xrange='2023Q1:', yrange=[-5, 9.5])
+
+# Add fill for 25-75 percentile
+chart1.fill('25%', '75%', color='grey', alpha=0.7,
+            label=r'$1 \sigma$', legend=True)
+
+# Add fill between 10-25 percentile
+chart1.fill('10%', '25%', color='grey', alpha=0.3,
+            label=r'$2 \sigma$', legend=True)
+
+# Add fill between 75-90 percentile
+chart1.fill('75%', '90%', color='grey', alpha=0.3)
+```
+
+### Adding Directly in `Chart()` Using `dict`s
+
+An example of how to add text, arrows, and fill directly in `Chart()`.
+Each input is set up as a `dict` and passed in as a `list` of `dict`s to `Chart()`.
+
+```{python}
+#| label: gallery_text_arrow_fill_kwargs
+#| fig-cap: "Using `dict` to add Text, Arrow, Fill"
+#| code-fold: show
+
+kw_hline = {'y' : 1.4, 'xrange' : '2020Q1:' + df.index[-1].strftime('%Y-%m'),
+            'color' : IMFBLACK, 'linewidth' : 2.5, 'linestyle' : '--', 'dashes' : [10, 4]}
+
+
+text = '''Real GDP growth
+long-run average
+(1.4 q/q)'''
+
+kw_text = {'x' : pd.Timestamp('2024Q3'), 'y' : 6.5, 'text' : text,
+           'fontweight' : 'bold', 'color' : '#004C97'}
+
+kw_arrow = {'head' : [pd.Timestamp('2025Q1'), 1.5],
+            'tail' : [pd.Timestamp('2025Q1'), 5],
+            'color' : '#004C97'}
+
+kw_fills_mid = {'lo' : '25%', 'hi' : '75%',
+                'color' : 'grey', 'alpha' : 0.7,
+                'label' : r'$1 \sigma$', 'legend' : True}
+
+kw_fills_lo = {'lo' : '10%', 'hi' : '25%',
+                'color' : 'grey', 'alpha' : 0.3,
+                'label' : r'$2 \sigma$', 'legend' : True}
+
+kw_fills_hi = {'lo' : '75%', 'hi' : '90%',
+                'color' : 'grey', 'alpha' : 0.3}
+
+chart1 = Chart(df, linecols=[linecol, 'forecast'],
+               hlines=[kw_hline], # Add hline via kwargs
+               texts = [kw_text], # Add text via kwargs
+               arrows = [kw_arrow], # Add arrow via kwargs
+               fills=[kw_fills_mid, kw_fills_lo, kw_fills_hi],
+               title='dict inputs',
+               xrange='2023Q1:', yrange=[-5, 9.5])
+```
+
+
+:::
+
 
 ## Additional Options{#sec-basics-additional}
 

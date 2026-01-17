@@ -58,6 +58,7 @@ REDCIRCLES = {'linewidth' : 0,
 # Set default style
 try:
     set_style('imf-articleiv')
-except Exception:
-    pass
+except Exception as e:
+    print('Could not set style with exception:')
+    print(e)
 

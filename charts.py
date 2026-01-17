@@ -125,7 +125,22 @@ class Chart:
                  alpha=1,
                  # title options ------------------------------------------------
                  title=None,
-                 subtitle = None,
+                 titlecolor=None,
+                 titlefontsize=18,
+                 titlefont='Segoe UI',
+                 titlefontweight='bold',
+                 titleloc='left',
+                 titley=1.05,
+                 
+                 subtitle=None,
+                 subtitlecolor='#4B82AD',
+                 subtitlefont='Segoe UI',
+                 subtitlefontsize=12,
+                 subtitlefontweight='normal',
+                 subtitleha='left',
+                 subtitleva='center',
+                 subtitley=1.03,
+                 
                  # h/vlines, h/vrects, texts, arrows ----------------------------
                  hlines=None, vlines=None, hrects=None, vrects=None, fills=None, texts=None, arrows=None,
                  xtitle='', ytitle='',
@@ -212,8 +227,22 @@ class Chart:
         self.height = height
 
         self.title = title
+        self.titlecolor = titlecolor
+        self.titlefontsize = titlefontsize
+        self.titlefontweight = titlefontweight
+        self.titlefont = titlefont
+        self.titleloc = titleloc
+        self.titley = titley
+        
         self.subtitle = subtitle
-
+        self.subtitlecolor = subtitlecolor
+        self.subtitlefont = subtitlefont
+        self.subtitlefontsize = subtitlefontsize
+        self.subtitlefontweight = subtitlefontweight
+        self.subtitleha = subtitleha
+        self.subtitleva = subtitleva
+        self.subtitley = subtitley
+        
         self.xtitle = xtitle
         self.ytitle = ytitle
 
@@ -540,27 +569,115 @@ class Chart:
                 print('After applying trim, self.data:')
                 print(self.data)
 
-    def set_title(self, title, loc='left', y=1.05, fontweight='bold', fontname='Segoe UI'):
-        if title is not None:
-            self.title = str(title)
-            self.ax.set_title(str(title), loc=loc, y=y,
-                              fontweight=fontweight, fontname=fontname)
+    def set_title(self, title, color=None, fontsize=None, font=None, fontweight=None,
+                  loc=None, y=None,
+                  debug=False):
 
-    def set_subtitle(self, subtitle):
-        if self.subtitle is not None:
-            font_properties = {
-                'family': 'Segoe UI',
-                'size': 12,
-                'color': '#4B82AD'
-            }
+        # Use title if it is given, otherwise use self.title.
+        # If both are None don't do anything
+        if title is None:
+            title = self.title
+            if title is None:
+                return
+
+        # For other params use rcParams, if self attributes are set, override.
+        # Further override with input params.
+        if fontsize is None:
+            fontsize = self.titlefontsize
+            if fontsize is None:
+                fontsize = matplotlib.rcParams['axes.titlesize']
+
+        if color is None:
+            color = self.titlecolor
+            if color is None:
+                color = matplotlib.rcParams['axes.titlecolor']
+                
+        if font is None:
+            font = self.titlefont
+            if font is None:
+                font = matplotlib.rcParams['font.sans-serif']
+
+        if fontweight is None:
+            fontweight = self.titlefontweight
+            if fontweight is None:
+                fontweight = matplotlib.rcParams['figure.titleweight']
+
+        if loc is None:
+            loc = self.titleloc
+            if loc is None:
+                # No rcParam, default to left
+                loc = 'left'
+
+        if y is None:
+            y = self.titley
+            if y is None:
+                y = matplotlib.rcParams['axes.titley']
+
+
+        if debug:
+            print('title = ' + str(title) + ' color = ' + str(color) + ' loc = ' + str(loc) + ' y = ' + str(y))
+            print('fontweight = ' + str(fontweight) + ' fontname = ' + str(font) + ' fontsize = ' + str(fontsize))
             
-            self.ax.text(0., 1.03, subtitle,
-                         horizontalalignment='left',
-                         verticalalignment='center',
-                         transform=self.ax.transAxes,
-                         fontdict=font_properties)
-                         # color='#4B82AD',
-                         # fontsize=12)
+        self.ax.set_title(str(title), color=color, loc=loc, y=y,
+                          fontweight=fontweight, fontname=font, fontsize=fontsize)
+
+    def set_subtitle(self, subtitle, color=None, fontsize=None, font=None, fontweight=None,
+                     ha=None, va=None, y=None,
+                     debug=False):
+
+        # Use title if it is given, otherwise use self.subtitle.
+        # If both are None don't do anything
+        if subtitle is None:
+            subtitle = self.subtitle
+            if subtitle is None:
+                return
+        
+        # For other params use rcParams, if self attributes are set, override.
+        # Further override with input params.
+        if fontsize is None:
+            fontsize = self.subtitlefontsize
+            if fontsize is None:
+                fontsize = 12
+
+        if color is None:
+            color = self.subtitlecolor
+            if color is None:
+                color = matplotlib.rcParams['axes.titlecolor']
+                
+        if font is None:
+            font = self.subtitlefont
+            if font is None:
+                font = matplotlib.rcParams['font.sans-serif']
+
+        if fontweight is None:
+            fontweight = self.subtitlefontweight
+            if fontweight is None:
+                fontweight = matplotlib.rcParams['figure.titleweight']
+
+        if ha is None:
+            ha = self.subtitleha
+            if ha is None:
+                # No rcParam, default to left
+                ha = 'left'
+
+        if va is None:
+            va = self.subtitleva
+            if va is None:
+                # No rcParam, default to center
+                va = 'center'
+                
+        if y is None:
+            y = self.subtitley
+            if y is None:
+                y = 1.03
+
+        if debug:
+            print('subtitle = ' + str(subtitle) + ' color = ' + str(color) + ' ha = ' + str(ha) + ' va = ' + str(va) + ' y = ' + str(y))
+            print('fontweight = ' + str(fontweight) + ' fontname = ' + str(font) + ' fontsize = ' + str(fontsize))
+
+        self.ax.text(0., y, subtitle,
+                     color=color, fontsize=fontsize, fontweight=fontweight, fontname=font,
+                     horizontalalignment=ha, verticalalignment=va, transform=self.ax.transAxes)
         
     def set_xtitle(self, xtitle, xtitlesize=None):
         self.xtitle = xtitle
@@ -2051,7 +2168,7 @@ class Chart:
             print('Chart.topxaxis must be "left" or "right", given ' + str(topxaxis))
 
     def hline(self, y, xrange=None, coordinates='data', color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None,
-              label='', legend=False, zorder=0,
+              label='', legend=False, zorder=3,
               debug=False, **kwarg):
         '''
         Add horizontal line across figure.
@@ -2121,7 +2238,7 @@ class Chart:
                 print('called update_legend()')
             
     def vline(self, x, yrange=None, coordinates='data', width=1, color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None,
-              label='', legend=False, zorder=0,
+              label='', legend=False, zorder=3,
               debug=False, **kwarg):
         '''
         Add vertical line across figure.

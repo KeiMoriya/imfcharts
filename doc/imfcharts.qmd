@@ -725,7 +725,7 @@ chart.bars(data=df, cols='Inflation')
 chart.set_xrange([0, 3])
 
 # Set title
-chart.set_title('Domestic Growth (Annual)')
+chart.title('Domestic Growth (Annual)')
 
 # Add horizontal band
 chart.hrect(y0=0, y1=3, color='grey', alpha=0.3)
@@ -871,6 +871,8 @@ The available keys for a column within `attrs` are:
 | dashes, dash_capstyle | Advanced options to specify cap styles |
 | legend | If `False`, do not show this entry in the legend |
 
+: {tbl-colwidths="[10,90]"}
+
 A fuller example is below.
 ```{python}
 #| label: lines_all_options
@@ -926,6 +928,8 @@ Internally, lines are added with the function `Chart.lines()`, options for this 
 | yrange | None | Override existing `yrange` of this object and set y-axis range |
 | ryrange | None | Override existing `ryrange` of this object and set right y-axis range |
 | debug | False | Show information when running. |
+
+: {tbl-colwidths="[10,10, 80]"}
 
 When drawing lines, set the option `drawstyle` to `steps-post` to set the line style to be steps.
 This is useful for example when plotting the monetary policy rate.
@@ -1118,6 +1122,8 @@ The available options in `attrs` for bars is as follows:
 | barcolors | Specify color of individual colors of bars using the index of the data. See example below. |
 | offset | If `stack=False`, specify custom offset of x-axis position for this column. |
 
+: {tbl-colwidths="[10,90]"}
+
 The `attrs` keywords are set so that when possible, for example for `color` it is the same as with those for when calling `lines()`,
 so that it is easy to switch from a line chart to a bar chart using the same `attrs` if the attributes are the same.
 
@@ -1182,6 +1188,8 @@ Options for `Chart.bars()` are:
 | yrange | None | Override existing `yrange` of this object and set y-axis range |
 | ryrange | None | Override existing `ryrange` of this object and set right y-axis range |
 | debug | False | Show information when running. |
+
+: {tbl-colwidths="[10,10, 80]"}
 
 Again, note that many options are the same as for `Chart.lines()`.
 Below is a gallery of bar charts with various options.
@@ -1462,6 +1470,8 @@ Below are the options for an area graph, many are similar to that for bar graphs
 | edgecolor | Specify color of lines for the edges of the bars. |
 | legend | If `False`, do not add to legend. |
 
+: {tbl-colwidths="[10,90]"}
+
 All of these options are the same as for `bars()` except for `alpha`.
 
 An example with customized area attrs is below.
@@ -1520,6 +1530,8 @@ are determined in the order of
 | yrange | None | Override existing `yrange` of this object and set y-axis range |
 | ryrange | None | Override existing `ryrange` of this object and set right y-axis range |
 | debug | False | Show information when running. |
+
+: {tbl-colwidths="[10,10, 80]"}
 
 Again, note that many options are the same as for `Chart.lines()` and especially `Chart.bars()`, so that switching
 between bars and area graphs based on aesthetics is easy to do.
@@ -1727,13 +1739,15 @@ Further options listed below allows customization.
 | coordinates | 'data' | If this is `data` and the chart is plotting a time series, `xrange` will be interpreted as time ranges. |
 | color | 'red' | Specify color of line, see sec-basics-misc-colors for valid colors. |
 | linewidth |None | Width of edges of line. |
-| linestyle | A valid `Matplotlib` line style specified [here](https://matplotlib.org/stable/gallery/lines_bars_and_markers/linestyles.html){target="_blank"}. Special implementations such as "imfdash", "imfround" are implemented which mimic Excel styles. |
+| linestyle | '-' | A valid `Matplotlib` line style specified [here](https://matplotlib.org/stable/gallery/lines_bars_and_markers/linestyles.html){target="_blank"}. Special implementations such as "imfdash", "imfround" are implemented which mimic Excel styles. |
 | alpha | 1 | Apply transparency to color of area, specify as float between 0 and 1. |
-| dashes, dash_capstyle | Advanced options to specify cap styles |
+| dashes, dash_capstyle | None | Advanced options to specify cap styles |
 | label | '' | When `legend` is `True`, a legend entry is created using this label.  |
 | legend | `False` | If `False`, do not show this entry in the legend |
 | zorder | 0 | Specify the drawing order, higher values are shown on top of other objects. |
 | debug | False | Show information when running. |
+
+: {tbl-colwidths="[10,10, 80]"}
 
 ### Horizontal Rectangles
 
@@ -1756,14 +1770,16 @@ Additional options are below.
 | color | 'red' | Specify color of line, see sec-basics-misc-colors for valid colors. |
 | linecolor | 'none' | Specify color of outline of shade. |
 | linewidth | 0 | Width of edges of shade. |
-| linestyle | A valid `Matplotlib` line style specified [here](https://matplotlib.org/stable/gallery/lines_bars_and_markers/linestyles.html){target="_blank"}. Special implementations such as "imfdash", "imfround" are implemented which mimic Excel styles. |
+| linestyle | None | A valid `Matplotlib` line style specified [here](https://matplotlib.org/stable/gallery/lines_bars_and_markers/linestyles.html){target="_blank"}. Special implementations such as "imfdash", "imfround" are implemented which mimic Excel styles. |
 | alpha | 0.3 | Apply transparency to color of area, specify as float between 0 and 1. |
-| dashes, dash_capstyle | Advanced options to specify cap styles |
+| dashes, dash_capstyle | None | Advanced options to specify cap styles |
 | hatch | None | Specify hatches to draw |
 | label | '' | When `legend` is `True`, a legend entry is created using this label.  |
 | legend | `False` | If `False`, do not show this entry in the legend |
 | zorder | 0 | Specify the drawing order, higher values are shown on top of other objects. |
 | debug | False | Show information when running. |
+
+: {tbl-colwidths="[10,10, 80]"}
 
 ### Vertical Lines
 
@@ -1783,11 +1799,13 @@ Further options listed below allows customization.
 | linewidth | 1 | Width of edges of line. |
 | linestyle | '-' | A valid `Matplotlib` line style specified [here](https://matplotlib.org/stable/gallery/lines_bars_and_markers/linestyles.html){target="_blank"}. Special implementations such as "imfdash", "imfround" are implemented which mimic Excel styles. |
 | alpha | 1 | Apply transparency to color of area, specify as float between 0 and 1. |
-| dashes, dash_capstyle | Advanced options to specify cap styles |
+| dashes, dash_capstyle | None | Advanced options to specify cap styles |
 | label | '' | When `legend` is `True`, a legend entry is created using this label.  |
 | legend | `False` | If `False`, do not show this entry in the legend |
 | zorder | 0 | Specify the drawing order, higher values are shown on top of other objects. |
 | debug | False | Show information when running. |
+
+: {tbl-colwidths="[10,10, 80]"}
 
 ### Vertical Shades
 
@@ -1810,22 +1828,24 @@ Additional options are below.
 | color | 'red' | Specify color of line, see sec-basics-misc-colors for valid colors. |
 | linecolor | 'none' | Specify color of outline of shade. |
 | linewidth |0 | Width of edges of shade. |
-| linestyle | A valid `Matplotlib` line style specified [here](https://matplotlib.org/stable/gallery/lines_bars_and_markers/linestyles.html){target="_blank"}. Special implementations such as "imfdash", "imfround" are implemented which mimic Excel styles. |
+| linestyle | '-' | A valid `Matplotlib` line style specified [here](https://matplotlib.org/stable/gallery/lines_bars_and_markers/linestyles.html){target="_blank"}. Special implementations such as "imfdash", "imfround" are implemented which mimic Excel styles. |
 | alpha | 0.3 | Apply transparency to color of area, specify as float between 0 and 1. |
-| dashes, dash_capstyle | Advanced options to specify cap styles |
+| dashes, dash_capstyle | None | Advanced options to specify cap styles |
 | hatch | None | Specify hatches to draw |
 | label | '' | When `legend` is `True`, a legend entry is created using this label.  |
 | legend | `False` | If `False`, do not show this entry in the legend |
 | zorder | 0 | Specify the drawing order, higher values are shown on top of other objects. |
 | debug | False | Show information when running. |
 
+: {tbl-colwidths="[10,10, 80]"}
+
 Below is a gallery showing how to add lines and shades.
 
 ::: {.panel-tabset}
 
 ```{python}
+#| label: gallery_lines_rects_data
 
-# Read in data
 infilename = 'data/turkey_page2/fig2_chart1_inflation.csv'
 df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 ```
@@ -2081,6 +2101,8 @@ The options available for `text()` are below.
 | ha | 'left' | Horizontal alignment of text |
 | zorder | 1 | Specify the drawing order, higher values are shown on top of other objects. |
 
+: {tbl-colwidths="[10,10, 80]"}
+
 The options available for `arrow()` are below.
 
 | Argument | Default | Description |
@@ -2096,6 +2118,8 @@ The options available for `arrow()` are below.
 | ha | 'left' | Horizontal alignment of text |
 | coords | 'data' |Coordinates of `head` and `tail`. Can specify `'axes fraction'` instead of `'data'` if setting position irrespective of charting data. |
 | zorder | 1 | Specify the drawing order, higher values are shown on top of other objects. |
+
+: {tbl-colwidths="[10,10, 80]"}
 
 The options available for `fill` are below.
 
@@ -2116,6 +2140,8 @@ The options available for `fill` are below.
 | legend | `False` | If `False`, do not show this entry in the legend |
 | zorder | 0 | Specify the drawing order, higher values are shown on top of other objects. |
 | debug | False | Show information when running. |
+
+: {tbl-colwidths="[10,10, 80]"}
 
 Below is a gallery of various options to add text, arrow, and fills.
 
@@ -2367,16 +2393,106 @@ chart1 = Chart(df, linecols=[linecol, 'forecast'],
                xrange='2023Q1:', yrange=[-5, 9.5])
 ```
 
-
 :::
 
+## Additional Functions{#sec-basics-additional}
 
-## Additional Options{#sec-basics-additional}
+Further functions exist for creating or customizing charts and also manipulating them.
 
-### Adding Titles, Subtitles, axis titles.
+### Showing and Saving `Chart`
+
+Once a `Chart` object is created, the following functions can be called on it:
+```python
+# Show chart on the screen
+chart.show()
+
+# Save the chart
+chart.save('chart.pdf')
+```
+
+Note that the `Chart.show()` function attempts to saves the `Chart` object to a png file and shows it.
+While `Matplotlib` `Figure` objects have a `show()` function, the output displayed can be different from
+what is saved due to screen resolution, backend being used, and environment variables from different libraries.
+Due to these complications, the `Chart.show()` function shows a saved png image which is what the user will get as output.
+
+To save a `Chart`, specify the filename with appropriate extension, typically pdf or png.
+Further options are
+
+| Argument | Default | Description |
+|---|---|---|
+| dpi | 250 | Resolution for image, only affects png and other rastered images (not pdf). |
+| bbox_inches | 'tight' | Tightly remove additional unused space from the image. |
+| pad_inches | 0.02 | Padding, in inches around the image for white space. |
+
+: {tbl-colwidths="[10,10, 80]"}
+
+In most cases the defaults should provide good results.
+There are no further options for `Chart.show()`. It is also possible to use the `Chart.save()` function
+directly and open the resulting image.
+
+### Adding Titles, Subtitles
 
 The `Chart()` function has arguments `title` and `subtitle` which allow specifying titles and subtitles, respectively.
-Internally these call `Chart.title()` and `Chart.subtitle()`.
+Internally these call `Chart.title()` and `Chart.subtitle()` but have similar options.
+The `imfcharts` library is set up so that by using the default arugments the titles should appear correctly for each publication type,
+and in general it should only be necessary to specify the text.
+
+The simplest way to set a title and subtitle are when creating the chart:
+
+```{python}
+#| label: basics_additional_title
+#| fig-cap: "Specifying title, subtitle"
+#| code-fold: show
+infilename = 'data/turkey_page2/fig2_chart3_mp.csv'
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+
+chart = Chart(df, linecols=df.columns,
+              title='Monetary Policy Rate',
+              subtitle='(Percent)',
+              colorcycle=['red', 'green', 'blue'],
+              linewidth=3,
+              xrange='2023-01:', yrange=[0, 90])
+```
+
+Options for setting the title are below.
+
+| Argument | Default | Description |
+|---|---|---|
+| title | None | The title to be shown. |
+| color | 'black' | Color of title. When calling `Chart()` this is `titlecolor`. |
+| fontsize | 14 | Font size of title. When calling `Chart()` this is `titlefontsize`. |
+| font | 'Segoe UI' | Title font. When calling `Chart()` this is `titlefont`. |
+| fontweight | 'normal' | Choose font weight from [options](https://matplotlib.org/stable/users/explain/text/text_props.html){target="_blank"} available. When calling `Chart()` this is `titlefontweight`. |
+| loc | None | Horizontal alignment of title. When calling `Chart()` this is `titleloc`. |
+| y |None | y coordinate of text. When calling `Chart()` this is `titley`. |
+
+: {tbl-colwidths="[10,10, 80]"}
+
+The title can be set after the `Chart` object is created with
+```python
+chart.set_title(title)
+```
+and any of the options above.
+
+Options for setting the subtitle are below.
+
+| Argument | Default | Description |
+|---|---|---|
+| subtitle | None | The subtitle to be shown. |
+| color | 'black' | Color of subtitle. When calling `Chart()` this is `subtitlecolor`. |
+| fontsize | 14 | Font size of subtitle. When calling `Chart()` this is `subtitlefontsize`. |
+| font | 'Segoe UI' | Subtitle font. When calling `Chart()` this is `subtitlefont`. |
+| fontweight | 'normal' | Choose font weight from [options](https://matplotlib.org/stable/users/explain/text/text_props.html){target="_blank"} available. When calling `Chart()` this is `subtitlefontweight`. |
+| ha | None | Horizontal alignment of subtitle. When calling `Chart()` this is `subtitleha`. |
+| va | None | Vertical alignment of subtitle. When calling `Chart()` this is `subtitleva`. |
+
+: {tbl-colwidths="[10,10, 80]"}
+
+The subtitle can be set after the `Chart` object is created with
+```python
+chart.set_subtitle(subtitle)
+```
+and any of the options above.
 
 Axes titles are set within `Chart()` with arguments `xtitle` and `yttile`, together with `xtitlesize`, `ytitlesize`.
 Internally these call `Chart.set_xtitle(xtitle, xtitlesize)` and `Chart.set_ytitle(ytitle, ytitlesize)`.
@@ -2408,10 +2524,6 @@ Internally these call `Chart.set_xtitle(xtitle, xtitlesize)` and `Chart.set_ytit
                  show_legend=True,
     def update_legend(self,
     def set_show_legend(self, option):
-
-### Show, save `Chart`.
-    def save(self, filename, dpi=250):
-    def show(self, debug=False):
 
 ### Show left or right x-axis on top.
     `topxaxis`.

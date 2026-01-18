@@ -2747,10 +2747,24 @@ class Chart:
         if debug:
             print('Calling show')
 
-        # This is necessary to update charts after they have been shown.
-        self.fig.canvas.draw()
+        # The below does not work because due to screen resolution
+        # and other factors, the image shown will not match exactly the saved output.
+        ### # This is necessary to update charts after they have been shown.
+        ### self.fig.canvas.draw()
+        ### self.fig.show()
+
+        # To ensure what the user sees is what is saved, save the image as png
+        # and show the output.
+        tmpfilename = "__preview.png"
+        try:
+            self.fig.savefig(tmpfilename, dpi=250)
+        except Exception as e:
+            print('WARNING: Could not save temporary image ' + tmpfilename + ':')
+            print(e)
+            return
         
-        self.fig.show()
+        from PIL import Image
+        Image.open(tmpfilename).show()
 
     def set_show_legend(self, option):
         if option:

@@ -59,6 +59,7 @@ chart1 = Chart(df, linecols=['Capital', 'Core capital'], rlinecols=riskcol,
 
 # Save
 chart1.save(outdir + '/page6_chart1_current_account.pdf')
+chart1.save(outdir + '/page6_chart1_current_account.png')
 
 # ---------------------------------------------------------------------------------------------------------
 # p. 6 Chart 2
@@ -84,6 +85,7 @@ chart2 = Chart(df, barcols='Return to asset', rlinecols='Return to equity', topx
 
 # Save
 chart2.save(outdir + '/page6_chart2_current_account_mms.pdf')
+chart2.save(outdir + '/page6_chart2_current_account_mms.png')
 
 # ---------------------------------------------------------------------------------------------------------
 # p. 6 Chart 3
@@ -108,6 +110,7 @@ chart3 = Chart(df, linecols=df.columns,
 
 # Save
 chart3.save(outdir + '/page6_chart3_non_performing.pdf')
+chart3.save(outdir + '/page6_chart3_non_performing.png')
 
 # ---------------------------------------------------------------------------------------------------------
 # p. 6 Chart 4
@@ -132,6 +135,7 @@ chart4 = Chart(df, linecols=df.columns,
 
 # Save
 chart4.save(outdir + '/page6_chart4_required_reserves.pdf')
+chart4.save(outdir + '/page6_chart4_required_reserves.png')
 
 # ---------------------------------------------------------------------------------------------------------
 # p. 6 Chart 5
@@ -156,6 +160,7 @@ chart5 = Chart(df, linecols=df.columns,
 
 # Save
 chart5.save(outdir + '/page6_chart5_fx_position.pdf')
+chart5.save(outdir + '/page6_chart5_fx_position.png')
 
 # ---------------------------------------------------------------------------------------------------------
 # p. 6 Chart 6
@@ -182,6 +187,7 @@ chart6 = Chart(df, linecols=paycol, barcols=sharecol, baraxis='right',
                legend_bottom=0.75, legend_height=0.25)
 
 # Save
+chart6.save(outdir + '/page6_chart6_fx_exposure.pdf')
 chart6.save(outdir + '/page6_chart6_fx_exposure.pdf')
 
 # ---------------------------------------------------------------------------------------------------------

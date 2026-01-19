@@ -49,7 +49,7 @@ barcols.remove(linecol)
 
 # Create Chart object
 attrs = {linecol : {'linewidth' : 4, 'color' : IMFBLACK},
-         'Personnel' : {'color' : '#004C97', 'edgecolor' : 'red'},
+         'Personnel' : {'color' : '#004C97'},
          'Goods & services' : {'color' : '#009CDE'},
          'Current transfers' : {'color' : '#CAEDFE'},
          'Capital exp.' : {'color' : '#FF8200'},
@@ -81,7 +81,7 @@ df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 
 attrs = {'Accrual spending' : {'color' : IMFBLUE},
               'Cash spending' : {'color' : 'white', 'offset' : 30,
-                                 'hatch' : '\\\\', 'hatchcolor' : IMFBLACK, 'edgecolor' : 'cyan'}
+                                 'hatch' : '\\\\', 'hatchcolor' : IMFBLACK}
               }
 
 # Create Chart object

@@ -49,7 +49,7 @@ chart1 = Chart(df, barcols='Real Minimum Wage',
                attrs=attrs,
                title='Real Minimum Wage',
                subtitle='(Jan 2015=100)',
-               show_legend=False,
+               legend=False,
                xrange='2015-01:', yrange=[0, 250])
 
 # Save

@@ -106,24 +106,24 @@ class Chart:
                  linecols=None, barcols=None, rlinecols=None, areacols=None,
                  # iterable of colors for colorcycle
                  colorcycle=None,
-                 # lines() options ----------------------------------------------
+                 # lines() options ---------------------------------------------------------
                  # Global linewidth
                  linewidth=None,
                  # whether to remove breaks in line charts
                  linebreaks=False,
                  # Set drawstyle to "steps-post" to draw step plots
                  drawstyle='default',
-                 # bars() options -----------------------------------------------
+                 # bars() options ----------------------------------------------------------
                  barstack=True, barwidth=None, baraxis='left',
                  total_barwidth=None,
                  barlinewidth=None,
                  baredgecolor='black',
-                 # area() options -----------------------------------------------
+                 # area() options ----------------------------------------------------------
                  areastack=True, areaaxis='left',
                  arealinewidth=None,
                  areaedgecolor='none',
                  alpha=1,
-                 # title options ------------------------------------------------
+                 # title options -----------------------------------------------------------
                  title=None,
                  titlecolor=None,
                  titlefontsize=18,
@@ -141,22 +141,34 @@ class Chart:
                  subtitleva='center',
                  subtitley=1.03,
                  
-                 # h/vlines, h/vrects, texts, arrows ----------------------------
-                 hlines=None, vlines=None, hrects=None, vrects=None, fills=None, texts=None, arrows=None,
-                 xtitle='', ytitle='',
-                 xtitlesize=14, ytitlesize=14,
+                 # h/vlines, h/vrects, texts, arrows, fills --------------------------------
+                 hlines=None, vlines=None, hrects=None, vrects=None,
+                 fills=None, texts=None, arrows=None,
+                 
+                 # xtitle, ytitle options --------------------------------------------------
+                 xtitle='', 
+                 xfontsize=14, xfont='Segoe UI', xfontweight='normal', xcolor='black', xpad=8,
+                 xloc='left', xrotation=0, xalpha=1,
+
+                 ytitle='', 
+                 yfontsize=14, yfont='Segoe UI', yfontweight='normal', ycolor='black', ypad=8,
+                 yloc='center', yrotation=90, yalpha=1,
+                 
+                 # xtick, ytick options ----------------------------------------------------
                  xtickfontsize=14, ytickfontsize=14,
                  xticklength=None, yticklength=None,
                  xtickangle=0,
                  nxticks=7,
-                 # individual look of each column in data
+                 
+                 # individual look of each column in data-----------------------------------
                  attrs=None,
                  xrange=None, yrange=None, ryrange=None,
                  xformat='auto',
                  margins='auto',
                  width=10, height=6,
                  topxaxis='left',
-                 # legend options -----------------------------------------------
+                 
+                 # legend options ----------------------------------------------------------
                  ncol_legend=1,
                  legend_spacing=0.5,
                  legend_fontsize=14,
@@ -226,7 +238,8 @@ class Chart:
         self.width = width
         self.height = height
 
-        self.title = title
+        # title options
+        self.titletext = title # self.title is reserved for function to set title
         self.titlecolor = titlecolor
         self.titlefontsize = titlefontsize
         self.titlefontweight = titlefontweight
@@ -234,7 +247,8 @@ class Chart:
         self.titleloc = titleloc
         self.titley = titley
         
-        self.subtitle = subtitle
+        # subtitle options
+        self.subtitletext = subtitle # self.subtitle is reserved for function to set title
         self.subtitlecolor = subtitlecolor
         self.subtitlefont = subtitlefont
         self.subtitlefontsize = subtitlefontsize
@@ -243,11 +257,27 @@ class Chart:
         self.subtitleva = subtitleva
         self.subtitley = subtitley
         
-        self.xtitle = xtitle
-        self.ytitle = ytitle
+        # x-axis label options
+        self.xtitletext = xtitle
+        self.xfontsize = xfontsize
+        self.xfont = xfont
+        self.xfontweight = xfontweight
+        self.xpad = xpad
+        self.xcolor = xcolor
+        self.xloc = xloc
+        self.xrotation = xrotation
+        self.xalpha = xalpha
 
-        self.xtitlesize = xtitlesize
-        self.ytitlesize = ytitlesize
+        # y-axis label options
+        self.ytitletext = ytitle
+        self.yfontsize = yfontsize
+        self.yfont = yfont
+        self.yfontweight = yfontweight
+        self.ypad = ypad
+        self.ycolor = ycolor
+        self.yloc = yloc
+        self.yrotation = yrotation
+        self.yalpha = yalpha
 
         self.xtickfontsize = xtickfontsize
         self.ytickfontsize = ytickfontsize
@@ -298,12 +328,12 @@ class Chart:
             print('Created self.fig, self.ax')
 
         # Add title, subtitle
-        self.set_title(self.title)
-        self.set_subtitle(self.subtitle)
+        self.title(self.titletext)
+        self.subtitle(self.subtitletext)
 
         # Add x, y title
-        self.set_xtitle(self.xtitle, self.xtitlesize)
-        self.set_ytitle(self.ytitle, self.ytitlesize)
+        self.xtitle(self.xtitletext)
+        self.ytitle(self.ytitletext)
 
         # Set x, y tick font size
         self.set_xticks(size=self.xtickfontsize, length=self.xticklength, angle=self.xtickangle)
@@ -569,15 +599,15 @@ class Chart:
                 print('After applying trim, self.data:')
                 print(self.data)
 
-    def set_title(self, title, color=None, fontsize=None, font=None, fontweight=None,
-                  loc=None, y=None,
-                  debug=False):
+    def title(self, text, color=None, fontsize=None, font=None, fontweight=None,
+              loc=None, y=None,
+              debug=False):
 
-        # Use title if it is given, otherwise use self.title.
+        # Use text if it is given, otherwise use self.title.
         # If both are None don't do anything
-        if title is None:
-            title = self.title
-            if title is None:
+        if text is None:
+            text = self.titletext
+            if text is None:
                 return
 
         # For other params use rcParams, if self attributes are set, override.
@@ -615,21 +645,21 @@ class Chart:
 
 
         if debug:
-            print('title = ' + str(title) + ' color = ' + str(color) + ' loc = ' + str(loc) + ' y = ' + str(y))
+            print('title = ' + str(text) + ' color = ' + str(color) + ' loc = ' + str(loc) + ' y = ' + str(y))
             print('fontweight = ' + str(fontweight) + ' fontname = ' + str(font) + ' fontsize = ' + str(fontsize))
             
-        self.ax.set_title(str(title), color=color, loc=loc, y=y,
+        self.ax.set_title(str(text), color=color, loc=loc, y=y,
                           fontweight=fontweight, fontname=font, fontsize=fontsize)
 
-    def set_subtitle(self, subtitle, color=None, fontsize=None, font=None, fontweight=None,
-                     ha=None, va=None, y=None,
-                     debug=False):
+    def subtitle(self, text, color=None, fontsize=None, font=None, fontweight=None,
+                 ha=None, va=None, y=None,
+                 debug=False):
 
-        # Use title if it is given, otherwise use self.subtitle.
+        # Use text if it is given, otherwise use self.subtitle.
         # If both are None don't do anything
-        if subtitle is None:
-            subtitle = self.subtitle
-            if subtitle is None:
+        if text is None:
+            text = self.subtitletext
+            if text is None:
                 return
         
         # For other params use rcParams, if self attributes are set, override.
@@ -672,30 +702,170 @@ class Chart:
                 y = 1.03
 
         if debug:
-            print('subtitle = ' + str(subtitle) + ' color = ' + str(color) + ' ha = ' + str(ha) + ' va = ' + str(va) + ' y = ' + str(y))
+            print('text = ' + str(text) + ' color = ' + str(color) + ' ha = ' + str(ha) + ' va = ' + str(va) + ' y = ' + str(y))
             print('fontweight = ' + str(fontweight) + ' fontname = ' + str(font) + ' fontsize = ' + str(fontsize))
 
-        self.ax.text(0., y, subtitle,
+        self.ax.text(0., y, text,
                      color=color, fontsize=fontsize, fontweight=fontweight, fontname=font,
                      horizontalalignment=ha, verticalalignment=va, transform=self.ax.transAxes)
         
-    def set_xtitle(self, xtitle, xtitlesize=None):
-        self.xtitle = xtitle
-        # If a xtitlesize was specified, save internally
-        if xtitlesize is not None:
-            self.xtitlesize = xtitlesize
+    def xtitle(self, text, fontsize=None, font=None, fontweight=None, color=None, pad=None, loc=None,
+               rotation=None, alpha=1):
 
+        # Get text to show
+        if text is None:
+            # Use internal xtitletext
+            text = self.xtitletext
+
+            # If nothing specified, quit
+            if text is None:
+                return
+        else:
+            self.xtitletext = text
+
+        # For all other params, hierarchy is
+        # 1. specified within function
+        # 2. class attributes set in __init__()
+        # 3. rcParams
+
+        # fontsize
+        if fontsize is None:
+            fontsize = self.xfontsize
+            if fontsize is None:
+                fontsize = matplotlib.rcParams['axes.labelsize']
+        self.xfontsize = fontsize
+
+        # font
+        if font is None:
+            font = self.xfont
+            if font is None:
+                font = matplotlib.rcParams['font.family']
+        self.xfont = font
+
+        # fontweight
+        if fontweight is None:
+            fontweight = self.xfontweight
+            if fontweight is None:
+                fontweight = matplotlib.rcParams['axes.labelweight']
+        self.xfontweight = fontweight
+
+        # color
+        if color is None:
+            color = self.xcolor
+            if color is None:
+                color = matplotlib.rcParams['axes.labelcolor']
+        self.xcolor = color
+
+        # pad
+        if pad is None:
+            pad = self.xpad
+            if pad is None:
+                pad = matplotlib.rcParams['axes.labelpad']
+        self.xpad = pad
+
+        # loc
+        if loc is None:
+            loc = self.xloc
+            if loc is None:
+                loc = 'left' # no rcParams
+        self.xloc = loc
+
+        # rotation
+        if rotation is None:
+            rotation = self.xrotation
+            if rotation is None:
+                rotation = 0 # no rcParams
+        self.xrotation = rotation
+
+        # alpha
+        if alpha is None:
+            alpha = self.xalpha
+            if alpha is None:
+                alpha = 1 # no rcParams
+        self.xalpha = alpha
+        
         # Set x-axis title
-        self.ax.set_xlabel(xtitle, fontsize=self.xtitlesize)
+        self.ax.set_xlabel(text, fontsize=fontsize, font=font, fontweight=fontweight,
+                           color=color, labelpad=pad, loc=loc, rotation=rotation, alpha=alpha)
+        
+    def ytitle(self, text, fontsize=None, font=None, fontweight=None, color=None, pad=None, loc=None,
+               rotation=None, alpha=1):
 
-    def set_ytitle(self, ytitle, ytitlesize=None):
-        self.ytitle = ytitle
-        # If a ytitlesize was specified, save internally
-        if ytitlesize is not None:
-            self.ytitlesize = ytitlesize
+        # Get text to show
+        if text is None:
+            # Use internal ytitletext
+            text = self.ytitletext
 
+            # If nothing specified, quit
+            if text is None:
+                return
+        else:
+            self.ytitletext = text
+
+        # For all other params, hierarchy is
+        # 1. specified within function
+        # 2. class attributes set in __init__()
+        # 3. rcParams
+
+        # fontsize
+        if fontsize is None:
+            fontsize = self.yfontsize
+            if fontsize is None:
+                fontsize = matplotlib.rcParams['axes.labelsize']
+        self.yfontsize = fontsize
+
+        # font
+        if font is None:
+            font = self.yfont
+            if font is None:
+                font = matplotlib.rcParams['font.family']
+        self.yfont = font
+
+        # fontweight
+        if fontweight is None:
+            fontweight = self.yfontweight
+            if fontweight is None:
+                fontweight = matplotlib.rcParams['axes.labelweight']
+        self.yfontweight = fontweight
+
+        # color
+        if color is None:
+            color = self.ycolor
+            if color is None:
+                color = matplotlib.rcParams['axes.labelcolor']
+        self.ycolor = color
+
+        # pad
+        if pad is None:
+            pad = self.ypad
+            if pad is None:
+                pad = matplotlib.rcParams['axes.labelpad']
+        self.ypad = pad
+
+        # loc
+        if loc is None:
+            loc = self.yloc
+            if loc is None:
+                loc = 'center' # no rcParams
+        self.yloc = loc
+
+        # rotation
+        if rotation is None:
+            rotation = self.yrotation
+            if rotation is None:
+                rotation = 90 # no rcParams
+        self.yrotation = rotation
+
+        # alpha
+        if alpha is None:
+            alpha = self.yalpha
+            if alpha is None:
+                alpha = 1 # no rcParams
+        self.yalpha = alpha
+        
         # Set y-axis title
-        self.ax.set_ylabel(ytitle, fontsize=self.ytitlesize)
+        self.ax.set_ylabel(text, fontsize=fontsize, font=font, fontweight=fontweight,
+                           color=color, labelpad=pad, loc=loc, rotation=rotation, alpha=alpha)
 
     def set_xticks(self, size=None, length=None, angle=0):
         # If size is specified, update internal value

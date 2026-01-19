@@ -169,13 +169,15 @@ class Chart:
                  topxaxis='left',
                  
                  # legend options ----------------------------------------------------------
+                 legend=True, # Whether to show legend
                  ncol_legend=1,
                  legend_spacing=0.5,
                  legend_fontsize=14,
                  legend_header='', legend_header_color='black', legend_header_fontsize=16,
                  legend_left=0.04, legend_bottom=0.85, legend_width=0.70, legend_height=0.15,
-                 legend_mode='expand',
-                 show_legend=True,
+                 legend_mode='expand', legend_frame=False,
+                 legend_color='white', legend_alpha=1, legend_shadow=False, legend_fancybox=False,
+                 legend_edge='black', legend_linestyle='-', legend_linewidth=1,
                  debug=False):
 
         # ------------------------------------------------------------------------------
@@ -291,9 +293,11 @@ class Chart:
         self.xformat = xformat
         self.margins = margins
 
-        # self.legend is None while it does not exist or
-        # if show_legend=False or set_legend(show=False) is called.
-        self.legend = None
+        # self._legend is None while it does not exist or show_legend=False
+        # self.show_legend is the internal variable that controls whether a legned is shown.
+        self._legend = None
+        self.show_legend = legend
+        
         self.ncol_legend = ncol_legend
         self.legend_fontsize = legend_fontsize
         self.legend_header = legend_header
@@ -314,9 +318,17 @@ class Chart:
         self.legend_width = legend_width
         self.legend_height = legend_height
         self.legend_mode = legend_mode
+        self.legend_frame = legend_frame
         self.legend_spacing = legend_spacing
-        self.show_legend = show_legend
-
+        self.legend_frame = False
+        self.legend_color = legend_color
+        self.legend_alpha = 1
+        self.legend_shadow = legend_shadow
+        self.legend_fancybox = legend_fancybox
+        self.legend_edge = legend_edge
+        self.legend_linestyle = legend_linestyle
+        self.legend_linewidth = legend_linewidth
+        
         # Set self.xaxis_type based on data
         self.xaxis_type = self._set_xaxis_type()
         
@@ -467,7 +479,7 @@ class Chart:
             print('self.legend_labels:')
             print(self.legend_labels)
         if self.show_legend:
-            self.update_legend()
+            self.legend()
 
     def apply(self, style):
         '''
@@ -1450,9 +1462,9 @@ class Chart:
 
         # Re-create legend
         if self.show_legend:
-            self.update_legend()
+            self.legend()
             if debug:
-                print('called update_legend()')
+                print('called legend()')
 
         # Set x-axis range if specified
         if xrange is not None:
@@ -1900,7 +1912,7 @@ class Chart:
 
         # Re-create legend
         if self.show_legend:
-            self.update_legend()
+            self.legend()
         
         # Set x-axis range if specified
         if xrange is not None:
@@ -2234,7 +2246,7 @@ class Chart:
 
         # Re-create legend
         if self.show_legend:
-            self.update_legend()
+            self.legend()
         
         # Set x-axis range if specified.
         # For area, default is to set margins=0 so that the are chart
@@ -2403,9 +2415,9 @@ class Chart:
 
         # Re-create legend
         if self.show_legend:
-            self.update_legend()
+            self.legend()
             if debug:
-                print('called update_legend()')
+                print('called legend()')
             
     def vline(self, x, yrange=None, coordinates='data', width=1, color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None,
               label='', legend=False, zorder=3,
@@ -2468,9 +2480,9 @@ class Chart:
 
         # Re-create legend
         if self.show_legend:
-            self.update_legend()
+            self.legend()
             if debug:
-                print('called update_legend()')
+                print('called legend()')
                 
     def hrect(self, ymin=0, ymax=0, xrange=None, coordinates='data', color='red', linecolor='none', linewidth=0, linestyle='-', alpha=0.3,
               dash_capstyle=None,
@@ -2546,9 +2558,9 @@ class Chart:
 
         # Re-create legend
         if self.show_legend:
-            self.update_legend()
+            self.legend()
             if debug:
-                print('called update_legend()')
+                print('called legend()')
             
 #        # As of Matplotlib 3.8.0, changing the hatch linewidth does not work.
 #        # It is possible to set the rcParams temporarily,
@@ -2648,9 +2660,9 @@ class Chart:
 
         # Re-create legend
         if self.show_legend:
-            self.update_legend()
+            self.legend()
             if debug:
-                print('called update_legend()')
+                print('called legend()')
             
 #        # As of Matplotlib 3.8.0, changing the hatch linewidth does not work.
 #        # It is possible to set the rcParams temporarily,
@@ -2800,89 +2812,108 @@ class Chart:
 
         # Re-create legend
         if self.show_legend:
-            self.update_legend()
+            self.legend()
             if debug:
-                print('called update_legend()')
+                print('called legend()')
             
-    def update_legend(self,
-                      ncol_legend=None, legend_spacing=None,
-                      legend_left=None, legend_bottom=None, legend_width=None, legend_height=None, legend_mode=None, adjust=True,
-                      legend_header=None, legend_header_color=None, legend_header_fontsize=None):
+    def legend(self, show=True,
+               ncol_legend=None, legend_spacing=None,
+               legend_left=None, legend_bottom=None, legend_width=None, legend_height=None, legend_mode=None,
+               legend_frame=None, legend_color=None, legend_alpha=None, legend_shadow=None, legend_fancybox=None,
+               legend_edge=None, legend_linestyle=None, legend_linewidth=None,
+               adjust=True,
+               legend_header=None, legend_header_color=None, legend_header_fontsize=None):
         '''
         Update legend of Chart.
         Some options can be specified as inputs, if they are provided as None the class  attributes are used.
+
+        If show=False, delete existing legend.
         '''
 
-        # Use inputs if they are specified, otherwise default to class attributes
-        if ncol_legend is None:
-            ncol_legend = self.ncol_legend
-        if legend_left is None:
-            legend_left = self.legend_left
-        if legend_bottom is None:
-            legend_bottom = self.legend_bottom
-        if legend_width is None:
-            legend_width = self.legend_width
-        if legend_height is None:
-            legend_height = self.legend_height
-        if legend_mode is None:
-            legend_mode = self.legend_mode
-        if legend_spacing is None:
-            legend_spacing = self.legend_spacing
-        if legend_header is None:
-            legend_header = self.legend_header
-        if legend_header_color is None:
-            legend_header_color = self.legend_header_color
-        if legend_header_fontsize is None:
-            legend_header_fontsize = self.legend_header_fontsize
-
-        # Make sure legend_left + legend_width is less than 1,
-        # otherwise we are left with long white margin on right side.
-        if adjust:
-            if legend_left + legend_width > 1:
-                legend_width = 1 - legend_left
-                self.legend_width = legend_width
-        
-        self.legend = self.ax.legend(self.legend_entries, self.legend_labels,
-                                     loc='upper left',
-                                     labelspacing=legend_spacing,
-                                     bbox_transform=self.ax.transAxes,
-                                     bbox_to_anchor=(legend_left,legend_bottom,legend_width,legend_height),
-                                     mode=legend_mode, borderaxespad=0,
-                                     ncol=ncol_legend, fontsize=self.legend_fontsize, frameon=False,
-                                     title=self.legend_header, alignment='left', title_fontsize=self.legend_header_fontsize,
-                                     numpoints=1
-        )
-
-        # Need to set legend title color
-        self.legend.get_title().set_color(self.legend_header_color)
-
-        # Need to set 
-
-    def set_legend(self, show=True):
-        '''
-        Show legend.
-        If show=False, don't show and delete existing legend.
-        '''
-
-        # Modify self.show_legend
-        if show:
-            self.show_legend = True
-
-            # Create legend if it does not exist
-            if not self.legend:
-                self.update_legend()
-                
-        else:
+        if not show:
+            # Set internal flag
             self.show_legend = False
 
             # If a legend already exists, delete
-            if self.legend:
+            if self._legend:
                 try:
                     self.ax.get_legend().remove()
-                    self.legend = None
+                    self._legend = None
                 except Exception as e:
                     print('WARNING: Could not remove existing legend with exception:')
                     print(e)
+                
+        else:
+            # Set internal flag
+            self.show_legend = True
+
+            # Recreate legend if it does not exist.
+            # This ensures that any new entries are added in.
+            # Use inputs if they are specified, otherwise default to class attributes
+            if ncol_legend is None:
+                ncol_legend = self.ncol_legend
+            if legend_left is None:
+                legend_left = self.legend_left
+            if legend_bottom is None:
+                legend_bottom = self.legend_bottom
+            if legend_width is None:
+                legend_width = self.legend_width
+            if legend_height is None:
+                legend_height = self.legend_height
+            if legend_mode is None:
+                legend_mode = self.legend_mode
+            if legend_frame is None:
+                legend_frame = self.legend_frame
+            if legend_color is None:
+                legend_color = self.legend_color
+            if legend_alpha is None:
+                legend_alpha = self.legend_alpha
+            if legend_shadow is None:
+                legend_shadow = self.legend_shadow
+            if legend_fancybox is None:
+                legend_fancybox = self.legend_fancybox
+            if legend_edge is None:
+                legend_edge = self.legend_edge
+            if legend_linestyle is None:
+                legend_linestyle = self.legend_linestyle
+            if legend_linewidth is None:
+                legend_linewidth = self.legend_linewidth
+            if legend_spacing is None:
+                legend_spacing = self.legend_spacing
+            if legend_header is None:
+                legend_header = self.legend_header
+            if legend_header_color is None:
+                legend_header_color = self.legend_header_color
+            if legend_header_fontsize is None:
+                legend_header_fontsize = self.legend_header_fontsize
+    
+            # Make sure legend_left + legend_width is less than 1,
+            # otherwise we are left with long white margin on right side.
+            if adjust:
+                if legend_left + legend_width > 1:
+                    legend_width = 1 - legend_left
+                    self.legend_width = legend_width
+            
+            self._legend = self.ax.legend(self.legend_entries, self.legend_labels,
+                                          loc='upper left',
+                                          labelspacing=legend_spacing,
+                                          bbox_transform=self.ax.transAxes,
+                                          bbox_to_anchor=(legend_left,legend_bottom,legend_width,legend_height),
+                                          mode=legend_mode, borderaxespad=0,
+                                          ncol=ncol_legend, fontsize=self.legend_fontsize, frameon=legend_frame,
+                                          facecolor=legend_color, framealpha=legend_alpha, shadow=legend_shadow, fancybox=legend_fancybox,
+                                          edgecolor=legend_edge,
+                                          title=self.legend_header, alignment='left', title_fontsize=self.legend_header_fontsize,
+                                          numpoints=1
+                                    )
+
+            # Need to set legend title color
+            self._legend.get_title().set_color(self.legend_header_color)
+            # Need to set legend edge attributes
+            if legend_frame:
+                self._legend.get_frame().set_linestyle(legend_linestyle)
+                self._legend.get_frame().set_linewidth(legend_linewidth)
+        # end of show=True
         
     def save(self, filename, dpi=250, bbox_inches='tight', pad_inches=0.02):
         '''
@@ -2935,12 +2966,6 @@ class Chart:
         
         from PIL import Image
         Image.open(tmpfilename).show()
-
-    def set_show_legend(self, option):
-        if option:
-            self.show_legend = True
-        else:
-            self.show_legend = False
 
 def color_bars(barcolors, patches, dataindex, stack=False, debug=False):
     '''

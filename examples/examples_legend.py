@@ -67,20 +67,20 @@ chart2 = Chart(df, linecols=df.columns,
 chart2.save(outdir + '/legends_2_colorcycle.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
-# 3. show_legend
+# 3. legend = False
 # ---------------------------------------------------------------------------------------------------------
 # Create Chart object
 chart2 = Chart(df, linecols=df.columns,
-               title='show_legend = False',
+               title='legend = False',
                xrange='2022-01:', yrange=[-95, 60],
-               show_legend=False,
+               legend=False,
                legend_bottom=0.22, legend_left=0.55)
 
 # Save
-chart2.save(outdir + '/legends_3_show_legend_false.pdf')
+chart2.save(outdir + '/legends_3_legend_false.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
-# 4. set_legend
+# 4. set legend False
 # ---------------------------------------------------------------------------------------------------------
 
 # Create Chart object
@@ -90,32 +90,37 @@ chart2 = Chart(df, linecols=df.columns,
                xrange='2022-01:', yrange=[-95, 60],
                legend_bottom=0.22, legend_left=0.55)
 # Set legend off
-chart2.set_legend(show=False)
+chart2.legend(show=False)
 
 # Save
 chart2.save(outdir + '/legends_4_1_set_legend_false.pdf')
 
 # Set legend on
-chart2.set_legend(show=True)
-chart2.set_title('set_legend = True')
+chart2.legend(show=True)
+chart2.title('set_legend = True')
 
 # Save
 chart2.save(outdir + '/legends_4_2_legend_true.pdf')
-
-
 
 # Draw without legend, then turn on
 chart2 = Chart(df, linecols=df.columns,
                title='set_legend = False',
                xrange='2022-01:', yrange=[-95, 60],
                legend_bottom=0.22, legend_left=0.55,
-               show_legend=False)
-# Set legend on
-chart2.set_legend(show=True)
-chart2.set_title('set_legend = True from no legend')
+               legend=False)
+# Set legend off
+chart2.legend(show=False)
 
 # Save
-chart2.save(outdir + '/legends_4_3_legend_true2.pdf')
+chart2.save(outdir + '/legends_4_1_set_legend_false.pdf')
+
+# Set legend on
+chart2.legend(show=True, legend_frame=True, legend_color='yellow', legend_alpha=0.3, legend_shadow=True, legend_fancybox=True,
+              legend_edge='red', legend_linestyle='--', legend_linewidth=5)
+chart2.title('set_legend = True')
+
+# Save
+chart2.save(outdir + '/legends_4_2_legend_true.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
 # 5. fontsize

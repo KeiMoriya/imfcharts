@@ -132,7 +132,7 @@ chart3 = Chart(df, barcols=df.columns, barstack=False, # baraxis='right',
                title='Terms of Trade Shock, 2025Q2 or Latest',
                subtitle='(Percent change from 2023 average)',
                yrange=[-15, 15],
-               show_legend=False) # , debug=True
+               legend=False) # , debug=True
 
 # Save
 chart3.save(outdir + '/page5_chart3_terms_of_trade.pdf')

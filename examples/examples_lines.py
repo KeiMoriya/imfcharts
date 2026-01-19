@@ -48,7 +48,7 @@ df = pd.read_csv(infilename, index_col=0, parse_dates=[0]).dropna(how='all', axi
 # Create Chart object
 chart2 = Chart(df, linecols=df.columns,
                title='no options',
-               xrange='2022-01:', yrange=[-95, 60],
+               xrange='2022-01:', # yrange=[-95, 60],
                legend_bottom=0.22, legend_left=0.55)
 
 # Save

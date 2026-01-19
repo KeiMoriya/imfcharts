@@ -52,7 +52,7 @@ barcols.remove(linecol)
 # Create Chart object
 chart1 = Chart(df, linecols=linecol, barcols=barcols,
                title='no options',
-               xrange='2018-01:', yrange=[0, 30],
+               xrange='2018-01:', # yrange=[0, 30],
                ncol_legend=2)
 
 # Save

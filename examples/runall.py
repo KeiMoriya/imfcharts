@@ -1,6 +1,11 @@
 import os
 import glob
 import importlib
+import shutil
+import pandas as pd
+
+from imfcharts import *
+set_style('fund-guide')
 
 import examples_turkey_page1
 import examples_turkey_page2
@@ -32,3 +37,26 @@ merger.write(mergedfilename)
 print('Created file ' + mergedfilename)
 
 
+# Other scripts
+import examples_lines
+import examples_bars
+import examples_area
+import examples_lines_rects
+import examples_titles
+import examples_legend
+import examples_text_arrow_fill
+import examples_fill
+import examples_styles
+import examples_axistitles
+
+# Copy all summary charts
+datestr = pd.Timestamp.today().strftime('%Y-%m-%d')
+outdir = 'pdf/summary_' + datestr
+if not os.path.isdir(outdir):
+    os.makedirs(outdir)
+
+for filestem in ['all', 'lines', 'bars', 'area', 'lines_rects', 'titles', 'legends', 'text_arrow_fill', 'fill']:
+    original = 'pdf/' + filestem + '.pdf'
+    newname = outdir + '/' + filestem + '_' + datestr + '.pdf'
+    shutil.copy2(original, newname)
+    

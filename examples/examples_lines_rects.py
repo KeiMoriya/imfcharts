@@ -56,12 +56,11 @@ attrs = {'Inflation' : {'linewidth' : 4, 'color' : IMFBLACK},
 # Create Chart object
 chart1 = Chart(df, linecols=df.columns,
                attrs=attrs,
-               title='Inflation: Goods and Services',
-               subtitle='(Y/y percent change)',
+               title='hline no options',
                xrange='2017-01:', yrange=[0, 120])
 
 # Add hline
-chart1.hline(y=10)
+chart1.hline(y=20)
 
 # Save
 chart1.save(outdir + '/hlines_1_no_options.pdf')
@@ -72,12 +71,11 @@ chart1.save(outdir + '/hlines_1_no_options.pdf')
 # Create Chart object
 chart1 = Chart(df, linecols=df.columns,
                attrs=attrs,
-               title='Inflation: Goods and Services',
-               subtitle='(Y/y percent change)',
+               title='hline xrange',
                xrange='2017-01:', yrange=[0, 120])
 
 # Add hline
-chart1.hline(y=10, xrange='2020-03:2025-04')
+chart1.hline(y=20, xrange='2020-03:2025-04')
 
 # Save
 chart1.save(outdir + '/hlines_2_xrange.pdf')
@@ -88,12 +86,11 @@ chart1.save(outdir + '/hlines_2_xrange.pdf')
 # Create Chart object
 chart1 = Chart(df, linecols=df.columns,
                attrs=attrs,
-               title='Inflation: Goods and Services',
-               subtitle='(Y/y percent change)',
+               title='hline attrs',
                xrange='2017-01:', yrange=[0, 120])
 
 # Add hline
-chart1.hline(y=10, xrange='2020-03:2025-04',
+chart1.hline(y=20, xrange='2020-03:2025-04',
              color='blue', linewidth=1.5, linestyle='--', alpha=0.3)
 
 # Save
@@ -105,14 +102,12 @@ chart1.save(outdir + '/hlines_3_line_options.pdf')
 # Create Chart object
 chart1 = Chart(df, linecols=df.columns,
                attrs=attrs,
-               title='Inflation: Goods and Services',
-               subtitle='(Y/y percent change)',
+               title='hline zorder',
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vrect
-chart1.hline(y=10, xrange='2020-03:2025-04',
-             color='grey', linewidth=0.5, linestyle='--', alpha=0.9,
-             zorder=5) # , dashes=[10, 4]
+chart1.hline(y=20, xrange='2020-03:2025-04',
+             zorder=3) # , dashes=[10, 4]
 
 # Save
 chart1.save(outdir + '/hlines_4_zorder.pdf')
@@ -123,12 +118,11 @@ chart1.save(outdir + '/hlines_4_zorder.pdf')
 # Create Chart object
 chart1 = Chart(df, linecols=df.columns,
                attrs=attrs,
-               title='Inflation: Goods and Services',
-               subtitle='(Y/y percent change)',
+               title='hline legend',
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vrect
-chart1.hline(y=10, xrange='2020-03:2025-04',
+chart1.hline(y=20, xrange='2020-03:2025-04',
              label='horizontal line', legend=True,
              color='grey', linewidth=0.5, linestyle='--', alpha=0.2)
 
@@ -141,12 +135,11 @@ chart1.save(outdir + '/hlines_5_legend.pdf')
 # Create Chart object
 chart1 = Chart(df, linecols=df.columns,
                attrs=attrs,
-               title='Inflation: Goods and Services',
-               subtitle='(Y/y percent change)',
+               title='hline kwargs',
                xrange='2017-01:', yrange=[0, 120])
 
 # Add hline
-kwargs = {'y' : 10, 'xrange' : '2020-03:2025-04',
+kwargs = {'y' : 20, 'xrange' : '2020-03:2025-04',
           'label' : 'horizontal line', 'legend' : True,
           'color' : 'grey', 'linewidth' : 0.5, 'linestyle' : '--', 'alpha' : 0.2}
 chart1.hline(**kwargs)
@@ -164,8 +157,7 @@ chart1.save(outdir + '/hlines_6_kwargs.pdf')
 # Create Chart object
 chart1 = Chart(df, linecols=df.columns,
                attrs=attrs,
-               title='Inflation: Goods and Services',
-               subtitle='(Y/y percent change)',
+               title='vline no options',
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vline
@@ -180,8 +172,7 @@ chart1.save(outdir + '/vlines_1_no_options.pdf')
 # Create Chart object
 chart1 = Chart(df, linecols=df.columns,
                attrs=attrs,
-               title='Inflation: Goods and Services',
-               subtitle='(Y/y percent change)',
+               title='vline xrange',
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vline
@@ -196,8 +187,7 @@ chart1.save(outdir + '/vlines_2_xrange.pdf')
 # Create Chart object
 chart1 = Chart(df, linecols=df.columns,
                attrs=attrs,
-               title='Inflation: Goods and Services',
-               subtitle='(Y/y percent change)',
+               title='vline attrs',
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vline
@@ -213,14 +203,12 @@ chart1.save(outdir + '/vlines_3_line_options.pdf')
 # Create Chart object
 chart1 = Chart(df, linecols=df.columns,
                attrs=attrs,
-               title='Inflation: Goods and Services',
-               subtitle='(Y/y percent change)',
+               title='vline zorder',
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vrect
-chart1.vline(x='2020-03', yrange=[30, 60],
-             color='grey', linewidth=0.5, linestyle='--', alpha=0.9,
-             zorder=5) # , dashes=[10, 4]
+chart1.vline(x='2020-03',
+             zorder=3) # , dashes=[10, 4]
 
 # Save
 chart1.save(outdir + '/vlines_4_zorder.pdf')
@@ -231,17 +219,34 @@ chart1.save(outdir + '/vlines_4_zorder.pdf')
 # Create Chart object
 chart1 = Chart(df, linecols=df.columns,
                attrs=attrs,
-               title='Inflation: Goods and Services',
-               subtitle='(Y/y percent change)',
+               title='vline legend',
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vrect
 chart1.vline(x='2020-03', yrange=[30, 60],
              label='vertical line', legend=True,
-             color='grey', linewidth=0.5, linestyle='--', alpha=0.2)
+             color='grey', linewidth=2.5, linestyle='--', alpha=0.7)
 
 # Save
 chart1.save(outdir + '/vlines_5_legend.pdf')
+
+# ---------------------------------------------------------------------------------------------------------
+# 6. kwargs
+# ---------------------------------------------------------------------------------------------------------
+# Create Chart object
+chart1 = Chart(df, linecols=df.columns,
+               attrs=attrs,
+               title='vline kwargs',
+               xrange='2017-01:', yrange=[0, 120])
+
+# Add vline
+kwargs = {'x' : '2020-03', 'yrange' : [30, 60],
+          'label' : 'vertical line', 'legend' : True,
+          'color' : 'grey', 'linewidth' : 2.5, 'linestyle' : '--', 'alpha' : 0.7}
+chart1.vline(**kwargs)
+
+# Save
+chart1.save(outdir + '/vlines_6_kwargs.pdf')
 
 #==========================================================================================================
 # hrect
@@ -253,8 +258,7 @@ chart1.save(outdir + '/vlines_5_legend.pdf')
 # Create Chart object
 chart1 = Chart(df, linecols=df.columns,
                attrs=attrs,
-               title='Inflation: Goods and Services',
-               subtitle='(Y/y percent change)',
+               title='hrect no options',
                xrange='2017-01:', yrange=[0, 120])
 
 # Add hrect
@@ -269,8 +273,7 @@ chart1.save(outdir + '/hrects_1_no_options.pdf')
 # Create Chart object
 chart1 = Chart(df, linecols=df.columns,
                attrs=attrs,
-               title='Inflation: Goods and Services',
-               subtitle='(Y/y percent change)',
+               title='hrect xrange',
                xrange='2017-01:', yrange=[0, 120])
 
 # Add hrect
@@ -285,8 +288,7 @@ chart1.save(outdir + '/hrects_2_xrange.pdf')
 # Create Chart object
 chart1 = Chart(df, linecols=df.columns,
                attrs=attrs,
-               title='Inflation: Goods and Services',
-               subtitle='(Y/y percent change)',
+               title='hrect attrs',
                xrange='2017-01:', yrange=[0, 120])
 
 # Add hrect
@@ -303,15 +305,14 @@ chart1.save(outdir + '/hrects_3_line_options.pdf')
 # Create Chart object
 chart1 = Chart(df, linecols=df.columns,
                attrs=attrs,
-               title='Inflation: Goods and Services',
-               subtitle='(Y/y percent change)',
+               title='hrect zorder',
                xrange='2017-01:', yrange=[0, 120])
 
-# Add vrect
+# Add hrect
 chart1.hrect(ymin=20, ymax=100, xrange='2020-03:2025-04',
              hatch='++',
              color='grey', linewidth=0.5, linecolor='black', linestyle='--', alpha=0.9,
-             zorder=5) # , dashes=[10, 4]
+             zorder=3) # , dashes=[10, 4]
 
 # Save
 chart1.save(outdir + '/hrects_4_zorder.pdf')
@@ -322,11 +323,10 @@ chart1.save(outdir + '/hrects_4_zorder.pdf')
 # Create Chart object
 chart1 = Chart(df, linecols=df.columns,
                attrs=attrs,
-               title='Inflation: Goods and Services',
-               subtitle='(Y/y percent change)',
+               title='hrect legend',
                xrange='2017-01:', yrange=[0, 120])
 
-# Add vrect
+# Add hrect
 chart1.hrect(ymin=20, ymax=100, xrange='2020-03:2025-04',
              hatch='++',
              label='horizontal rectangle', legend=True,
@@ -334,6 +334,25 @@ chart1.hrect(ymin=20, ymax=100, xrange='2020-03:2025-04',
 
 # Save
 chart1.save(outdir + '/hrects_5_legend.pdf')
+
+# ---------------------------------------------------------------------------------------------------------
+# 6. kwargs
+# ---------------------------------------------------------------------------------------------------------
+# Create Chart object
+chart1 = Chart(df, linecols=df.columns,
+               attrs=attrs,
+               title='hrect kwargs',
+               xrange='2017-01:', yrange=[0, 120])
+
+# Add hrect
+kwargs = {'ymin' : 20, 'ymax' : 100, 'yrange' : '2020-03:2025-04',
+          'hatch' : '++',
+          'label' : 'horizontal rectangle', 'legend' : True,
+          'color' : 'grey', 'linewidth' : 0.5, 'linestyle' : '--', 'alpha' : 0.2}
+chart1.hrect(**kwargs)
+
+# Save
+chart1.save(outdir + '/hrects_6_kwargs.pdf')
 
 #==========================================================================================================
 # vrect
@@ -345,8 +364,7 @@ chart1.save(outdir + '/hrects_5_legend.pdf')
 # Create Chart object
 chart1 = Chart(df, linecols=df.columns,
                attrs=attrs,
-               title='Inflation: Goods and Services',
-               subtitle='(Y/y percent change)',
+               title='vrect no options',
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vrect
@@ -361,8 +379,7 @@ chart1.save(outdir + '/vrects_1_no_options.pdf')
 # Create Chart object
 chart1 = Chart(df, linecols=df.columns,
                attrs=attrs,
-               title='Inflation: Goods and Services',
-               subtitle='(Y/y percent change)',
+               title='vrect xrange',
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vrect
@@ -377,8 +394,7 @@ chart1.save(outdir + '/vrects_2_xrange.pdf')
 # Create Chart object
 chart1 = Chart(df, linecols=df.columns,
                attrs=attrs,
-               title='Inflation: Goods and Services',
-               subtitle='(Y/y percent change)',
+               title='vrect attrs',
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vrect
@@ -395,15 +411,14 @@ chart1.save(outdir + '/vrects_3_line_options.pdf')
 # Create Chart object
 chart1 = Chart(df, linecols=df.columns,
                attrs=attrs,
-               title='Inflation: Goods and Services',
-               subtitle='(Y/y percent change)',
+               title='vrect zorder',
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vrect
 chart1.vrect(xmin='2019-06', xmax='2024-02', yrange=[30, 90],
              hatch='++',
              color='grey', linewidth=0.5, linecolor='black', linestyle='--', alpha=0.9,
-             zorder=5) # , dashes=[10, 4]
+             zorder=3) # , dashes=[10, 4]
 
 # Save
 chart1.save(outdir + '/vrects_4_zorder.pdf')
@@ -415,8 +430,7 @@ chart1.save(outdir + '/vrects_4_zorder.pdf')
 # Create Chart object
 chart1 = Chart(df, linecols=df.columns,
                attrs=attrs,
-               title='Inflation: Goods and Services',
-               subtitle='(Y/y percent change)',
+               title='vrect legend',
                xrange='2017-01:', yrange=[0, 120])
 
 # Add vrect
@@ -427,6 +441,25 @@ chart1.vrect(xmin='2019-06', xmax='2024-02', yrange=[30, 90],
 
 # Save
 chart1.save(outdir + '/vrects_5_legend.pdf')
+
+# ---------------------------------------------------------------------------------------------------------
+# 6. kwargs
+# ---------------------------------------------------------------------------------------------------------
+# Create Chart object
+chart1 = Chart(df, linecols=df.columns,
+               attrs=attrs,
+               title='vrect kwargs',
+               xrange='2017-01:', yrange=[0, 120])
+
+# Add vrect
+kwargs = {'xmin' : '2019-06', 'xmax' : '2024-02', 'yrange' : [30, 90],
+          'hatch' : '++',
+          'label' : 'vertical rectangle', 'legend' : True,
+          'color' : 'grey', 'linewidth' : 0.5, 'linestyle' : '--', 'alpha' : 0.2}
+chart1.vrect(**kwargs)
+
+# Save
+chart1.save(outdir + '/vrects_6_kwargs.pdf')
 
 #==========================================================================================================
 # Merge all files

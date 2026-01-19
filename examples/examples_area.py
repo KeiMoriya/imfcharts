@@ -60,9 +60,11 @@ attrs = {gircol : {'color' : '#416FA6'},
 # 1. No options
 # ---------------------------------------------------------------------------------------------------------
 # Create Chart object
-chart6 = Chart(df, linecols=[bankcol, gircol], rlinecols=corecol, areacols=['FX', 'Gold'],
+chart6 = Chart(df, # linecols=[bankcol, gircol], rlinecols=corecol,
+               areacols=['FX', 'Gold'],
                title='no options',
-               xrange='2022-01:', yrange=[0, 200], ryrange=[-120, 60])
+               xrange='2022-01:', # yrange=[0, 200], ryrange=[-120, 60]
+               )
 
 # Save
 chart6.save(outdir + '/area_1_no_options.pdf')
@@ -74,7 +76,7 @@ chart6.save(outdir + '/area_1_no_options.pdf')
 chart6 = Chart(df, rlinecols=[bankcol, gircol], linecols=corecol,
                areacols=['FX', 'Gold'], areaaxis='right',
                title='right y-axis',
-               xrange='2022-01:', ryrange=[0, 200], yrange=[-120, 60])
+               xrange='2022-01:') # , ryrange=[0, 200], yrange=[-120, 60])
 
 # Save
 chart6.save(outdir + '/area_2_right.pdf')

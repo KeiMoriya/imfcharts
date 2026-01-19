@@ -2398,6 +2398,9 @@ chart1 = Chart(df, linecols=[linecol, 'forecast'],
 ## Additional Functions{#sec-basics-additional}
 
 Further functions exist for creating or customizing charts and also manipulating them.
+In many cases the functions can be called directly as `Matplotlib` functions, and the underlying functions are shown.
+The reason these functions exist is so that the defualt behavior of any IMF charts can be automatically captured using these
+so that users do not have to be aware of, or look into the underlying functions.
 
 ### Showing and Saving `Chart`
 
@@ -2458,19 +2461,19 @@ Options for setting the title are below.
 
 | Argument | Default | Description |
 |---|---|---|
-| title | None | The title to be shown. |
+| text | None | The title to be shown. When calling `Chart()` this is `title`. |
 | color | 'black' | Color of title. When calling `Chart()` this is `titlecolor`. |
 | fontsize | 14 | Font size of title. When calling `Chart()` this is `titlefontsize`. |
 | font | 'Segoe UI' | Title font. When calling `Chart()` this is `titlefont`. |
 | fontweight | 'normal' | Choose font weight from [options](https://matplotlib.org/stable/users/explain/text/text_props.html){target="_blank"} available. When calling `Chart()` this is `titlefontweight`. |
 | loc | None | Horizontal alignment of title. When calling `Chart()` this is `titleloc`. |
-| y |None | y coordinate of text. When calling `Chart()` this is `titley`. |
+| y |1.05 | y coordinate of text. When calling `Chart()` this is `titley`. |
 
 : {tbl-colwidths="[10,10, 80]"}
 
 The title can be set after the `Chart` object is created with
 ```python
-chart.set_title(title)
+chart.title(title)
 ```
 and any of the options above.
 
@@ -2478,52 +2481,104 @@ Options for setting the subtitle are below.
 
 | Argument | Default | Description |
 |---|---|---|
-| subtitle | None | The subtitle to be shown. |
+| text | None | The subtitle to be shown. When calling `Chart()` this is `subtitle`. |
 | color | 'black' | Color of subtitle. When calling `Chart()` this is `subtitlecolor`. |
 | fontsize | 14 | Font size of subtitle. When calling `Chart()` this is `subtitlefontsize`. |
 | font | 'Segoe UI' | Subtitle font. When calling `Chart()` this is `subtitlefont`. |
 | fontweight | 'normal' | Choose font weight from [options](https://matplotlib.org/stable/users/explain/text/text_props.html){target="_blank"} available. When calling `Chart()` this is `subtitlefontweight`. |
 | ha | None | Horizontal alignment of subtitle. When calling `Chart()` this is `subtitleha`. |
 | va | None | Vertical alignment of subtitle. When calling `Chart()` this is `subtitleva`. |
+| y |1.03 | y coordinate of text. When calling `Chart()` this is `subtitley`. |
 
 : {tbl-colwidths="[10,10, 80]"}
 
 The subtitle can be set after the `Chart` object is created with
 ```python
-chart.set_subtitle(subtitle)
+chart.subtitle(subtitle)
 ```
 and any of the options above.
 
-Axes titles are set within `Chart()` with arguments `xtitle` and `yttile`, together with `xtitlesize`, `ytitlesize`.
-Internally these call `Chart.set_xtitle(xtitle, xtitlesize)` and `Chart.set_ytitle(ytitle, ytitlesize)`.
+### Adding Axes Labels
 
-                 xtickfontsize=14, ytickfontsize=14,
-                 xticklength=None, yticklength=None,
-                 xtickangle=0,
-                 nxticks=7,
-                 xformat='auto',
-                 dict_legend=None,
-                 dict_xaxis=None,
-                 dict_yaxis=None,
-                 # style
-                 style='default',
+Axes labels (titles) can be set within `Chart()` with arguments `xtitle` and `yttile`, along with various arguments for customization.
+Internally these call `Chart.xtitle(xtitle)` and `Chart.ytitle(ytitle)`, which rely on the `Matplotlib` functions
+`ax.set_xlabel()` and `ax.set_ylabel()`.
 
-                 xrange=None, yrange=None, ryrange=None,
-                 xmargins='auto',
-                 width=10, height=6,
-                 topxaxis='left',
-                 hlines=[], vlines=[], hrects=[], vrects=[],
+The options for `xtitle()` and `ytitle()` are below.
+
+| Argument | Default | Description |
+|---|---|---|
+| text | None | The text to be shown. When calling `Chart()` this is `xtitle` and `ytitle`. |
+| fontsize | 14 | Font size. When calling `Chart()` this is `xfontsize` and `yfontsize`. |
+| font | 'Segoe UI' | Text font. When calling `Chart()` this is `xfont` and `yfont`. |
+| fontweight | 'normal' | Choose font weight from [options](https://matplotlib.org/stable/users/explain/text/text_props.html){target="_blank"} available. When calling `Chart()` this is `xfontweight` and `yfontweight`. |
+| color | 'black' | Color of text. When calling `Chart()` this is `xcolor` and `ycolor`. |
+| pad | 8 | Padding between axis and label. When calling `Chart()` this is `xpad` and `ypad`. |
+| loc | 'left'/'center' | Location of label, left for x-axis, center for y-axis. When calling `Chart()` this is `xloc` and `yloc`. |
+| rotation | 0/90 | Rotation of label. When calling `Chart()` this is `xrotation` and `yrotation`. |
+| alpha |1 | Transparency of text. When calling `Chart()` this is `xalpha` and `yalpha`. |
+
+Below is an example of customized x-axis and y-axis labels.
+
+```{python}
+#| label: basics_axis_titles
+#| fig-cap: "Specifying x-axis and y-axis titles"
+#| code-fold: show
+
+infilename = 'data/turkey_page2/fig2_chart3_mp.csv'
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+
+chart = Chart(df, linecols=df.columns,
+              title='Examples of X-axis and Y-axis Titles',
+              subtitle='(Percent)',
+	      xtitle='dates',
+	      xfontsize=10, xfont='monospace', xfontweight='bold', xcolor='red', xpad=2, xloc='center', xrotation=30, xalpha=0.3,
+              ytitle='values',
+              yfontsize=10, yfont='monospace', yfontweight='bold', ycolor='blue', ypad=2, yloc='top', yrotation=75, yalpha=0.3,
+              colorcycle=['red', 'green', 'blue'],
+              linewidth=3,
+              xrange='2023-01:', yrange=[0, 90])
+```
 
 ### Legend options.
-                 ncol_legend=1,
-                 legend_spacing=0.5,
-                 legend_fontsize=14,
-                 legend_header='',
-                 legend_left=0.04, legend_bottom=0.85, legend_width=0.70, legend_height=0.15,
-                 legend_mode='expand',
-                 show_legend=True,
+
     def update_legend(self,
+                      ncol_legend=None, legend_spacing=None,
+                      legend_left=None, legend_bottom=None, legend_width=None, legend_height=None, legend_mode=None, adjust=True,
+                      legend_header=None, legend_header_color=None, legend_header_fontsize=None)
+
+    def set_legend(self, show=True):
+        '''
+        Show legend.
+        If show=False, don't show and delete existing legend.
+        '''
+
+        # Modify self.show_legend
+        if show:
+            self.show_legend = True
+
+            # Create legend if it does not exist
+            if not self.legend:
+                self.update_legend()
+                
+        else:
+            self.show_legend = False
+
+            # If a legend already exists, delete
+            if self.legend:
+                try:
+                    self.ax.get_legend().remove()
+                    self.legend = None
+                except Exception as e:
+                    print('WARNING: Could not remove existing legend with exception:')
+                    print(e)
+
     def set_show_legend(self, option):
+        if option:
+            self.show_legend = True
+        else:
+            self.show_legend = False
+
 
 ### Show left or right x-axis on top.
     `topxaxis`.

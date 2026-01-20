@@ -271,7 +271,8 @@ For this purpose many of the functions like `lines()` are able to receive the in
 Full use of this feature would allow this library to be integrated into various data formats such as DMXe, etc.
 
 The goal of this library is to cover the 90% of instances where a chart is needed, and to be able to
-provide a quick solution which is reproducible and usable by many people. It is *not* intended as a package
+provide a quick solution which is reproducible and usable by many people. Since it relies on the open source `Matplotlib` library,
+further customizations of charts can be added as needed. The library is *not* intended as a package
 to cover every single customized chart. The hope is that this library helps the evolution of the Fund in managing its data and assets
 and it makes life easier for everyone who dares to try something new.
 
@@ -348,7 +349,7 @@ attrs = {linecol             : {'linewidth' : 4, 'color' : IMFBLACK},
 
 chart1 = Chart(df, linecols=linecol, barcols=barcols,
                attrs=attrs,
-               topxaxis='left',
+               topaxis='left',
                title='Central Government: Primary Expenditure Components',
                subtitle='(Percent of GDP)',
                xrange='2018-01:', yrange=[0, 30],
@@ -378,7 +379,7 @@ attrs = {gircol  : {'color' : '#416FA6'},
 
 chart6 = Chart(df, linecols=gircol, areacols=['FX', 'Gold'],
                attrs=attrs,
-               topxaxis='right',
+               topaxis='right',
                title='Gross International Reserves',
                subtitle='(Billions USD)',
                xrange='2022-01:', yrange=[0, 200], ryrange=[-120, 40])
@@ -443,7 +444,7 @@ attrs = {'Return to asset' : {'color' : IMFBLUE},
 
 # Create Chart object
 chart = Chart(df, barcols='Return to asset', rlinecols='Return to equity',
-              topxaxis='right',
+              topaxis='right',
               barlinewidth=0,
               attrs=attrs,
               title='Bank Profitability 1/',
@@ -670,7 +671,6 @@ attrs = {linecol : {'linewidth' : 4,
 
 chart1 = Chart(df, linecols=linecol, barcols=barcols,
                attrs=attrs,
-               topxaxis='left',
                title='Contributions to Real GDP Growth',
                subtitle='(Percent, q/q)',
                xrange='2023Q1:', yrange=[-5, 9.5], ryrange=[-5, 9.5],
@@ -1102,7 +1102,6 @@ barcols = cols[1:]
 
 # Create Chart object
 chart1 = Chart(df, linecols=linecol, barcols=barcols,
-               topxaxis='left',
                title='Contributions to Real GDP Growth',
                subtitle='(Percent, q/q)',
                xrange='2023Q1:', yrange=[-5, 9.5], ryrange=[-5, 9.5],
@@ -1163,7 +1162,7 @@ attrs = {linecol : {'linewidth' : 4,
 
 chart1 = Chart(df, linecols=linecol, barcols=barcols,
                attrs=attrs,
-               topxaxis='left',
+               topaxis='left',
                title='Contributions to Real GDP Growth',
                subtitle='(Percent, q/q)',
                xrange='2023Q1:', yrange=[-5, 9.5], ryrange=[-5, 9.5],
@@ -2640,16 +2639,9 @@ format axes
                 def quarter_formatter(x, pos):
     def set_date_format(self, xformat='auto', debug=False):
 
-## Miscellaneous Topics {#sec-basics-misc}
+## Note on Available Colors {#sec-basics-misc-colors}
 
-Set which y-axis comes on top with chart.set_top_xaxis('left')
-
-By default, if NA values are in a column, the chart will connect all line segments.
-This may be misleading though as there is no data for some parts of the line.
-To show breaks in the line charts, set linebreaks=True.
-
-### Note on Available Colors {#sec-basics-misc-colors}
-
+Given that colors are an important aesthetic in all charts, this section explains the colors available.
 Colors can be specified as one of the following:
 
 - A valid `matplotlib` color (see [List of named colors](https://matplotlib.org/stable/gallery/color/named_colors.html){target="_blank"}.
@@ -2657,6 +2649,122 @@ Colors can be specified as one of the following:
 - A color hex code specified as a `str` with format "#RRGGBB" where each of RR, GG, BB are hexadecimal values from "00" to "FF".
 - An RGBA string of the form (r, g, b, t) where r, g, b are values between 0 - 1 and t is the transparency, also 0 - 1.
 - Several colors are defined as `IMFBLUE`, `IMFRED`, `IMFGREEN`, `IMFGREY`, `IMFBLACK` and are imported from `imfcharts`.
+
+See the gallery below for examples.
+
+```{python}
+#| label: basics_color_data
+infilename = 'data/turkey_page5/fig5_chart2_current_account_mms.csv'
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0]).dropna(how='all', axis=0)
+```
+
+::: {.panel-tabset}
+
+### Named Colors
+
+Using named basic colors, which are simplest and most intuitive to use.
+
+```{python}
+#| label: gallery_colors_basic
+#| fig-cap: "Using Basic Colors"
+#| code-fold: show
+
+chart = Chart(df, linecols=df.columns,
+               colorcycle=['red', 'green', 'blue', 'magenta'],
+               title='Basic Named Colors',
+               xrange='2022-01:', yrange=[-95, 60],
+               legend_bottom=0.22, legend_left=0.55)
+```
+
+### CSS Colors
+
+Using named CSS colors, which provide more flexibility but are somewhat difficult to remember.
+
+```{python}
+#| label: gallery_colors_css
+#| fig-cap: "Using CSS Colors"
+#| code-fold: show
+
+chart = Chart(df, linecols=df.columns,
+               colorcycle=['firebrick', 'lawngreen', 'darkturquoise', 'darkviolet'],
+               title='CSS Colors',
+               xrange='2022-01:', yrange=[-95, 60],
+               legend_bottom=0.22, legend_left=0.55)
+```
+
+### XKCD Colors
+
+Using named XKCD colors, which are are fun to use.
+Note that the names must be preceded by "xkcd:" followed by the name as-is from [here](https://xkcd.com/color/rgb/){target="_blank"}.
+
+```{python}
+#| label: gallery_colors_xkcd
+#| fig-cap: "Using XKCD Colors"
+#| code-fold: show
+
+chart = Chart(df, linecols=df.columns,
+               colorcycle=['xkcd:pea green', 'xkcd:dark brown', 'xkcd:kelly green', 'xkcd:bright purple'],
+               title='XKCD Colors',
+               xrange='2022-01:', yrange=[-95, 60],
+               legend_bottom=0.22, legend_left=0.55)
+```
+
+### HEX Colors
+
+Using HEX colors of the form "#RRGGBB", where each of RR, GG, BB are represented from 00 to FF.
+This is not intuitive, but provides a way to implement the color if known from other sources in this format.
+
+```{python}
+#| label: gallery_colors_hex
+#| fig-cap: "Using HEX Colors"
+#| code-fold: show
+
+chart = Chart(df, linecols=df.columns,
+               colorcycle=['#EE2222', '#22EF33', '#3232DD', '#DD54DE'],
+               title='HEX Colors',
+               xrange='2022-01:', yrange=[-95, 60],
+               legend_bottom=0.22, legend_left=0.55)
+```
+
+### RGBA Colors
+
+Using RGBA colors which are a tuple of the form (r, g, b, t) where each of
+r, g, b, t are the red, green, blue and trasnsparency, float values between 0 and 1.
+This is not intuitive, but provides a way to implement the color if known from other sources in this format.
+
+```{python}
+#| label: gallery_colors_rgba
+#| fig-cap: "Using RGBA Colors"
+#| code-fold: show
+
+chart = Chart(df, linecols=df.columns,
+               colorcycle=[(0.9, 0.05, 0.1, 0.7), (0.2, 0.85, 0.1, 0.8), (0.25, 0.05, 0.9, 0.6), (0.85, 0.25, 0.85, 0.6)],
+               title='RGBA Colors',
+               xrange='2022-01:', yrange=[-95, 60],
+               legend_bottom=0.22, legend_left=0.55)
+```
+
+### IMF Colors
+
+Some colors for the Fund are defined within the library.
+These colors are the following: `AXISGREY` : '#B3B3B3', `AXISGRAY` : '#B3B3B3', `IMFBLUE` : '#4B82AD',
+`IMFGREEN` : '#96BA79', `IMFRED` : '#C00000', `IMFGREY` : '#A6A8AC', `IMFGRAY` : '#A6A8AC', `IMFBLACK` : '#000000',
+
+: {tbl-colwidths="[40,60]"}
+
+```{python}
+#| label: gallery_colors_imf
+#| fig-cap: "Using IMF Colors"
+#| code-fold: show
+
+chart = Chart(df, linecols=df.columns,
+               colorcycle=[IMFRED, IMFGREEN, IMFBLUE, IMFGREY],
+               title='IMF Colors',
+               xrange='2022-01:', yrange=[-95, 60],
+               legend_bottom=0.22, legend_left=0.55)
+```
+
+:::
 
 <!------------------------------------------------------------------------------------------------------------------------------------>
 # Switching Styles {#sec-styles}

@@ -58,7 +58,7 @@ attrs = {linecol : {'linewidth' : 4, 'color' : IMFBLACK},
 
 chart1 = Chart(df, linecols=linecol, barcols=barcols,
                attrs=attrs,
-               topxaxis='left',
+               topaxis='left',
                title='Central Government: Primary Expenditure Components',
                subtitle='(Percent of GDP)',
                xrange='2018-01:', yrange=[0, 30],

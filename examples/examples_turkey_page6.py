@@ -75,7 +75,7 @@ attrs = {'Return to asset' : {'color' : IMFBLUE},
          'Return to equity' : {'color' : IMFRED}}
 
 # Create Chart object
-chart2 = Chart(df, barcols='Return to asset', rlinecols='Return to equity', topxaxis='right',
+chart2 = Chart(df, barcols='Return to asset', rlinecols='Return to equity', topaxis='right',
                barlinewidth=0,
                attrs=attrs,
                title='Bank Profitability 1/',

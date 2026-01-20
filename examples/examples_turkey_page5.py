@@ -215,7 +215,7 @@ chart6 = Chart(df, linecols=[bankcol, gircol], rlinecols=corecol, barcols=['FX',
                barlinewidth=0,
                linebreaks=False,
                attrs=attrs,
-               topxaxis='right',
+               topaxis='right',
                title='Gross International Reserves',
                subtitle='(Billions USD)',
                xrange='2022-01:', yrange=[0, 200], ryrange=[-120, 40])

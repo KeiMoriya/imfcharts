@@ -138,7 +138,7 @@ attrs = {'FX' : {'color' : 'yellow',
 chart6 = Chart(df, linecols=[bankcol, gircol], rlinecols=corecol,
                areacols=['FX', 'Gold'],
                attrs=attrs,
-               topxaxis='right',
+               topaxis='right',
                title='hatches',
                xrange='2022-01:', yrange=[-0.5, 200], ryrange=[-120, 60])
 
@@ -150,7 +150,7 @@ chart6.save(outdir + '/area_6_hatches.pdf')
 # ---------------------------------------------------------------------------------------------------------
 # Create Chart object
 chart6 = Chart(df, linecols=[bankcol, gircol], rlinecols=corecol,
-               topxaxis='right',
+               topaxis='right',
                title='kwargs',
                xrange='2022-01:', yrange=[-0.5, 200], ryrange=[-120, 60])
 
@@ -189,7 +189,7 @@ attrs = {'FX' : {'color' : 'yellow',
 chart6 = Chart(df, linecols=[bankcol, gircol], rlinecols=corecol,
                areacols=['FX', 'Gold'],
                attrs=attrs,
-               topxaxis='right',
+               topaxis='right',
                title='legend False',
                xrange='2022-01:', yrange=[-0.5, 200], ryrange=[-120, 60])
 

@@ -83,7 +83,7 @@ kw_arrow = {'head' : [pd.Timestamp('2025Q1'), 1.5],
 
 chart1 = Chart(df, linecols=linecol, barcols=barcols,
                attrs=attrs,
-               topxaxis='left',
+               topaxis='left',
                title='Contributions to Real GDP Growth',
                subtitle='(Percent, q/q)',
                xrange='2023Q1:', yrange=[-5, 9.5], ryrange=[-5, 9.5],

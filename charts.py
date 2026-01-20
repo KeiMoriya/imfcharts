@@ -1040,11 +1040,20 @@ class Chart:
                 if debug:
                     print('Set xlim to xrange as-is')
         elif self.xaxis_type == 'categorical':
-            self.ax.set_xlim(xrange[0] - 0.5, xrange[1] - 0.5)
+            # Default is to add 0.5 margins unless a margin is specified as a float
+            try:
+                margins = float(margins)
+                self.ax.set_xlim(xrange[0] - margins, xrange[1] + margins)
+            except:
+                self.ax.set_xlim(xrange[0] - 0.5, xrange[1] + 0.5)
         elif self.xaxis_type == 'numerical':
-            # Add 3% margin
+            # Default is to add 3% margins unless a margin is specified as a float
             total = np.abs(xrange[1] - xrange[0])
-            self.ax.set_xlim(xrange[0] - 0.03 * total, xrange[1] + 0.03 * total)
+            try:
+                margins = float(margins)
+                self.ax.set_xlim(xrange[0] - margins * total, xrange[1] + margins * total)
+            except:
+                self.ax.set_xlim(xrange[0] - 0.03 * total, xrange[1] + 0.03 * total)
         else:
             print('self.axis_type of ' + str(self.axis_type) + ' not implemented for set_xrange()')
             sys.exit()
@@ -1467,7 +1476,7 @@ class Chart:
                 print('called legend()')
 
         # Set x-axis range if specified
-        if xrange is not None:
+        if xrange is not None or margins is not None:
             if debug:
                 print('before calling set_xrange()')
                 print(xrange)
@@ -1574,7 +1583,7 @@ class Chart:
         self.xaxis_type = self._set_xaxis_type()
         if debug:
             print('self.xaxis_type = ' + str(self.xaxis_type))
-
+            
         # Set x-axis limits if specified, or use default
         if xrange is not None:
             xrange = self._parse_xrange(xrange, debug=debug)
@@ -1915,7 +1924,7 @@ class Chart:
             self.legend()
         
         # Set x-axis range if specified
-        if xrange is not None:
+        if xrange is not None or margins is not None:
             if debug:
                 print('before calling set_xrange()')
                 print(xrange)
@@ -2032,7 +2041,7 @@ class Chart:
             print('self.xaxis_type = ' + str(self.xaxis_type))
             
         # Set x-axis limits if specified, or use default
-        if xrange is not None:
+        if xrange is not None or margins is not None:
             xrange = self._parse_xrange(xrange, debug=debug)
             self.xrange = xrange
         else:
@@ -2252,7 +2261,7 @@ class Chart:
         # For area, default is to set margins=0 so that the are chart
         # does not look like it was chopped off at the edges.
         # To have same behavior as lines etc., use margins='auto'.
-        if xrange is not None:
+        if xrange is not None or margins is not None:
             if debug:
                 print('before calling set_xrange()')
                 print(xrange)

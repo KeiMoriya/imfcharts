@@ -2623,15 +2623,196 @@ chart =Chart(data=df, linecols=cols, debug=True)
 chart.hline(y=3, debug=True)
 ```
 
-## Advanced Usage
+### Formatting Axis Ranges {#sec-basics-format_axes}
 
-### Formatting Axis and Setting Ranges {#sec-basics-format_axes}
+Setting the axis range for the y-axes is straightforward.
+In `Chart()` as well as functions that draw data like `lines()`, `bars()`, and `area()`,
+pass in the argument `yrange=[ymin, ymax]` or `ryrange=[ymin, ymax]` and this will set
+the axis range of the left or right y-axis, respectively.
+Note that once the y-axis range is specified, this is recorded in the `Chart` object so that
+unless this is further updated with another call to a function with the argument `yrange`,
+the y-axis ranges will stay the same. A recommendation is to first create the chart without
+specifying the y-axis range and let `Matplotlib` automatically adjust the axis ranges,
+then for publication specify the range with "clean" numbers. Various examples of setting
+`yrange` or `ryrange` have been provided in this documentation. Internally, the y-axis range
+is changed with the functions `Chart.set_yrange([ymin, ymax])` and `Chart.set_ryrange([ymin, ymax])`.
+```python
+chart =Chart(data=df, linecols='GDP', rlinecols='Inflation')
+chart.set_yrange([-2, 3])
+chart.set_ryrange([0, 15])
+```
 
-format axes
+Setting the x-axis range is a little more complicated as in many cases a time series is plotted,
+and margins and formatting is based on the frequency and length of data.
+The argument `xrange` can be passed into `Chart()` as well as functions that draw data - `lines()`, `bars()`, and `area()`.
+If a time series is being plotted, `xrange` can be an iterable of length two that can be dates or `str`s that can be interpreted
+as dates, or a `str` that has two dates separated by a colon (:). In the below, all are equivalent.
 
-    def set_xrange(self, xrange, margins='auto', debug=False):
-    def set_yrange(self, yrange):
-    def set_ryrange(self, ryrange):
+```python
+# Specify as two dates
+chart = Chart(df, linecols=col, xrange=[pd.Timestamp('2020-01'), pd.Timestamp('2025-01')])
+
+# Specify as two strs that can be interpreted as dates
+chart = Chart(df, linecols=col, xrange=['2020-01', '2025-01'])
+
+# Specify a str with two dates separated by a :
+chart = Chart(df, linecols=col, xrange='2020-01:2025-01')
+```
+
+When specifying a `str` with two dates separated a colon, if a date is abbreviated on one side,
+the data passed in will determine the range for that side:
+```python
+# Set only starting range (all available data including and after 2020-01 shown)
+chart = Chart(df, linecols=col, xrange='2020-01:')
+
+# Set only ending range (all available data including and before 2025-01 shown)
+chart = Chart(df, linecols=col, xrange=':2025-01')
+```
+
+In many cases it is useful to have margins around the start and end so that the data points can be clearly seen.
+In all cases, when `xrange` can be specified, a further option `margins` can be specified as well.
+This defualts to `'auto'` in which case the frequency of the data will determine the margins.
+For each frequency of daily, weekly, monthly, quarterly and yearly data, the margins are 1, 5, 30, 85, 335 days, respectively.
+Passing an integer value to `margins` will set the margin on both sides to be that many days.
+
+```python
+# Default, margins determined by frequency of data
+chart = Chart(df, linecols=col, margins='auto')
+
+# Specify margins with integer, will have 10 days of margins on both sides
+chart = Chart(df, linecols=col, margins=10)
+```
+
+In cases where time series data is now shown, the margins can be specified as floats.
+If the data has an index of categorical data such as country names, by default if `margins` is `'auto'`
+margins of 0.5 (half a category length) will be added. This can be modified by specifying `margins` with a number.
+If the data has a numerical index, the default when `margins` is `'auto'` will be to add 3% margins around the total length of the data.
+This can also be modified by passing in a float that corresponds to the margins (in fractions of the total index length).
+
+```python
+# By default for categorical and numerical index,
+# margins of +/- 0.5 categories or 3% of the total will be added, respectively
+chart = Chart(df, linecols=col, margins='auto')
+
+# For categorical data index, specify margins as floats
+chart = Chart(df, linecols=col, margins=1.2)
+
+# For numerical data index, specify margins as floats as fraction of total length.
+# 5% margins:
+chart = Chart(df, linecols=col, margins=0.05)
+```
+
+Internally, the x-axis margins are called with the function
+```python
+chart.set_xrange(xrange, margins='auto')
+```
+which can be called at any time to modify the x-axis range.
+
+For time series data, another complication is how to format the x-axis tick values.
+When data is added to the chart via `Chart()`, `lines()`, `bars()`, `area()`,
+by default the x-axis formatting is determined by the data frequency.
+For each frequency the format is given as below.
+
+| Frequency | Formatting | Example |
+|---|---|---|
+| daily | '%m/%d/%Y' | '2026-01-01' |
+| weekly | '%m/%d/%Y' | '2026-01-01' |
+| monthly | '%b-%y' | 'Jan-26' |
+| quarterly | '%YQ%q' | '2026Q1' |
+| annual | '%Y' | '2026-01-01' |
+
+: {tbl-colwidths="[30,30,40]"}
+
+The format can also be specified directly with the argument `xformat` which is provided for
+`Chart()`, `lines()`, `bars()`, `area()`. This can either be a frequency (one of D, W, M, Q, A)
+so that the formatting matches the frequency in the above table, or it can be specified as a
+formatter like `'%Y-%m'`, which will show as values like '2026-01'.
+
+This can be specifed at any time with the function
+```python
+chart.set_xaxis_format(xformat)
+```
+
+The following gallery shows examples of setting the margins and x-axis formatting.
+
+```{python}
+#| label: basics_xaxis_data
+infilename = 'data/turkey_page5/fig5_chart2_current_account_mms.csv'
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0]).dropna(how='all', axis=0)
+```
+
+::: {.panel-tabset}
+
+### No options
+
+No options are provided for the x-axis, so all available data is plotted,
+and the x-axis is formatted to have the form `'%b-%Y'`.
+
+```{python}
+#| label: gallery_xaxis_nooptions
+#| fig-cap: "Defaults"
+#| code-fold: show
+chart = Chart(df, linecols=df.columns,
+               title='No options',
+               yrange=[-95, 60],
+               legend_bottom=0.22)
+```
+
+### Specify x-axis range, margins
+
+The x-axis range is specified along with margins, and the formatting is changed to '%Y-%m'.
+
+```{python}
+#| label: gallery_xaxis_options
+#| fig-cap: "X-axis Options"
+#| code-fold: show
+chart = Chart(df, linecols=df.columns,
+               title='Specify xrange, margins, xformat',
+               xrange='2022-01:', margins=90, xformat='%Y-%m',
+               yrange=[-95, 60],
+               legend_bottom=0.22, legend_left=0.55)
+```
+
+### Categorical Data
+
+For categorical data the margins default to half a category length.
+
+```{python}
+#| label: gallery_xaxis_categorical
+#| fig-cap: "Categorical Data"
+#| code-fold: show
+
+infilename = 'data/turkey_page5/fig5_chart3_terms_of_trade.csv'
+df = pd.read_csv(infilename, index_col=0)
+
+chart3 = Chart(df, barcols=df.columns, barstack=False,
+               barlinewidth=0, xtickangle=90, xticklength=0,
+               title='Categorical Data',
+               yrange=[-15, 15],
+               legend=False)
+```
+
+### Categorical Data with Margins
+
+Specify the margins in units of a category.
+
+```{python}
+#| label: gallery_xaxis_categorical_options
+#| fig-cap: "Categorical Data With Margins"
+#| code-fold: show
+
+infilename = 'data/turkey_page5/fig5_chart3_terms_of_trade.csv'
+df = pd.read_csv(infilename, index_col=0)
+
+chart3 = Chart(df, barcols=df.columns, barstack=False,
+               barlinewidth=0, xtickangle=90, xticklength=0,
+               title='Categorical Data',
+               margins=2,
+               yrange=[-15, 15],
+               legend=False)
+```
+
+:::
 
     def set_xticks(self, size=None, length=None, angle=0):
     def set_yticks(self, size=None, length=None):

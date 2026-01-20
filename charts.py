@@ -166,7 +166,7 @@ class Chart:
                  xformat='auto',
                  margins='auto',
                  width=10, height=6,
-                 topxaxis='left',
+                 topaxis='left',
                  
                  # legend options ----------------------------------------------------------
                  legend=True, # Whether to show legend
@@ -306,7 +306,7 @@ class Chart:
 
         # Whether left or right x-axis should be drawn on top.
         # Use self.set_top_xaxis() to set.
-        self.topxaxis = topxaxis
+        self.topaxis = topaxis
 
         # ------------------------------------------------------------------------------
         # Entries, labels for legend
@@ -388,7 +388,7 @@ class Chart:
             self.set_nxticks(self.nxticks)
 
         # Set which x-axis is drawn on top
-        self.set_top_xaxis(self.topxaxis)
+        self.set_top_axis(self.topaxis)
                 
         # ---------------------------------------------------------------------------------------------------
         # Draw area, bars, lines
@@ -1492,7 +1492,7 @@ class Chart:
             self.set_nxticks(self.nxticks)
 
         # Set which x-axis is drawn on top
-        self.set_top_xaxis(self.topxaxis)
+        self.set_top_axis(self.topaxis)
 
         # If yrange is specified use it, otherwise use self.yrange
         if axis == 'left':
@@ -1940,7 +1940,7 @@ class Chart:
             self.set_nxticks(self.nxticks)
 
         # Set which x-axis is drawn on top
-        self.set_top_xaxis(self.topxaxis)
+        self.set_top_axis(self.topaxis)
 
         # If yrange is specified use it, otherwise use self.yrange
         if axis == 'left':
@@ -2277,7 +2277,7 @@ class Chart:
             self.set_nxticks(self.nxticks)
 
         # Set which x-axis is drawn on top
-        self.set_top_xaxis(self.topxaxis)
+        self.set_top_axis(self.topaxis)
 
         # If yrange is specified use it, otherwise use self.yrange
         if axis == 'left':
@@ -2332,22 +2332,22 @@ class Chart:
             else:
                 print('WARNING: indexcol specified but data is not DataFrame')
 
-    def set_top_xaxis(self, topxaxis='left'):
+    def set_top_axis(self, topaxis='left'):
         '''
         Set which x-axis is drawn on top.
         '''
 
-        if topxaxis == 'left':
+        if topaxis == 'left':
             if self.ax_right:
                 self.ax.set_zorder(self.ax_right.get_zorder() + 1)
                 self.ax.patch.set_visible(False)
-        elif topxaxis == 'right':
+        elif topaxis == 'right':
             if self.ax_right:
                 self.ax_right.set_zorder(self.ax.get_zorder() + 1)
                 self.ax_right.patch.set_visible(False)
         else:
             print('WARNING:')
-            print('Chart.topxaxis must be "left" or "right", given ' + str(topxaxis))
+            print('Chart.topaxis must be "left" or "right", given ' + str(topaxis))
 
     def hline(self, y, xrange=None, coordinates='data', color='red', linewidth=1, linestyle='-', alpha=1, dashes=None, dash_capstyle=None,
               label='', legend=False, zorder=3,

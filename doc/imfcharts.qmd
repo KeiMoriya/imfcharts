@@ -250,6 +250,10 @@ The crucial point with AI is that although the AI system can be the one calling 
 the Fund retains full control of it. The use of open source, particularly Python ensures that any AI system can use it.
 See @sec-ai on further details of usage with AI systems.
 
+Another interesting future direction is integration with Excel so that the library can be called directly within Excel.
+As Excel is not going to go away, there is a benefit to having the ability to easily generate charts in an almost native Excel way,
+but still retaining the intellectual properties of the chart created and not relying on the Excel featurees used to be maintained indefinitely.
+
 Finally, for users of Python and R, combining this library with the [datatools](http://datatools){target="_blank"} provides an end-to-end solution for
 the analysis lifecycle:
 
@@ -265,6 +269,11 @@ This would allow abstracting the features contained in the chart (such as colors
 then later on when the data has been updated, to generate the chart using those features.
 For this purpose many of the functions like `lines()` are able to receive the inputs in a `dict` format.
 Full use of this feature would allow this library to be integrated into various data formats such as DMXe, etc.
+
+The goal of this library is to cover the 90% of instances where a chart is needed, and to be able to
+provide a quick solution which is reproducible and usable by many people. It is *not* intended as a package
+to cover every single customized chart. The hope is that this library helps the evolution of the Fund in managing its data and assets
+and it makes life easier for everyone who dares to try something new.
 
 <span style="color:red;">TODO: EXPAND ON</span>
 
@@ -563,7 +572,7 @@ chart3 = Chart(df, barcols=df.columns, barstack=False, # baraxis='right',
                title='Terms of Trade Shock, 2025Q2 or Latest',
                subtitle='(Percent change from 2023 average)',
                yrange=[-15, 15],
-               show_legend=False)
+               legend=False)
 chart3
 ```
 
@@ -1402,7 +1411,7 @@ chart3 = Chart(df, barcols=df.columns, barstack=False,
                xtickangle=90, xticklength=0,
                title='categorical, no stack with colors',
                yrange=[-15, 15],
-               show_legend=False)
+               legend=False)
 ```
 
 :::
@@ -2518,6 +2527,8 @@ The options for `xtitle()` and `ytitle()` are below.
 | rotation | 0/90 | Rotation of label. When calling `Chart()` this is `xrotation` and `yrotation`. |
 | alpha |1 | Transparency of text. When calling `Chart()` this is `xalpha` and `yalpha`. |
 
+: {tbl-colwidths="[10,10, 80]"}
+
 Below is an example of customized x-axis and y-axis labels.
 
 ```{python}
@@ -2531,66 +2542,91 @@ df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 chart = Chart(df, linecols=df.columns,
               title='Examples of X-axis and Y-axis Titles',
               subtitle='(Percent)',
-	      xtitle='dates',
-	      xfontsize=10, xfont='monospace', xfontweight='bold', xcolor='red', xpad=2, xloc='center', xrotation=30, xalpha=0.3,
+              xtitle='dates',
+              xfontsize=10, xfont='monospace', xfontweight='bold', xcolor='red', xpad=2, xloc='center', xrotation=30, xalpha=0.3,
               ytitle='values',
               yfontsize=10, yfont='monospace', yfontweight='bold', ycolor='blue', ypad=2, yloc='top', yrotation=75, yalpha=0.3,
-              colorcycle=['red', 'green', 'blue'],
-              linewidth=3,
               xrange='2023-01:', yrange=[0, 90])
 ```
 
-### Legend options.
+### Legend Options
 
-    def update_legend(self,
-                      ncol_legend=None, legend_spacing=None,
-                      legend_left=None, legend_bottom=None, legend_width=None, legend_height=None, legend_mode=None, adjust=True,
-                      legend_header=None, legend_header_color=None, legend_header_fontsize=None)
+The legend is by default set automatically to be shown.
+Internally, this is set with the function `legend()` which takes on various options for customization.
+To turn off the existing legend, call
+```python
+Chart(legend=False)
+```
+or for an existing `Chart`, call
+```python
+chart.legend(show=False)
+```
+which will then delete the existing legend.
 
-    def set_legend(self, show=True):
-        '''
-        Show legend.
-        If show=False, don't show and delete existing legend.
-        '''
+When adding new elements to a `Chart` object, it will always record which elemnts are added to the legend as an entry,
+so even if a `Chart` is created with the legend turned off, once it is turned on it will correctly show all
+entries that were specified. By default, lines, bars and areas will have legend entries added for each column
+specified unless `legend=False` is passed into the attributes like
+```python
+chart.lines(data=df, cols='GDP', attrs={'GDP' : {'legend' : False}})
+```
+while for horizontl/vertical lines and shades as well as for filling between lines will not show a legend entry
+unless `legend=True` is passed in explicitly:
+```python
+chart.hline(y=3, legend=True)
+```
 
-        # Modify self.show_legend
-        if show:
-            self.show_legend = True
+The options available for a legend are shown below.
+All of these options can be passed directly into `Chart()` so that the properties are set for the `Chart` object.
 
-            # Create legend if it does not exist
-            if not self.legend:
-                self.update_legend()
-                
-        else:
-            self.show_legend = False
+| Argument | Default | Description |
+|---|---|---|
+| ncol_legend | 1 | Number of columns for the legend |
+| legend_spacing | 0.5 | Vertical spacing between legend entries. |
+| legend_fontsize | 14 | Font size of legend entries |
+| legend_header | '' | Legend title |
+| legend_header_color | 'black' | Legend title font color |
+| legend_header_fontsize | 16 | Legend title font size |
+| legend_left | 0.04 | Legend left position, axes coordinates (left edge 0, right edge 1) |
+| legend_bottom | 0.85 | Legend bottom position, axes coordinates (bottom edge 0, top edge 1) |
+| legend_width | 0.70 | Width of legend in axes coordinates |
+| legend_height | 0.15 | Height of legend in axes coordinates |
+| legend_mode | 'expand' | How legend expands, 'expand' will set it to expand as necessary |
+| legend_frame | False | Whether to have a frame around the legend. |
+| legend_color | 'white' | Legend background color |
+| legend_alpha | 1 | Legend transparency |
+| legend_shadow | False | Add a shadow to the legend |
+| legend_fancybox | False | Whether the legend corners are rounded |
+| legend_edge | 'black' | Legend edge line colors |
+| legend_linestyle | '-' | Legend edge line style |
+| legend_linewidth | 1 | Legend edge line width |
 
-            # If a legend already exists, delete
-            if self.legend:
-                try:
-                    self.ax.get_legend().remove()
-                    self.legend = None
-                except Exception as e:
-                    print('WARNING: Could not remove existing legend with exception:')
-                    print(e)
+: {tbl-colwidths="[10,10, 80]"}
 
-    def set_show_legend(self, option):
-        if option:
-            self.show_legend = True
-        else:
-            self.show_legend = False
+### Show Left or Right Y-axis on Top
 
+In some cases the user may want to specify which of the objects drawn on the left and right y-axes should
+be shown on top. The function
+```python
+chart.set_top_axis('right')
+```
+will set the objects drawn on the right y-axis to show up on top.
+This can be reset to the default of having the left y-axis objects on top with
+```python
+chart.set_top_axis('left')
+```
 
-### Show left or right x-axis on top.
-    `topxaxis`.
-    
-    def set_top_xaxis(self, topxaxis='left'):
+### Showing Additional Information
 
-### Showing information.
+To show internal debugging messages, set `debug=True` for various functions, including `Chart()`
+```python
+chart =Chart(data=df, linecols=cols, debug=True)
+chart.hline(y=3, debug=True)
+```
 
-To show internal debugging messages, set `debug=True`.
+## Advanced Usage
 
-
-## Formatting Axis and Setting Ranges {#sec-basics-format_axes}
+### Formatting Axis and Setting Ranges {#sec-basics-format_axes}
 
 format axes
 

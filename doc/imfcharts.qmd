@@ -731,7 +731,7 @@ It is possible to modify a generated chart by calling additional functions on it
 chart.bars(data=df, cols='Inflation')
 
 # Set x-axis range
-chart.set_xrange([0, 3])
+chart.xrange([0, 3])
 
 # Set title
 chart.title('Domestic Growth (Annual)')
@@ -2607,12 +2607,12 @@ All of these options can be passed directly into `Chart()` so that the propertie
 In some cases the user may want to specify which of the objects drawn on the left and right y-axes should
 be shown on top. The function
 ```python
-chart.set_top_axis('right')
+chart.top_axis('right')
 ```
 will set the objects drawn on the right y-axis to show up on top.
 This can be reset to the default of having the left y-axis objects on top with
 ```python
-chart.set_top_axis('left')
+chart.top_axis('left')
 ```
 
 ### Showing Additional Information
@@ -2635,11 +2635,11 @@ the y-axis ranges will stay the same. A recommendation is to first create the ch
 specifying the y-axis range and let `Matplotlib` automatically adjust the axis ranges,
 then for publication specify the range with "clean" numbers. Various examples of setting
 `yrange` or `ryrange` have been provided in this documentation. Internally, the y-axis range
-is changed with the functions `Chart.set_yrange([ymin, ymax])` and `Chart.set_ryrange([ymin, ymax])`.
+is changed with the functions `Chart.yrange([ymin, ymax])` and `Chart.ryrange([ymin, ymax])`.
 ```python
 chart =Chart(data=df, linecols='GDP', rlinecols='Inflation')
-chart.set_yrange([-2, 3])
-chart.set_ryrange([0, 15])
+chart.yrange([-2, 3])
+chart.ryrange([0, 15])
 ```
 
 Setting the x-axis range is a little more complicated as in many cases a time series is plotted,
@@ -2704,7 +2704,7 @@ chart = Chart(df, linecols=col, margins=0.05)
 
 Internally, the x-axis margins are called with the function
 ```python
-chart.set_xrange(xrange, margins='auto')
+chart.xrange(xrange, margins='auto')
 ```
 which can be called at any time to modify the x-axis range.
 
@@ -2730,7 +2730,7 @@ formatter like `'%Y-%m'`, which will show as values like '2026-01'.
 
 This can be specifed at any time with the function
 ```python
-chart.set_xaxis_format(xformat)
+chart.xaxis_format(xformat)
 ```
 
 The following gallery shows examples of setting the margins and x-axis formatting.
@@ -2814,9 +2814,9 @@ chart3 = Chart(df, barcols=df.columns, barstack=False,
 
 :::
 
-    def set_xticks(self, size=None, length=None, angle=0):
-    def set_yticks(self, size=None, length=None):
-    def set_nxticks(self, nxticks):
+    def xticks(self, size=None, length=None, angle=0):
+    def yticks(self, size=None, length=None):
+    def nxticks(self, nxticks):
                 def quarter_formatter(x, pos):
     def set_date_format(self, xformat='auto', debug=False):
 

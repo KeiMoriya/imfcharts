@@ -178,7 +178,7 @@ kwargs = {'data' : df, 'lo' : hi, 'hi' : 'hi2', 'color' : 'blue', 'edgecolor' : 
           'linewidth' : 1.5, 'linestyle' : '--', 'alpha' : 0.2, 'zorder' : 2}
 chart1.fill(**kwargs)
 
-chart1.set_xrange('2016-01:')
+chart1.xrange('2016-01:')
 
 # Save
 chart1.save(outdir + '/fill_6_kwargs.pdf')
@@ -205,7 +205,7 @@ kwargs = {'data' : df, 'lo' : hi, 'hi' : 'hi2', 'color' : 'blue', 'edgecolor' : 
           'linewidth' : 1.5, 'linestyle' : '--', 'alpha' : 0.2, 'zorder' : 2}
 chart1.fill(**kwargs)
 
-chart1.set_xrange('2016-01:')
+chart1.xrange('2016-01:')
 
 # Save
 chart1.save(outdir + '/fill_7_right.pdf')

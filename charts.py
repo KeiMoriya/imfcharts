@@ -288,7 +288,7 @@ class Chart:
         self.yticklength = yticklength
         
         self.xtickangle = xtickangle
-        self.nxticks = nxticks
+        self._nxticks = nxticks
 
         self.xformat = xformat
         self.margins = margins
@@ -305,8 +305,8 @@ class Chart:
         self.legend_header_fontsize = legend_header_fontsize
 
         # Whether left or right x-axis should be drawn on top.
-        # Use self.set_top_xaxis() to set.
-        self.topaxis = topaxis
+        # Use self.top_xaxis() to set.
+        self._topaxis = topaxis
 
         # ------------------------------------------------------------------------------
         # Entries, labels for legend
@@ -348,12 +348,12 @@ class Chart:
         self.ytitle(self.ytitletext)
 
         # Set x, y tick font size
-        self.set_xticks(size=self.xtickfontsize, length=self.xticklength, angle=self.xtickangle)
-        self.set_yticks(size=self.ytickfontsize, length=self.yticklength)
+        self.xticks(size=self.xtickfontsize, length=self.xticklength, angle=self.xtickangle)
+        self.yticks(size=self.ytickfontsize, length=self.yticklength)
 
         # Get xrange and trim data as needed
-        self.xrange = self._parse_xrange(xrange, debug=self.debug)
-        self._trim_data(self.xrange, debug=self.debug)
+        self._xrange = self._parse_xrange(xrange, debug=self.debug)
+        self._trim_data(self._xrange, debug=self.debug)
 
         # Set whether to allow breaks in line charts.
         # If linebreaks is True, NA values will have a break in lines.
@@ -361,7 +361,7 @@ class Chart:
         
         # Set x-axis range.
         if self.data is not None:
-            self.set_xrange(self.xrange, self.margins)
+            self.xrange(self._xrange, self.margins)
 
         # Set y-axis ranges if specified.
         # If yrange is None, keep as None instead of passing through _parse_yrange()
@@ -369,26 +369,26 @@ class Chart:
         # Matplotlib's default (0, 1).
         # Below, self.yrange and self.ryrange are always set,
         # and if None is passed in, they remain None.
-        self.yrange = yrange
+        self._yrange = yrange
         if yrange is not None:
-            self.yrange = self._parse_yrange(yrange)
-            self.set_yrange(self.yrange)
+            self._yrange = self._parse_yrange(yrange)
+            self.yrange(self._yrange)
 
-        self.ryrange = ryrange
+        self._ryrange = ryrange
         if ryrange is not None:
-            self.ryrange = self._parse_yrange(ryrange)
-            self.set_ryrange(self.ryrange)
+            self._ryrange = self._parse_yrange(ryrange)
+            self.ryrange(self._ryrange)
             
             
         # Set x-axis formatting
-        self.set_xaxis_format()
+        self.xaxis_format()
 
         # Set number of x-axis ticks
         if self.xaxis_type == 'datetime':
-            self.set_nxticks(self.nxticks)
+            self.nxticks(self._nxticks)
 
         # Set which x-axis is drawn on top
-        self.set_top_axis(self.topaxis)
+        self.topaxis(self._topaxis)
                 
         # ---------------------------------------------------------------------------------------------------
         # Draw area, bars, lines
@@ -396,28 +396,28 @@ class Chart:
             self.area(self.data, areacols, indexcol=self.indexcol, axis=areaaxis, colorcycle=None, alpha=self.alpha,
                       stack=areastack, linewidth=self.linewidth, edgecolor=self.areaedgecolor,
                       attrs=attrs,
-                      xrange=self.xrange,
+                      xrange=self._xrange,
                       debug=self.debug)
             
         if barcols is not None:
             self.bars(self.data, barcols, indexcol=self.indexcol, colorcycle=None, stack=barstack, total_barwidth=total_barwidth,
                       axis=baraxis, linewidth=self.barlinewidth, edgecolor=self.baredgecolor,
                       attrs=attrs,
-                      xrange=self.xrange,
+                      xrange=self._xrange,
                       debug=self.debug)
             
         if linecols is not None:
             self.lines(self.data, linecols, indexcol=self.indexcol, colorcycle=None,
                        linewidth=self.linewidth, linebreaks=self.linebreaks, drawstyle=self.drawstyle,
                        attrs=attrs,
-                       xrange=self.xrange,
+                       xrange=self._xrange,
                        debug=self.debug)
 
         if rlinecols is not None:
             self.lines(self.data, rlinecols, indexcol=self.indexcol, axis='right', colorcycle=None,
                        linewidth=self.linewidth, linebreaks=self.linebreaks, drawstyle=self.drawstyle,
                        attrs=attrs, 
-                       xrange=self.xrange,
+                       xrange=self._xrange,
                        debug=self.debug)
             
         # If hlines, vlines, hrects, vrects, fills, texts, arrows is given, loop over.
@@ -879,7 +879,7 @@ class Chart:
         self.ax.set_ylabel(text, fontsize=fontsize, font=font, fontweight=fontweight,
                            color=color, labelpad=pad, loc=loc, rotation=rotation, alpha=alpha)
 
-    def set_xticks(self, size=None, length=None, angle=0):
+    def xticks(self, size=None, length=None, angle=0):
         # If size is specified, update internal value
         if size is not None:
             self.xtickfontsize = size
@@ -891,7 +891,7 @@ class Chart:
         # Set
         self.ax.tick_params(axis='x', which='major', length=length, labelsize=size, labelrotation=angle)
 
-    def set_yticks(self, size=None, length=None):
+    def yticks(self, size=None, length=None):
         # If size is specified, update internal value
         if size is not None:
             self.ytickfontsize = size
@@ -905,7 +905,7 @@ class Chart:
         if self.ax_right:
             self.ax_right.tick_params(axis='y', length=length, which='major', labelsize=size)
 
-    def set_nxticks(self, nxticks):
+    def nxticks(self, nxticks):
         self.ax.xaxis.set_major_locator(MaxNLocator(nbins=nxticks))
 
         # From freq try to specify location of ticks
@@ -961,13 +961,13 @@ class Chart:
                 base = int(len(self.data) / 6)
                 self.ax.xaxis.set_major_locator(mdates.YearLocator(base=base))
             
-    def set_xrange(self, xrange, margins='auto', debug=False):
+    def xrange(self, xrange, margins='auto', debug=False):
         '''
         Set x-axis range of fig.
         '''
 
         if debug:
-            print('start of set_xrange() for xrange = ' + str(xrange) + ', margins = ' + str(margins))
+            print('start of xrange() for xrange = ' + str(xrange) + ', margins = ' + str(margins))
         xrange = self._parse_xrange(xrange)
         if debug:
             print('xrange after calling _parse_xrange():')
@@ -987,7 +987,7 @@ class Chart:
             elif freq == 'A':
                 margins = 335
             elif freq == '?':
-                margins = 0
+                pass
             else:
                 print('Unknown freq ' + freq)
                 sys.exit()
@@ -996,7 +996,7 @@ class Chart:
                 # Use input int as-is
                 pass
             else:
-                print('set_xrange: margins of type ' + str(type(margins)) + ' not allowed')
+                print('xrange: margins of type ' + str(type(margins)) + ' not allowed')
                 sys.exit()
 
         if self.xaxis_type == 'datetime':
@@ -1017,7 +1017,7 @@ class Chart:
         elif self.xaxis_type is None:
             return None
         else:
-            print('self.xaxis_type of ' + str(self.axis_type) + ' not implemented for set_xrange()')
+            print('self.xaxis_type of ' + str(self.axis_type) + ' not implemented for xrange()')
             sys.exit()
             
         if debug:
@@ -1043,9 +1043,11 @@ class Chart:
             # Default is to add 0.5 margins unless a margin is specified as a float
             try:
                 margins = float(margins)
-                self.ax.set_xlim(xrange[0] - margins, xrange[1] + margins)
             except:
-                self.ax.set_xlim(xrange[0] - 0.5, xrange[1] + 0.5)
+                margins = 0
+            # The second minus sign is not a mistake, need to shift both ranges to the left.
+            # The margins are then added to both sides equally.
+            self.ax.set_xlim(xrange[0] - 0.5 - margins, xrange[1] - 0.5 + margins)
         elif self.xaxis_type == 'numerical':
             # Default is to add 3% margins unless a margin is specified as a float
             total = np.abs(xrange[1] - xrange[0])
@@ -1055,10 +1057,10 @@ class Chart:
             except:
                 self.ax.set_xlim(xrange[0] - 0.03 * total, xrange[1] + 0.03 * total)
         else:
-            print('self.axis_type of ' + str(self.axis_type) + ' not implemented for set_xrange()')
+            print('self.axis_type of ' + str(self.axis_type) + ' not implemented for xrange()')
             sys.exit()
 
-    def set_yrange(self, yrange):
+    def yrange(self, yrange):
         '''
         Set y-axis range of fig.
         '''
@@ -1079,10 +1081,10 @@ class Chart:
         try:
             self.ax.set_ylim(ymin, ymax)
         except Exception as e:
-            print('Could not apply set_yrange() for yrange = ' + str(yrange))
+            print('Could not apply yrange() for yrange = ' + str(yrange))
             sys.exit()
 
-    def set_ryrange(self, ryrange):
+    def ryrange(self, ryrange):
         '''
         Set y-axis range of fig.
         '''
@@ -1106,10 +1108,10 @@ class Chart:
         try:
             self.ax_right.set_ylim(ymin, ymax)
         except Exception as e:
-            print('Could not apply set_ryrange() for yrange = ' + str(yrange))
+            print('Could not apply ryrange() for yrange = ' + str(yrange))
             sys.exit()
 
-    def set_xaxis_format(self, xformat=None, debug=False):
+    def xaxis_format(self, xformat=None, debug=False):
         '''
         Set formatting for datetime x-axis.
         `formatter` should be something like a
@@ -1121,7 +1123,7 @@ class Chart:
         '''
 
         if debug:
-            print('Start of set_xaxis_format()')
+            print('Start of xaxis_format()')
 
         # If xformat is given use it, otherwise use self.xformat
         if xformat is not None:
@@ -1213,7 +1215,7 @@ class Chart:
                 print('Cannot specify mdates.DateFormatter with xformat ="' + xformat + '"')
                 sys.exit()
         else:
-            print('set_xaxis_format():')
+            print('xaxis_format():')
             print('xformat of "' + str(xformat) + '" of type ' + str(type(xformat)) + ' not allowed')
             sys.exit()
 
@@ -1285,9 +1287,9 @@ class Chart:
         # Set x-axis limits if specified, or use default
         if xrange is not None:
             xrange = self._parse_xrange(xrange, debug=debug)
-            self.xrange = xrange
+            self._xrange = xrange
         else:
-            xrange = self.xrange
+            xrange = self._xrange
         if debug:
             print('xrange:')
             print(xrange)
@@ -1478,48 +1480,48 @@ class Chart:
         # Set x-axis range if specified
         if xrange is not None or margins is not None:
             if debug:
-                print('before calling set_xrange()')
+                print('before calling xrange()')
                 print(xrange)
             # If margins is specified, set it for this chart and use it.
             if margins is not None:
                 self.margins = margins
-            self.set_xrange(xrange, margins=self.margins, debug=debug)
+            self.xrange(xrange, margins=self.margins, debug=debug)
             if debug:
-                print('after calling set_xrange():')
-                print(self.xrange)
+                print('after calling xrange():')
+                print(self._xrange)
 
         # Set xaxis format.
         # If xformat was specified use it, otherwise use self.xformat
         if xformat is None:
             xformat = self.xformat
-        self.set_xaxis_format(xformat=xformat, debug=debug)
+        self.xaxis_format(xformat=xformat, debug=debug)
         
         # Set number of x-axis ticks
         if self.xaxis_type == 'datetime':
             if debug:
-                print('self.nxticks = ' + str(self.nxticks))
-            self.set_nxticks(self.nxticks)
+                print('self._nxticks = ' + str(self._nxticks))
+            self.nxticks(self._nxticks)
 
         # Set which x-axis is drawn on top
-        self.set_top_axis(self.topaxis)
+        self.topaxis(self._topaxis)
 
         # If yrange is specified use it, otherwise use self.yrange
         if axis == 'left':
             if yrange is None:
                 if getattr(self, 'yrange', None) is not None:
-                    yrange = self.yrange
+                    yrange = self._yrange
 
             if yrange is not None:
-                self.yrange = self._parse_yrange(yrange)
-                self.set_yrange(self.yrange)
+                self._yrange = self._parse_yrange(yrange)
+                self.yrange(self._yrange)
         if axis == 'right':
             if ryrange is None:
                 if getattr(self, 'ryrange', None) is not None:
-                    ryrange = self.ryrange
+                    ryrange = self._ryrange
                     
             if ryrange is not None:
-                self.ryrange = self._parse_yrange(ryrange)
-                self.set_ryrange(self.ryrange)
+                self._ryrange = self._parse_yrange(ryrange)
+                self.ryrange(self._ryrange)
 
     def bars(self, data=None, cols=None, indexcol=None, axis='left', colorcycle=None,
              stack=True, total_barwidth=None, linewidth=None, edgecolor=None,
@@ -1587,9 +1589,9 @@ class Chart:
         # Set x-axis limits if specified, or use default
         if xrange is not None:
             xrange = self._parse_xrange(xrange, debug=debug)
-            self.xrange = xrange
+            self._xrange = xrange
         else:
-            xrange = self.xrange
+            xrange = self._xrange
         if debug:
             print('xrange:')
             print(xrange)
@@ -1926,48 +1928,48 @@ class Chart:
         # Set x-axis range if specified
         if xrange is not None or margins is not None:
             if debug:
-                print('before calling set_xrange()')
+                print('before calling xrange()')
                 print(xrange)
             # If margins is specified, set it for this chart and use it.
             if margins is not None:
                 self.margins = margins
-            self.set_xrange(xrange, margins=self.margins, debug=debug)
+            self.xrange(xrange, margins=self.margins, debug=debug)
             if debug:
-                print('after calling set_xrange():')
-                print(self.xrange)
+                print('after calling xrange():')
+                print(self._xrange)
 
         # Set xaxis format.
         # If xformat was specified use it, otherwise use self.xformat
         if xformat is None:
             xformat = self.xformat
-        self.set_xaxis_format(xformat=xformat, debug=debug)
+        self.xaxis_format(xformat=xformat, debug=debug)
         
         # Set number of x-axis ticks
         if self.xaxis_type == 'datetime':
             if debug:
-                print('self.nxticks = ' + str(self.nxticks))
-            self.set_nxticks(self.nxticks)
+                print('self._nxticks = ' + str(self._nxticks))
+            self.nxticks(self._nxticks)
 
         # Set which x-axis is drawn on top
-        self.set_top_axis(self.topaxis)
+        self.topaxis(self._topaxis)
 
         # If yrange is specified use it, otherwise use self.yrange
         if axis == 'left':
             if yrange is None:
-                if getattr(self, 'yrange', None) is not None:
-                    yrange = self.yrange
+                if getattr(self, '_yrange', None) is not None:
+                    yrange = self._yrange
 
             if yrange is not None:
-                self.yrange = self._parse_yrange(yrange)
-                self.set_yrange(self.yrange)
+                self._yrange = self._parse_yrange(yrange)
+                self.yrange(self._yrange)
         if axis == 'right':
             if ryrange is None:
-                if getattr(self, 'ryrange', None) is not None:
-                    ryrange = self.ryrange
+                if getattr(self, '_ryrange', None) is not None:
+                    ryrange = self._ryrange
                     
             if ryrange is not None:
-                self.ryrange = self._parse_yrange(ryrange)
-                self.set_ryrange(self.ryrange)
+                self._ryrange = self._parse_yrange(ryrange)
+                self.ryrange(self._ryrange)
 
     def area(self, data=None, cols=None, indexcol=None, axis='left', colorcycle=None, alpha=1,
              stack=True, linewidth=None, edgecolor=None,
@@ -2043,9 +2045,9 @@ class Chart:
         # Set x-axis limits if specified, or use default
         if xrange is not None or margins is not None:
             xrange = self._parse_xrange(xrange, debug=debug)
-            self.xrange = xrange
+            self._xrange = xrange
         else:
-            xrange = self.xrange
+            xrange = self._xrange
         if debug:
             print('xrange:')
             print(xrange)
@@ -2263,40 +2265,40 @@ class Chart:
         # To have same behavior as lines etc., use margins='auto'.
         if xrange is not None or margins is not None:
             if debug:
-                print('before calling set_xrange()')
+                print('before calling xrange()')
                 print(xrange)
             # If margins is specified, set it for this chart and use it.
             if margins is not None:
                 self.margins = margins
-            self.set_xrange(xrange, margins=self.margins, debug=debug)
+            self.xrange(xrange, margins=self.margins, debug=debug)
             if debug:
-                print('after calling set_xrange():')
-                print(self.xrange)
+                print('after calling xrange():')
+                print(self._xrange)
 
         # Set xaxis format.
         # If xformat was specified use it, otherwise use self.xformat
         if xformat is None:
             xformat = self.xformat
-        self.set_xaxis_format(xformat=xformat, debug=debug)
+        self.xaxis_format(xformat=xformat, debug=debug)
         
         # Set number of x-axis ticks
         if self.xaxis_type == 'datetime':
             if debug:
-                print('self.nxticks = ' + str(self.nxticks))
-            self.set_nxticks(self.nxticks)
+                print('self._nxticks = ' + str(self._nxticks))
+            self.nxticks(self._nxticks)
 
         # Set which x-axis is drawn on top
-        self.set_top_axis(self.topaxis)
+        self.topaxis(self._topaxis)
 
         # If yrange is specified use it, otherwise use self.yrange
         if axis == 'left':
             if yrange is None:
-                if getattr(self, 'yrange', None) is not None:
-                    yrange = self.yrange
+                if getattr(self, '_yrange', None) is not None:
+                    yrange = self._yrange
 
             if yrange is not None:
-                self.yrange = self._parse_yrange(yrange)
-                self.set_yrange(self.yrange)
+                self._yrange = self._parse_yrange(yrange)
+                self.yrange(self._yrange)
 
             # If no yrange is given and data is all above 0,
             # set y-axis min to 0
@@ -2305,12 +2307,12 @@ class Chart:
                 
         if axis == 'right':
             if ryrange is None:
-                if getattr(self, 'ryrange', None) is not None:
-                    ryrange = self.ryrange
+                if getattr(self, '_ryrange', None) is not None:
+                    ryrange = self._ryrange
                     
             if ryrange is not None:
-                self.ryrange = self._parse_yrange(ryrange)
-                self.set_ryrange(self.ryrange)
+                self._ryrange = self._parse_yrange(ryrange)
+                self.ryrange(self._ryrange)
 
             # If no yrange is given and data is all above 0,
             # set y-axis min to 0
@@ -2341,7 +2343,7 @@ class Chart:
             else:
                 print('WARNING: indexcol specified but data is not DataFrame')
 
-    def set_top_axis(self, topaxis='left'):
+    def topaxis(self, topaxis='left'):
         '''
         Set which x-axis is drawn on top.
         '''

@@ -155,10 +155,21 @@ class Chart:
                  yloc='center', yrotation=90, yalpha=1,
                  
                  # xtick, ytick options ----------------------------------------------------
-                 xtickfontsize=14, ytickfontsize=14,
+                 xtickfontsize=None, ytickfontsize=None,
                  xticklength=None, yticklength=None,
-                 xtickangle=0,
-                 nxticks=7,
+                 xtickpad=None, ytickpad=None,
+                 xtickangle=0, ytickangle=0,
+                 # Number of ticks on axes.
+                 # nticksx is set to 'auto' so that
+                 # - for xaxis_type of 'datetime', it will automatically set label positions
+                 # - for xaxis_type of 'categorical', it will show all labels
+                 # - for xaxis_type of 'numerical' it will defualt to try 7 labels
+                 # If an integer is specified, the number of labels is adjusted to roughly match.
+                 # 
+                 # By default nticksy is None so that we let Matplotlib automatically decide.
+                 # Specifying the number of ticks can be useful at times but often leads to
+                 # the ticks appearing at numbers that are not as round as the default.
+                 nticksx='auto', nticksy=None,
                  
                  # individual look of each column in data-----------------------------------
                  attrs=None,
@@ -281,15 +292,53 @@ class Chart:
         self.yrotation = yrotation
         self.yalpha = yalpha
 
-        self.xtickfontsize = xtickfontsize
-        self.ytickfontsize = ytickfontsize
+        # If params for ticks were specified use them,
+        # otherwise default to style
+        if xtickfontsize is not None:
+            self.xtickfontsize = xtickfontsize
+        else:
+            self.xtickfontsize = matplotlib.rcParams['xtick.labelsize']
 
-        self.xticklength = xticklength
-        self.yticklength = yticklength
-        
-        self.xtickangle = xtickangle
-        self._nxticks = nxticks
+        if ytickfontsize is not None:
+            self.ytickfontsize = ytickfontsize
+        else:
+            self.ytickfontsize = matplotlib.rcParams['ytick.labelsize']
 
+        if xticklength is not None:
+            self.xticklength = xticklength
+        else:
+            self.xticklength = matplotlib.rcParams['xtick.major.size']
+
+        if yticklength is not None:
+            self.yticklength = yticklength
+        else:
+            self.yticklength = matplotlib.rcParams['ytick.major.size']
+
+        if xtickpad is not None:
+            self.xtickpad = xtickpad
+        else:
+            self.xtickpad = matplotlib.rcParams['xtick.major.pad']
+
+        if ytickpad is not None:
+            self.ytickpad = ytickpad
+        else:
+            self.ytickpad = matplotlib.rcParams['ytick.major.pad']
+
+        # No rcParams for angle
+        if xtickangle is not None:
+            self.xtickangle = xtickangle
+        else:
+            self.xtickangle = 0
+
+        if ytickangle is not None:
+            self.ytickangle = ytickangle
+        else:
+            self.ytickangle = 0
+
+        # Set nticksx, nticksy
+        self.nticksx = nticksx
+        self.nticksy = nticksy
+            
         self.xformat = xformat
         self.margins = margins
 
@@ -348,8 +397,8 @@ class Chart:
         self.ytitle(self.ytitletext)
 
         # Set x, y tick font size
-        self.xticks(size=self.xtickfontsize, length=self.xticklength, angle=self.xtickangle)
-        self.yticks(size=self.ytickfontsize, length=self.yticklength)
+        self.ticks(axis='x', size=self.xtickfontsize, length=self.xticklength, pad=self.xtickpad, angle=self.xtickangle, nticks=self.nticksx)
+        self.ticks(axis='y', size=self.ytickfontsize, length=self.yticklength, pad=self.ytickpad, angle=self.ytickangle, nticks=self.nticksy)
 
         # Get xrange and trim data as needed
         self._xrange = self._parse_xrange(xrange, debug=self.debug)
@@ -382,10 +431,6 @@ class Chart:
             
         # Set x-axis formatting
         self.xaxis_format()
-
-        # Set number of x-axis ticks
-        if self.xaxis_type == 'datetime':
-            self.nxticks(self._nxticks)
 
         # Set which x-axis is drawn on top
         self.topaxis(self._topaxis)
@@ -879,37 +924,144 @@ class Chart:
         self.ax.set_ylabel(text, fontsize=fontsize, font=font, fontweight=fontweight,
                            color=color, labelpad=pad, loc=loc, rotation=rotation, alpha=alpha)
 
-    def xticks(self, size=None, length=None, angle=0):
-        # If size is specified, update internal value
+    def ticks(self, axis='x', yaxis='left', size=None, length=None, angle=None, pad=None, nticks=None,
+              debug=False):
+        '''
+        Control ticks. Pass in axis of "x" or "y" (for right y-axis pass in yaxis='right'),
+        together with
+        - size   : tick font size
+        - length : tick length
+        - angle  : tick font angle
+        - pad    : padding between ticks and tick labels
+        - nticks : number of ticks along axis. If "auto", will depend of xaxis_type
+        '''
+
+        if axis not in ['x', 'y']:
+            raise ValueError('axis must be "x" or "y", given ' + str(axis))
+
+        if yaxis not in ['left', 'right']:
+            raise ValueError('yaxis must be "left" or "right", given ' + str(yaxis))
+
+        if axis == 'x' and yaxis == 'right':
+            raise ValueError('axis given as "x" and yaxis given as "right"')
+        
+        # If params are specified, update internal value,
+        # otherwise use class values.
+
+        # tick label size
         if size is not None:
-            self.xtickfontsize = size
+            if axis == 'x':
+                self.xtickfontsize = size
+            else:
+                self.ytickfontsize = size
+        else:
+            if axis == 'x':
+                size = self.xtickfontsize
+            else:
+                size = self.ytickfontsize
             
-        # If length is given as default None, get from rcParams
-        if length is None:
-            length = matplotlib.rcParams['xtick.major.size']
+        # tick length
+        if length is not None:
+            if axis == 'x':
+                self.xticklength = length
+            else:
+                self.yticklength = length
+        else:
+            if axis == 'x':
+                length = self.xticklength
+            else:
+                length = self.yticklength
 
+        # padding between tick and labels
+        if pad is not None:
+            if axis == 'x':
+                self.xtickpad = pad
+            else:
+                self.ytickpad = pad
+        else:
+            if axis == 'x':
+                pad = self.xtickpad
+            else:
+                pad = self.ytickpad
+
+        # angle of tick labels
+        if angle is not None:
+            if axis == 'x':
+                self.xtickangle = angle
+            else:
+                self.ytickangle = angle
+        else:
+            if axis == 'x':
+                angle = self.xtickangle
+            else:
+                angle = self.ytickangle
+
+        if debug:
+            print('length = ' + str(length) + ' size = ' + str(size) + ' pad = ' + str(pad) + ' angle = ' + str(angle))
+                
         # Set
-        self.ax.tick_params(axis='x', which='major', length=length, labelsize=size, labelrotation=angle)
+        if yaxis == 'left':
+            self.ax.tick_params(axis=axis, which='major',
+                                length=length, labelsize=size,
+                                pad=pad, labelrotation=angle)
+        else:
+            if self.ax_right:
+                self.ax_right.tick_params(axis=axis, which='major',
+                                length=length, labelsize=size,
+                                pad=pad, labelrotation=angle)
+            else:
+                print('WARNING: yaxis="right" was specified but no right y-axis exists')
 
-    def yticks(self, size=None, length=None):
-        # If size is specified, update internal value
-        if size is not None:
-            self.ytickfontsize = size
+        # Set nticks
+        if axis == 'x':
+            if nticks is not None:
+                self.nticksx = nticks
 
-        # If length is given as default None, get from rcParams
-        if length is None:
-            length = matplotlib.rcParams['ytick.major.size']
+            # Integer
+            if type(self.nticksx) == int:
+                self.ax.xaxis.set_major_locator(MaxNLocator(nbins=self.nticksx))
 
-        # Set
-        self.ax.tick_params(axis='y', which='major', labelsize=size)
-        if self.ax_right:
-            self.ax_right.tick_params(axis='y', length=length, which='major', labelsize=size)
+            elif self.nticksx == 'auto':
+                # Check xaxis_type
+                if self.xaxis_type == 'datetime':
+                    self._set_datetime_ticks(debug=debug)
+                elif self.xaxis_type == 'categorical':
+                    if self.data is not None:
+                        self.ax.set_xticks(np.arange(len(self.data)), labels=self.data.index)
+                elif self.xaxis_type == 'numerical':
+                    self.ax.xaxis.set_major_locator(MaxNLocator(nbins=7))
+                elif self.xaxis_type is None:
+                    # In some cases for example if no data was passed in,
+                    # no need to set.
+                    pass
+                else:
+                    raise ValueError('self.xaxis_type was ' + str(self.xaxis_type))
+            else:
+                raise ValueError('nticks for x-axis must be int or "auto", given ' + str(nticks))
+        else:
+            if nticks is not None:
+                self.nticksy = nticks
 
-    def nxticks(self, nxticks):
-        self.ax.xaxis.set_major_locator(MaxNLocator(nbins=nxticks))
-
+            if self.nticksy is not None:
+                if yaxis == 'left':
+                    self.ax.yaxis.set_major_locator(MaxNLocator(nbins=self.nticksy))
+                else:
+                    if self.ax_right:
+                        self.ax_right.set_major_locator(MaxNLocator(nbins=self.nticksy))
+                    else:
+                        print('WARNING: yaxis="right" was specified but no right y-axis exists')
+                
+    def _set_datetime_ticks(self, debug=False):
+        '''
+        For datetime x-axis, set location of ticks based on freq and length of data.
+        This is called from ticks() when self.axis_type is "datetime" and self.nticks is "auto".
+        '''
+        
         # From freq try to specify location of ticks
         freq = guess_freq(self.data)
+        if debug:
+            print('freq = ' + str(freq) + ', len(self.data) = ' + str(len(self.data)))
+            
         if freq == 'D':
             if len(self.data) <= 30:
                 self.ax.xaxis.set_major_locator(mdates.DayLocator([1, 8, 15, 22, 29]))
@@ -917,41 +1069,75 @@ class Chart:
                 self.ax.xaxis.set_major_locator(mdates.DayLocator([1, 15]))
             elif len(self.data) <= 180:
                 self.ax.xaxis.set_major_locator(mdates.DayLocator([1]))
-            else:
+            elif len(self.data) <= 360:
+                self.ax.xaxis.set_major_locator(mdates.MonthLocator([1, 3, 5, 7, 9, 11]))
+            elif len(self.data) <= 720:
+                self.ax.xaxis.set_major_locator(mdates.MonthLocator([1, 4, 7, 10]))
+            elif len(self.data) <= 1260:
                 self.ax.xaxis.set_major_locator(mdates.MonthLocator([1, 7]))
+            else:
+                # Show only each Jan, but put in interval
+                nyears = len(self.data) // 365 + 1
+                interval =  nyears // 7
+                self.ax.xaxis.set_major_locator(mdates.MonthLocator(bymonth=[1], interval=interval))
         elif freq == 'W':
-            if len(self.data) <= 42:
-                self.ax.xaxis.set_major_locator(mdates.DayLocator([1, 8, 15, 22]))
-            elif 42 < len(self.data) and len(self.data) <= 310:
-                self.ax.xaxis.set_major_locator(mdates.MonthLocator([1, 7]))
-            else:
+            if len(self.data) <= 7:
+                self.ax.xaxis.set_major_locator(mdates.DayLocator([1, 8, 15, 22, 29]))
+            elif len(self.data) <= 15:
+                self.ax.xaxis.set_major_locator(mdates.DayLocator([1, 15]))
+            elif len(self.data) <= 30:
                 self.ax.xaxis.set_major_locator(mdates.MonthLocator([1]))
+            elif len(self.data) <= 60:
+                self.ax.xaxis.set_major_locator(mdates.MonthLocator([1, 3, 5, 7, 9, 11]))
+            elif  len(self.data) <= 80:
+                self.ax.xaxis.set_major_locator(mdates.MonthLocator([1, 4, 7, 10]))
+            elif len(self.data) <= 180:
+                self.ax.xaxis.set_major_locator(mdates.MonthLocator([1, 7]))
+            elif len(self.data) <= 360:
+                self.ax.xaxis.set_major_locator(mdates.MonthLocator([1]))
+            else:
+                # Show only each Jan, but put in interval
+                nyears = len(self.data) * 7 // 365 + 1
+                interval = nyears // 7
+                self.ax.xaxis.set_major_locator(mdates.MonthLocator(bymonth=[1], interval=interval))
         elif freq == 'M':
-            if len(self.data) <= 12:
-                self.ax.xaxis.set_major_locator(mdates.MonthLocator([1, 3, 5, 7, 9]))
-            elif 12 < len(self.data) and len(self.data) <= 24:
+            if len(self.data) <= 7:
+                self.ax.xaxis.set_major_locator(mdates.MonthLocator())
+            elif len(self.data) <= 12:
+                self.ax.xaxis.set_major_locator(mdates.MonthLocator([1, 3, 5, 7, 9, 11]))
+            elif len(self.data) <= 24:
                 self.ax.xaxis.set_major_locator(mdates.MonthLocator([1, 4, 7, 10]))
             elif len(self.data) <= 48:
                 self.ax.xaxis.set_major_locator(mdates.MonthLocator([1, 7]))
-            elif len(self.data) < 70:
+            elif len(self.data) < 80:
                 self.ax.xaxis.set_major_locator(mdates.MonthLocator([1]))
-            else:
+            elif len(self.data) < 160:
                 self.ax.xaxis.set_major_locator(mdates.YearLocator(base=2))
+            else:
+                nyears = len(self.data) * 30 // 365 + 1
+                interval = nyears // 7
+                self.ax.xaxis.set_major_locator(mdates.YearLocator(base=interval))
                 formatter = mdates.DateFormatter('%b-%y')
                 self.ax.xaxis.set_major_formatter(formatter)
         elif freq == 'Q':
-            if len(self.data) < 12:
+            if len(self.data) < 6:
+                self.ax.xaxis.set_major_locator(mdates.MonthLocator([1, 4, 7, 10]))
+            elif len(self.data) < 12:
                 self.ax.xaxis.set_major_locator(mdates.MonthLocator([1, 7]))
             elif len(self.data) < 30:
                 self.ax.xaxis.set_major_locator(mdates.MonthLocator([1]))
-            else:
+            elif len(self.data) < 70:
                 self.ax.xaxis.set_major_locator(mdates.YearLocator(base=2))
-                def quarter_formatter(x, pos):
-                    date = mdates.num2date(x)
-                    quarter = (date.month - 1) // 3 + 1
-                    return f"{date.year}Q{quarter}"
-                formatter = FuncFormatter(quarter_formatter)
-                self.ax.xaxis.set_major_formatter(formatter)
+            else:
+                nyears = len(self.data) * 90 // 365 + 1
+                interval = nyears // 7
+                self.ax.xaxis.set_major_locator(mdates.YearLocator(base=interval))
+            def quarter_formatter(x, pos):
+                date = mdates.num2date(x)
+                quarter = (date.month - 1) // 3 + 1
+                return f"{date.year}Q{quarter}"
+            formatter = FuncFormatter(quarter_formatter)
+            self.ax.xaxis.set_major_formatter(formatter)
         elif freq == 'A':
             if len(self.data) < 8:
                 self.ax.xaxis.set_major_locator(mdates.YearLocator(base=1))
@@ -1496,11 +1682,8 @@ class Chart:
             xformat = self.xformat
         self.xaxis_format(xformat=xformat, debug=debug)
         
-        # Set number of x-axis ticks
-        if self.xaxis_type == 'datetime':
-            if debug:
-                print('self._nxticks = ' + str(self._nxticks))
-            self.nxticks(self._nxticks)
+        # Set x-axis ticks
+        self.ticks(axis='x')
 
         # Set which x-axis is drawn on top
         self.topaxis(self._topaxis)
@@ -1893,9 +2076,6 @@ class Chart:
                                  width=barwidth, color='none', edgecolor=_edgecolor, linewidth=_linewidth,
                                  zorder=2)
                     
-                # Set x-axis categories from self.data.index
-                _ax.set_xticks(np.arange(len(self.data)), labels=self.data.index)
-
                 # If barcolors was specified, get all patches for this barcol,
                 # and if the index matches, set color for the corresponding bar.
                 patches = [p for p in _ax.patches if p not in previous_patches]
@@ -1944,11 +2124,8 @@ class Chart:
             xformat = self.xformat
         self.xaxis_format(xformat=xformat, debug=debug)
         
-        # Set number of x-axis ticks
-        if self.xaxis_type == 'datetime':
-            if debug:
-                print('self._nxticks = ' + str(self._nxticks))
-            self.nxticks(self._nxticks)
+        # Set x-axis ticks
+        self.ticks(axis='x')
 
         # Set which x-axis is drawn on top
         self.topaxis(self._topaxis)
@@ -2226,9 +2403,6 @@ class Chart:
                 entry2 = _ax.fill_between(self.data.index, y1=self.data[areacol], y2=0,
                                           color='none', edgecolor=_edgecolor, linewidth=_linewidth, alpha=_alpha,
                                           zorder=2)
-                    
-                # Set x-axis categories from self.data.index
-                _ax.set_xticks(np.arange(len(self.data)), labels=self.data.index)
             # end of stack=False
             
             # Adjust offsets
@@ -2281,11 +2455,8 @@ class Chart:
             xformat = self.xformat
         self.xaxis_format(xformat=xformat, debug=debug)
         
-        # Set number of x-axis ticks
-        if self.xaxis_type == 'datetime':
-            if debug:
-                print('self._nxticks = ' + str(self._nxticks))
-            self.nxticks(self._nxticks)
+        # Set x-axis ticks
+        self.ticks(axis='x')
 
         # Set which x-axis is drawn on top
         self.topaxis(self._topaxis)

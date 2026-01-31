@@ -48,6 +48,7 @@ import examples_text_arrow_fill
 import examples_fill
 import examples_styles
 import examples_axistitles
+import examples_ticks
 
 # Copy all summary charts
 datestr = pd.Timestamp.today().strftime('%Y-%m-%d')
@@ -55,7 +56,7 @@ outdir = 'pdf/summary_' + datestr
 if not os.path.isdir(outdir):
     os.makedirs(outdir)
 
-for filestem in ['all', 'lines', 'bars', 'area', 'lines_rects', 'titles', 'legends', 'text_arrow_fill', 'fill']:
+for filestem in ['all', 'lines', 'bars', 'area', 'lines_rects', 'titles', 'legends', 'text_arrow_fill', 'fill', 'ticks']:
     original = 'pdf/' + filestem + '.pdf'
     newname = outdir + '/' + filestem + '_' + datestr + '.pdf'
     shutil.copy2(original, newname)

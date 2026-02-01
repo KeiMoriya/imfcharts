@@ -1002,9 +1002,6 @@ class Chart:
         if last is None:
             last = self.last
 
-        if last and axis != 'x':
-            print('WARNING: last specifed for axis="' + str(axis) + '", will be ignored')
-
         if ticks is None:
             if axis == 'x':
                 ticks = self.xticks

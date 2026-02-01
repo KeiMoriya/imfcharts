@@ -2816,11 +2816,198 @@ chart3 = Chart(df, barcols=df.columns, barstack=False,
 
 :::
 
-    def xticks(self, size=None, length=None, angle=0):
-    def yticks(self, size=None, length=None):
-    def nxticks(self, nxticks):
-                def quarter_formatter(x, pos):
-    def set_date_format(self, xformat='auto', debug=False):
+### Formatting Axis Ticks
+
+In most cases the library will handle axis ticks automatically.
+This includes
+
+- the (approximate) number of tickson each axis
+- the formatting of the x-axis, which can be a datetime, number or category
+- the tick lengths, tick label font size, tick label angle, padding between ticks and labels
+
+Below are the options that can be passed in for ticks when creating a `Chart` object.
+
+| Argument | Default | Description |
+|---|---|---|
+| xtickfontsize | None | X-axis tick label font size. Defaults to `'xtick.labelsize'` in `matplotlib.rcParams` unless specified. |
+| ytickfontsize | None | Y-axis tick label font size. Defaults to `'ytick.labelsize'` in `matplotlib.rcParams` unless specified. |
+| xticklength | None | X-axis tick length. Defaults to `'xtick.major.size'` in `matplotlib.rcParams` unless specified. |
+| yticklength | None | Y-axis tick length. Defaults to `'ytick.major.size'` in `matplotlib.rcParams` unless specified. |
+| xtickpad | None | X-axis padding between tick and labels. Defaults to `'xtick.major.pad'` in `matplotlib.rcParams` unless specified. |
+| ytickpad | None | Y-axis padding between tick and labels. Defaults to `'ytick.major.pad'` in `matplotlib.rcParams` unless specified. |
+| xtickangle | 0 | X-axis label angle. |
+| ytickangle | 0 | Y-axis label angle. |
+| nticksx | 'auto' | X-axis tick numbers. Use `'auto'` to set automatically, or specify integer. |
+| nticksy | None | Uses `Matplotlib` defaults if `None` is specified, can also specify as integer. |
+| last | False | If specified, replaces last default label of time series x-axis with latest data point. |
+| xticks | None | Iterable specifying each tick position along x-axis. |
+| xlabels | None | Iterable specifying each tick label along x-axis. Length must match `xticks`. |
+| yticks | None | Iterable specifying each tick position along y-axis. |
+| ylabels | None | Iterable specifying each tick label along y-axis. Length must match `yticks`. |
+| ryticks | None | Iterable specifying each tick position along right y-axis. |
+| rylabels | None | Iterable specifying each tick label along right y-axis. Length must match `ryticks`. |
+
+: {tbl-colwidths="[10,10, 80]"}
+
+Internally the function `chart.ticks()` is called with the above parameters.
+The `chart.ticks()` function will take in the above options but the parameters are the following.
+
+| Argument | Default | Description |
+|---|---|---|
+| axis | 'x' | Axis to modify, specify `'x'` or `'y'`. |
+| yaxis | 'left' | In case modifying right y-axis, specify `'right'`. |
+| size | None | Tick label font size. Defaults to 'xtick.labelsize' in `matplotlib.rcParams` if not specified. Specified as `xtickfontsize` or `ytickfontsize` within `Chart()` |
+| length | None | Tick length. Defaults to 'xtick.major.size' in `matplotlib.rcParams` if not specified. Specified as `xticklength` or `yticklength` within `Chart()` |
+| angle | None | Tick label angle. Defaults to 0 if not specified. Specified as `xtickangle` or `ytickangle` within `Chart()` |
+| nticks | None | Number of ticks. For x-axis, defaults to `'auto'` while for y-axis uses `Matplotlib` defaults. Specified as `nxticks` or `nyticks` within `Chart()` |
+| ticks | None | Iterable speciying location of ticks. |
+| labels | None | Iterable speciying labels of ticks. |
+
+: {tbl-colwidths="[10,10, 80]"}
+
+For charts where the x-axis is a datetime, which is the case for time series charts, the positioning of the ticks
+are determined so that there are roughly 7 or so tick labels.
+Note that the format of the tick labels was explained in @sec-basics-format_axes, and this is by default determined
+by the frequency of the data.
+
+When the option `last=True` is specified in either `Chart()` or `Chart.ticks()`, the final tick position and label
+are set to be the last data point. This can be a convenient way to signal when the data ends.
+The option to specify integers for `nticks` is limited to the y-axis. For custom x-axis tick positions and labels
+it is recommended to use the options `ticks` and `labels` to specify them directly.
+If the options `ticks` or `labels` are used, any options for `last` and `nticks` will be ignored.
+
+Below are examples of specifying the tick options when creating the `Chart` or modifying the ticks later by calling `Chart.ticks()`.
+
+::: {.panel-tabset}
+
+```{python}
+#| label: basics_ticks_data
+infilename = 'data/turkey_page5/fig5_chart2_current_account_mms.csv'
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0]).dropna(how='all', axis=0)
+```
+
+### No options
+
+No options are provided for the ticks.
+
+```{python}
+#| label: gallery_ticks_nooptions
+#| fig-cap: "Defaults"
+#| code-fold: show
+chart = Chart(df, linecols=df.columns,
+              title='No options',
+              xrange='2022-01:', yrange=[-95, 60],
+              legend_bottom=0.22, legend_left=0.55)
+```
+
+### Specify options
+
+Options are provided for the ticks.
+
+```{python}
+#| label: gallery_ticks_options
+#| fig-cap: "Specify tick options"
+#| code-fold: show
+chart = Chart(df, linecols=df.columns,
+              title='With options',
+              xrange='2022-01:', yrange=[-95, 60],
+              legend_bottom=0.22, legend_left=0.55,
+              xtickfontsize=15, ytickfontsize=15,
+              xticklength=10, yticklength=10,
+              xtickpad=10, ytickpad=10,
+              xtickangle=90, ytickangle=45)
+```
+
+### Call `ticks()`
+
+No options are passed in when creating the `Chart` but are specified by calls to the `Chart.ticks()` function.
+
+```{python}
+#| label: gallery_ticks_func
+#| fig-cap: "Call `Chart.ticks()`"
+#| code-fold: show
+chart = Chart(df, linecols=df.columns,
+              title='Call Chart.ticks()',
+              legend_bottom=0.22, legend_left=0.55,
+              xrange='2022-01:', yrange=[-95, 60])
+# Call chart.ticks()
+chart.ticks(axis='x', size=15, length=10, angle=90, pad=10)
+chart.ticks(axis='y', size=15, length=10, angle=45, pad=10)
+```
+
+### Set number of ticks as integer
+
+In the below `nticksy=20` is specified.
+Note that specifying `nticksx` to be an integer for a datetime axis is not permitted.
+This is because just setting MaxNLocator(nbins) will not align the dates to be
+at the specific locations that the option "auto" will use.
+
+```{python}
+#| label: gallery_ticks_nticks
+#| fig-cap: "Specify number of ticks as integer"
+#| code-fold: show
+chart = Chart(df, linecols=df.columns,
+              title='Integer nticks',
+              legend_bottom=0.22, legend_left=0.55,
+              xrange='2022-01:', yrange=[-95, 60],
+              nticksy=20)
+```
+
+### Specify last date
+
+In the below `last=True` is specified.
+This will show the date of the last data point.
+
+```{python}
+#| label: gallery_ticks_last
+#| fig-cap: "Specify last date"
+#| code-fold: show
+chart = Chart(df, linecols=df.columns,
+              title='Integer nticks',
+              legend_bottom=0.22, legend_left=0.55,
+              xrange='2022-01:', yrange=[-95, 60],
+              last=True)
+```
+
+### Specify ticks and label positions for x-axis
+
+In the below `xticks` and `xlabels` are specified.
+
+```{python}
+#| label: gallery_ticks_customx
+#| fig-cap: "Specify x-axis tick locations and labels"
+#| code-fold: show
+ticks = ['2022-01-01', '2023-05-01', '2024-07-01', '2025-05-01']
+labels = ['Jan 22', 'May 2023', '7-24', 'May of 2025']
+
+chart = Chart(df, linecols=df.columns,
+              title='Specify x-axis tick locations and labels',
+              legend_bottom=0.22, legend_left=0.55,
+              xrange='2022-01:', yrange=[-95, 60],
+	      xticks=ticks, xlabels=labels)
+```
+
+### Specify ticks and label positions for y-axis
+
+In the below `yticks` and `ylabels` are specified.
+Note that 
+
+```{python}
+#| label: gallery_ticks_customy
+#| fig-cap: "Specify y-axis tick locations and labels"
+#| code-fold: show
+ticks = [-75, -10, 33, 55]
+labels = ['lower', 'low', 'mid' ,'high']
+
+chart = Chart(df, linecols=df.columns,
+              title='Specify y-axis tick locations and labels',
+              legend_bottom=0.22, legend_left=0.55,
+              xrange='2022-01:', yrange=[-95, 60],
+	      yticks=ticks, ylabels=labels)
+```
+
+:::
+
 
 ## Note on Available Colors {#sec-basics-misc-colors}
 

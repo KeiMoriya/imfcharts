@@ -170,6 +170,12 @@ class Chart:
                  # Specifying the number of ticks can be useful at times but often leads to
                  # the ticks appearing at numbers that are not as round as the default.
                  nticksx='auto', nticksy=None,
+                 # Whether the final period for a time series x-axis is shown as tick and label
+                 last=False,
+                 # These are for specifying the exact tick locations and labels
+                 xticks=None, xlabels=None,
+                 yticks=None, ylabels=None,
+                 ryticks=None, rylabels=None,
                  
                  # individual look of each column in data-----------------------------------
                  attrs=None,
@@ -338,6 +344,31 @@ class Chart:
         # Set nticksx, nticksy
         self.nticksx = nticksx
         self.nticksy = nticksy
+        self.last = last
+
+        # Specify tick location, labels
+        self.xticks = xticks
+        self.xlabels = xlabels
+        self.yticks = yticks
+        self.ylabels = ylabels
+        self.ryticks = ryticks
+        self.rylabels = rylabels
+        # Check that lengths match
+        if xticks is not None or xlabels is not None:
+            try:
+                len(self.xticks) == len(self.xlabels)
+            except Exception as e:
+                raise ValueError('xticks and xlabels must be iterables of same length, got exception:' + str(e))
+        if yticks is not None or ylabels is not None:
+            try:
+                len(self.yticks) == len(self.ylabels)
+            except Exception as e:
+                raise ValueError('yticks and ylabels must be iterables of same length, got exception:' + str(e))
+        if ryticks is not None or rylabels is not None:
+            try:
+                len(self.ryticks) == len(self.rylabels)
+            except Exception as e:
+                raise ValueError('ryticks and rylabels must be iterables of same length, got exception:' + str(e))
             
         self.xformat = xformat
         self.margins = margins
@@ -397,8 +428,8 @@ class Chart:
         self.ytitle(self.ytitletext)
 
         # Set x, y tick font size
-        self.ticks(axis='x', size=self.xtickfontsize, length=self.xticklength, pad=self.xtickpad, angle=self.xtickangle, nticks=self.nticksx)
-        self.ticks(axis='y', size=self.ytickfontsize, length=self.yticklength, pad=self.ytickpad, angle=self.ytickangle, nticks=self.nticksy)
+        self.ticks(axis='x')
+        self.ticks(axis='y')
 
         # Get xrange and trim data as needed
         self._xrange = self._parse_xrange(xrange, debug=self.debug)
@@ -924,7 +955,9 @@ class Chart:
         self.ax.set_ylabel(text, fontsize=fontsize, font=font, fontweight=fontweight,
                            color=color, labelpad=pad, loc=loc, rotation=rotation, alpha=alpha)
 
-    def ticks(self, axis='x', yaxis='left', size=None, length=None, angle=None, pad=None, nticks=None,
+    def ticks(self, axis='x', yaxis='left', size=None, length=None, angle=None, pad=None,
+              nticks=None, last=None,
+              ticks=None, labels=None,
               debug=False):
         '''
         Control ticks. Pass in axis of "x" or "y" (for right y-axis pass in yaxis='right'),
@@ -933,9 +966,19 @@ class Chart:
         - length : tick length
         - angle  : tick font angle
         - pad    : padding between ticks and tick labels
+        --------------
+        Below are options for specifying custom tick positions and labels.
+        If using option `last` does not provide good results, it may be necessary
+        to specify custom ticks and labels.
+        If ticks and labels are specified, inputs for nticks and last are ignored.
         - nticks : number of ticks along axis. If "auto", will depend of xaxis_type
+        - last   : If True, ensure last x-axis tick aligns with final data point
+        - ticks  : Specify an iterable of tick positions.
+        - labels : Specify an iterable of tick labels. Length must match ticks.
         '''
 
+        # ----------------------------------------------------------------------------------------------------------------
+        # Check input options
         if axis not in ['x', 'y']:
             raise ValueError('axis must be "x" or "y", given ' + str(axis))
 
@@ -944,6 +987,68 @@ class Chart:
 
         if axis == 'x' and yaxis == 'right':
             raise ValueError('axis given as "x" and yaxis given as "right"')
+
+        if nticks is None:
+            if axis == 'x':
+                nticks = self.nticksx
+            else:
+                nticks = self.nticksy
+        else:
+            if axis == 'x':
+                self.nticksx = nticks
+            else:
+                self.nticksy = nticks
+
+        if last is None:
+            last = self.last
+
+        if last and axis != 'x':
+            print('WARNING: last specifed for axis="' + str(axis) + '", will be ignored')
+
+        if ticks is None:
+            if axis == 'x':
+                ticks = self.xticks
+            else:
+                if yaxis == 'left':
+                    ticks = self.yticks
+                else:
+                    ticks = self.ryticks
+        else:
+            if axis == 'x':
+                self.xticks = ticks
+            else:
+                if yaxis == 'left':
+                    self.yticks = ticks
+                else:
+                    self.ryticks = ticks
+            
+        if labels is None:
+            if axis == 'x':
+                labels = self.xlabels
+            else:
+                if yaxis == 'left':
+                    labels = self.ylabels
+                else:
+                    labels = self.rylabels
+        else:
+            if axis == 'x':
+                self.xlabels = labels
+            else:
+                if yaxis == 'left':
+                    self.ylabels = labels
+                else:
+                    self.rylabels = labels
+
+        # If ticks or labels are specified, make sure they have same length
+        if ticks is not None or labels is not None:
+            try:
+                len(ticks) == len(labels)
+            except Exception:
+                raise ValueError('ticks and labels must be iterables with same length')
+        
+        # ----------------------------------------------------------------------------------------------------------------
+        # Set tick length, angle, padding, font size
+        # Options used are size, length, pad, angle.
         
         # If params are specified, update internal value,
         # otherwise use class values.
@@ -1012,15 +1117,48 @@ class Chart:
             else:
                 print('WARNING: yaxis="right" was specified but no right y-axis exists')
 
-        # Set nticks
+        # ----------------------------------------------------------------------------------------------------------------
+        # Set tick positions and labels.
+        # Options used are nticks, last, ticklist, labellist.
+
+        # If ticklist and labellist are specified, use these and do not use last or nticks.
+        if ticks is not None:
+            if axis == 'x':
+                # If datetime x-axis, try to convert specified values to dates
+                if self.xaxis_type == 'datetime':
+                    try:
+                        tick_dates = [pd.Timestamp(x) for x in ticks]
+                    except Exception:
+                        tick_dates = ticks
+                self.ax.set_xticks(tick_dates)
+                self.ax.set_xticklabels(labels)
+            elif axis == 'y':
+                if yaxis == 'left':
+                    self.ax.set_yticks(ticks)
+                    self.ax.set_yticklabels(labels)
+                else:
+                    if self.ax_right:
+                        self.ax_right.set_yticks(ticks)
+                        self.ax_right.set_yticklabels(labels)
+                    else:
+                        print('WARNING: ticks and labels specified for right y-axis but does not exist')
+                        
+            # If ticks or labels were specified, ignore nticks and last
+            return
+
+        # If no ticks or labels were specified, use nticks and last
         if axis == 'x':
             if nticks is not None:
                 self.nticksx = nticks
 
             # Integer
             if type(self.nticksx) == int:
-                self.ax.xaxis.set_major_locator(MaxNLocator(nbins=self.nticksx))
-
+                # This is not implemented as specifying MaxNLocator(nbins)
+                # will not align the dates with period start dates as with other charts.
+                # The proper way to do this would be to add this option into _set_datetime_ticks()
+                # with the appropriate argument.
+                # self.ax.xaxis.set_major_locator(MaxNLocator(nbins=self.nticksx))
+                raise ValueError('Cannont specify int value for nticks for datetime x-axis')
             elif self.nticksx == 'auto':
                 # Check xaxis_type
                 if self.xaxis_type == 'datetime':
@@ -1038,6 +1176,23 @@ class Chart:
                     raise ValueError('self.xaxis_type was ' + str(self.xaxis_type))
             else:
                 raise ValueError('nticks for x-axis must be int or "auto", given ' + str(nticks))
+
+            # If last was specified for a datetime axis, replace last tick with final data point.
+            # This ensures that number of ticks follows standard.
+            if self.xaxis_type == 'datetime' and last:
+                # Get current ticks
+                ticks = [pd.Timestamp(x.replace(tzinfo=None)) for x in mdates.num2date(self.ax.get_xticks())]
+                if debug:
+                    print('original ticks:')
+                    print(ticks)
+                # Replace final eleemnt from data
+                x = self.data.index[-1]
+                ticks = ticks[:-1] + [x]
+                self.ax.set_xticks(ticks)
+                if debug:
+                    print('new ticks:')
+                    print(ticks)
+        # end of axis == 'x'
         else:
             if nticks is not None:
                 self.nticksy = nticks

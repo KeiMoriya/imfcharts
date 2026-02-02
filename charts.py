@@ -48,10 +48,10 @@ def _parse_cols(cols):
                     print(col)
                     raise ValueError
         except TypeError:
-            print('_parse_cols: cols must be given as str or iterable of str')
-            print('given type of ' + str(type(cols)) + ':')
-            print(cols)
-            sys.exit(-1)
+            error = '_parse_cols: cols must be given as str or iterable of str, '
+            error += 'given type of ' + str(type(cols)) + ':\n'
+            error += cols
+            raise ValueError(error)
 
     # Remove any duplicate columns
     # (using a dict in Python 3.7 onwards will guarantee original ordering)
@@ -207,9 +207,9 @@ class Chart:
         if self.indexcol is not None:
             if self.data is not None and type(self.data) == pd.DataFrame:
                 if indexcol not in self.data.columns:
-                    print('indexcol specified as "' + str(indexcol) + '" but not found in data:')
-                    print(data)
-                    sys.exit()
+                    error = 'indexcol specified as "' + str(indexcol) + '" but not found in data:\n'
+                    error += str(data)
+                    raise ValueError(error)
                 else:
                     if self.debug:
                         print('Setting index to ' + str(indexcol))
@@ -637,8 +637,7 @@ class Chart:
                     print('returning:')
                     print(xrange)
             except ValueError:
-                print('Could not convert xrange = ' + str(xrange) + ' to pd.Timestamp')
-                sys.exit()
+                raise ValueError('Could not convert xrange = ' + str(xrange) + ' to pd.Timestamp')
             
         return [xrange[0], xrange[1]]
 
@@ -1327,15 +1326,13 @@ class Chart:
             elif freq == '?':
                 pass
             else:
-                print('Unknown freq ' + freq)
-                sys.exit()
+                raise ValueError('Unknown freq ' + str(freq))
         else:
             if type(margins) == int:
                 # Use input int as-is
                 pass
             else:
-                print('xrange: margins of type ' + str(type(margins)) + ' not allowed')
-                sys.exit()
+                raise ValueError('xrange: margins of type ' + str(type(margins)) + ' not allowed')
 
         if self.xaxis_type == 'datetime':
             if xrange[0] is None:
@@ -1355,8 +1352,7 @@ class Chart:
         elif self.xaxis_type is None:
             return None
         else:
-            print('self.xaxis_type of ' + str(self.axis_type) + ' not implemented for xrange()')
-            sys.exit()
+            raise ValueError('self.xaxis_type of ' + str(self.axis_type) + ' not implemented for xrange()')
             
         if debug:
             print('xrange before setting xlim:')
@@ -1395,8 +1391,7 @@ class Chart:
             except:
                 self.ax.set_xlim(xrange[0] - 0.03 * total, xrange[1] + 0.03 * total)
         else:
-            print('self.axis_type of ' + str(self.axis_type) + ' not implemented for xrange()')
-            sys.exit()
+            raise ValueError('self.axis_type of ' + str(self.axis_type) + ' not implemented for xrange()')
 
     def yrange(self, yrange):
         '''
@@ -1419,8 +1414,7 @@ class Chart:
         try:
             self.ax.set_ylim(ymin, ymax)
         except Exception as e:
-            print('Could not apply yrange() for yrange = ' + str(yrange))
-            sys.exit()
+            raise ValueError('Could not apply yrange() for yrange = ' + str(yrange))
 
     def ryrange(self, ryrange):
         '''
@@ -1446,8 +1440,7 @@ class Chart:
         try:
             self.ax_right.set_ylim(ymin, ymax)
         except Exception as e:
-            print('Could not apply ryrange() for yrange = ' + str(yrange))
-            sys.exit()
+            raise ValueError('Could not apply ryrange() for yrange = ' + str(yrange))
 
     def xaxis_format(self, xformat=None, debug=False):
         '''
@@ -1511,8 +1504,7 @@ class Chart:
                 # If no data is set, format of x-axis is not set.
                 formatter = None
             else:
-                print('Cannot determine formatter for xformat = auto')
-                sys.exit()
+                raise ValueError('Cannot determine formatter for xformat = auto')
         elif xformat in ['D', 'W']:
             # IMF default for daily
             formatter = mdates.DateFormatter('%m/%d/%Y')
@@ -1550,12 +1542,11 @@ class Chart:
                     print('formatter for str:')
                     print(formatter)
             except Exception as e:
-                print('Cannot specify mdates.DateFormatter with xformat ="' + xformat + '"')
-                sys.exit()
+                raise ValueError('Cannot specify mdates.DateFormatter with xformat ="' + xformat + '"')
         else:
-            print('xaxis_format():')
-            print('xformat of "' + str(xformat) + '" of type ' + str(type(xformat)) + ' not allowed')
-            sys.exit()
+            error = 'xaxis_format():\n'
+            error += 'xformat of "' + str(xformat) + '" of type ' + str(type(xformat)) + ' not allowed'
+            raise ValueError(error)
 
         if formatter is not None:
             self.ax.xaxis.set_major_formatter(formatter)
@@ -1584,9 +1575,9 @@ class Chart:
 
                 # Otherwise try to set index to indexcol
                 elif indexcol not in data.columns:
-                    print('indexcol specified as "' + str(indexcol) + '" but not found in data:')
-                    print(data)
-                    sys.exit()
+                    error = 'indexcol specified as "' + str(indexcol) + '" but not found in data:\n'
+                    error += str(data)
+                    raise ValueError(error)
                 else:
                     data.set_index(indexcol, inplace=True)
                     # If possible, convert to datetime index
@@ -1883,9 +1874,9 @@ class Chart:
 
                 # Otherwise try to set index to indexcol
                 elif indexcol not in data.columns:
-                    print('indexcol specified as "' + str(indexcol) + '" but not found in data:')
-                    print(data)
-                    sys.exit()
+                    error = 'indexcol specified as "' + str(indexcol) + '" but not found in data:\n'
+                    error += str(data)
+                    raise ValueError(error)
                 else:
                     data.set_index(indexcol, inplace=True)
                     # If possible, convert to datetime index
@@ -1953,8 +1944,7 @@ class Chart:
                 # Set below based on freq
                 pass
             else:
-                print('total_barwdith not implemented for self.xaxis_type of ' + str(self.xaxis_type))
-                sys.exit()
+                raise ValueError('total_barwdith not implemented for self.xaxis_type of ' + str(self.xaxis_type))
 
         # Guess freq of data and set bar width.
         # This can be overridden later for each individual bar from attrs.
@@ -1973,8 +1963,7 @@ class Chart:
             elif freq == '?':
                 barwidth = 1
             else:
-                print('Unknown frequency ' + freq)
-                sys.exit()
+                raise ValueError('Unknown frequency ' + str(freq))
 
             # If stack=False, need to divide each barwidth by number of bars.
             if not stack:
@@ -1990,8 +1979,7 @@ class Chart:
             # This can be overridden later for each individual bar from attrs.
             barwidth = total_barwidth / len(barcols)
         else:
-            print('self.xaxis_type of ' + str(self.xaxis_type) + ' not implemented')
-            sys.exit()
+            raise ValueError('self.xaxis_type of ' + str(self.xaxis_type) + ' not implemented')
 
         # Iterate over barcols and plot each bar.
         # Create cycle if specified.
@@ -2325,9 +2313,9 @@ class Chart:
 
                 # Otherwise try to set index to indexcol
                 elif indexcol not in data.columns:
-                    print('indexcol specified as "' + str(indexcol) + '" but not found in data:')
-                    print(data)
-                    sys.exit()
+                    error = 'indexcol specified as "' + str(indexcol) + '" but not found in data:'
+                    error += str(data)
+                    raise ValueError(error)
                 else:
                     data.set_index(indexcol, inplace=True)
                     # If possible, convert to datetime index
@@ -2658,9 +2646,9 @@ class Chart:
 
                 # Otherwise try to set index to indexcol
                 elif indexcol not in data.columns:
-                    print('indexcol specified as "' + str(indexcol) + '" but not found in data:')
-                    print(data)
-                    sys.exit()
+                    error = 'indexcol specified as "' + str(indexcol) + '" but not found in data:\n'
+                    error += str(data)
+                    raise ValueError(error)
                 else:
                     data.set_index(indexcol, inplace=True)
             else:
@@ -3387,8 +3375,7 @@ def color_bars(barcolors, patches, dataindex, stack=False, debug=False):
                                 print('x = ' + str(p.get_x()) + ', y = ' + str(p.get_y()) + ', height = ' + str(p.get_height()))
                             p.set_facecolor(color)
                 else:
-                    print('type of matching_idx is ' + str(type(matching_idx)))
-                    sys.exit()
+                    raise ValueError('type of matching_idx is ' + str(type(matching_idx)))
             except KeyError:
                 print('WARNING: barcolors specified for ' + str(idx) + ' but not found in data')
                 continue
@@ -3404,8 +3391,7 @@ def read(saved):
     '''
 
     if not os.path.isfile(saved):
-        print('File ' + saved + ' does not exist')
-        sys.exit()
+        raise ValueError('File ' + saved + ' does not exist')
         
     # return chart
     pass

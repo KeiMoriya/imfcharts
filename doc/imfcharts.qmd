@@ -3235,8 +3235,137 @@ It is also possible to switch styles temporarily for a single chart:
 <!------------------------------------------------------------------------------------------------------------------------------------>
 # Usage in R {#sec-R}
 
-How to use in R
+The `imfcharts` library can be used directly in R by importing it through the [`reticulate`](https://rstudio.github.io/reticulate/){target="_blank")
+package which is officially supported by RStudio. Users familiar with the [`datatools`](http://datatools){target="_blank"} will be
+familiar with this procedure. Below is sample code showing how the library and its components can be imported and used in R.
 
+```r
+# Read in necessary libraries
+library(reticulate)
+library(readr)
+library(dplyr)       
+library(tibble)     
+
+# Import imfcharts and make functions like Charts() available
+imfcharts <- import("imfcharts")
+
+# Attach all chart objects to the global environment
+# This is the equivalent of doing
+# from imfcharts import *
+# in Python
+for (name in names(imfcharts)) {
+  assign(name, imfcharts[[name]], envir = .GlobalEnv)
+}
+```
+
+The usage in R is very similar to that in Python, the only syntax changes are that instead of using a period to
+access class members, a dollar sign is used. So for example the code
+```{python}
+#| label: usage_r_py
+#| eval: false
+#| code-fold: show
+chart = Chart(df, linecols=cols)
+chart.hline(y=100)
+```
+
+becomes in R:
+```r
+chart <- Chart(df, linecols=cols)
+chart$hline(y=100)
+```
+
+An important thing to note is how to pass a DataFrame in R to the Python code.
+In general, Python's `pandas` libraries assumes an index which is separate from the columns of the data,
+and time series DataFrames are typically manipulated by utilizing this index for various calculations.
+In the case of R DataFrames, there is no one standard, and in some cases the index will be a column with
+equal footing as other colunmns containing data. The `imfcharts` library has a parameter
+`indexcol` when creating a `Chart` object or when adding visuals through functions like `Chart.lines()`,
+`Chart.bars()`, `Chart.area()`, `Chart.fill()`. When `indexcol` is specified, the specified column will
+be set internally as the index, and if it is specified as a column to draw for example in the following,
+it will be ignored.
+
+```{python}
+#| label: usage_r_indexcol
+#| eval: false
+#| code-fold: show
+# Even though the indexcol is specified as one of the columns to draw lines for
+# with `linecols=df.columns`, since it will be used as the `indexcol`,
+# no attempt will be made to draw it.
+chart = Chart(df, indexcol='dates', linecols=df.columns)
+```
+ Below are examples showing how DataFrames in R can
+be constructed and how they can be passed into the `imfplotly` library.
+Note that the Python `dict` for `attrs` is created as a `dict` from the `reticulate` library,
+and that the y-axis ranges, which are `list`s in Python are given with the `c()` function.
+
+```r
+
+# ---------------------------------------------------------------------
+# Create attrs  in R
+# ---------------------------------------------------------------------
+attrs <- dict(
+  `Risk weighted Assets (RHS)` = dict(color = IMFBLACK),
+  Capital                      = dict(color = IMFBLUE),
+  `Core capital`               = dict(color = IMFRED)
+)
+
+# ---------------------------------------------------------------------
+# 1. Read in a csv file and use column_to_rownames to
+# set the column as index (row names)
+# ---------------------------------------------------------------------
+df_r <- read_csv("data/turkey_page6/fig6_chart1_current_account.csv") %>% 
+  mutate(dates = lubridate::ymd(dates)) %>% 
+  arrange(dates) %>% 
+column_to_rownames("dates")
+
+# Create chart
+chart1 <- Chart(df_r,
+  linecols=c("Capital", "Core capital"), rlinecols="Risk weighted Assets (RHS)",
+  attrs=attrs,
+  title="Bank Capital", subtitle="(Percent of risk-weighted assets; RWA y/y percent change)",
+  legend_left = 0.4,
+  xrange="2022-01:", yrange=c(10, 25), ryrange=c(120, 200)
+)
+```
+
+```r
+# ---------------------------------------------------------------------
+# 2. Read in the same csv file but do not set index
+# ---------------------------------------------------------------------
+df_r2 <- read_csv("data/turkey_page6/fig6_chart1_current_account.csv") %>% 
+  mutate(dates = lubridate::ymd(dates)) %>% 
+  arrange(dates)
+
+# Create chart
+chart2 <- Chart(df_r2, indexcol='dates',
+  linecols= c("Capital", "Core capital"), rlinecols = "Risk weighted Assets (RHS)",
+  attrs=attrs,
+  title="Bank Capital", subtitle="(Percent of risk-weighted assets; RWA y/y percent change)",
+  legend_left=0.4,
+  xrange="2022-01:", yrange=c(10, 25), ryrange=c(120, 200)
+)
+```
+
+```r
+# ---------------------------------------------------------------------
+# 3. Convert R DataFrame to pandas and set index to datetime
+# ---------------------------------------------------------------------
+py_df <- r_to_py(df_r)
+# Below is to convert the index to datetime, not necessary but good practice
+py_df$index <- pd$to_datetime(py_df$index)
+
+chart3 <- Chart(py_df,
+  linecols=c("Capital", "Core capital"), rlinecols="Risk weighted Assets (RHS)",
+  attrs=attrs,
+  title="Bank Capital", subtitle="(Percent of risk-weighted assets; RWA y/y percent change)",
+  legend_left=0.4,
+  xrange="2022-01:", yrange=c(10, 25), ryrange=c(120, 200)
+)
+```
+
+See the file `examples/examples.R` under the installation of `imfcharts`
+(for Fund computeres this will typically be `C:\ProgramData\Python3\site-packages\imfcharts`)
+for an example R script that will use the `imfcharts` library.
 
 <!------------------------------------------------------------------------------------------------------------------------------------>
 # Usage in Stata {#sec-stata}

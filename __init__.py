@@ -6,14 +6,6 @@ from .charts import read
 
 from .mpl import *
 
-def show_styles():
-    '''
-    Show available styles.
-    Convenience function that just calls matplotlib.
-    '''
-
-    return plt.style.available
-
 # Define IMF colors
 AXISGREY  = '#B3B3B3'
 AXISGRAY  = '#B3B3B3'

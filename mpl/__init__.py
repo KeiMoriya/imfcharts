@@ -4,6 +4,8 @@
 __init__.py for imfcharts/mpl
 '''
 
+from __future__ import annotations
+
 import os
 import sys
 import glob
@@ -13,6 +15,10 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.colors import rgb2hex
 
+from contextlib import contextmanager
+from pathlib import Path
+from collections.abc import Mapping, Iterable
+
 # Get available styles in this project
 stylefiles = glob.glob(os.path.abspath(os.path.dirname(__file__) + '/*.mplstyle'))
 
@@ -20,6 +26,14 @@ stylefiles = glob.glob(os.path.abspath(os.path.dirname(__file__) + '/*.mplstyle'
 STYLEDIR = os.path.abspath(matplotlib.get_configdir() + '/stylelib')
 if not os.path.isdir(STYLEDIR):
     os.makedirs(STYLEDIR)
+
+def show_styles():
+    '''
+    Show available styles.
+    Convenience function that just calls matplotlib.
+    '''
+
+    return plt.style.available
 
 def install_styles(force: bool = False, verbose: bool = False) -> list[str]:
     """
@@ -61,7 +75,7 @@ def _local_style_path(stylename: str) -> str | None:
 
 def update_style(stylename):
     '''
-    Copy over local mplstyles to where matplotlib can find them i f any local changes are made.
+    Copy over local mplstyles to where matplotlib can find them if any local changes are made.
     Input is name of style file like "imf-articleiv".
     '''
 
@@ -117,6 +131,78 @@ def set_style(stylename):
 
     raise RuntimeError('Style ' + stylename + ' does not exist (not installed and no local .mplstyle found)')
 
+def _validate_style(style):
+    if style is None:
+        return
+
+    # List / tuple of styles
+    if isinstance(style, (list, tuple)):
+        for s in style:
+            _validate_style(s)
+        return
+
+    # Dict of rcParams
+    if isinstance(style, Mapping):
+        unknown = set(style) - set(plt.rcParams)
+        if unknown:
+            raise KeyError(f"Invalid rcParams keys: {sorted(unknown)}")
+        return
+
+    # String or path
+    if isinstance(style, (str, Path)):
+        s = str(style)
+
+        # Named style (don't need .mplstyle extension)
+        if s in matplotlib.style.library:
+            return
+
+        # File path
+        p = Path(s)
+        if p.exists():
+            if p.suffix != ".mplstyle":
+                raise ValueError(f"Style file must end with .mplstyle: {p}")
+            return
+
+        raise FileNotFoundError(
+            f"Style '{s}' not found in matplotlib.style.library "
+            f"and file does not exist."
+        )
+
+    raise TypeError(f"Unsupported style type: {type(style)!r}")
+
+def _validate_rc(rc):
+    if rc is None:
+        return
+
+    if not isinstance(rc, Mapping):
+        raise TypeError("rc must be a mapping of rcParams overrides")
+
+    unknown = set(rc) - set(matplotlib.rcParams)
+    if unknown:
+        raise KeyError(f"Invalid rcParams keys in rc: {sorted(unknown)}")
+
+@contextmanager
+def style(style=None, rc=None, reset=True):
+    """
+    Drop-in safe version of plt.style.context with guardrails.
+
+    Validates:
+      - named styles exist
+      - style files exist and are .mplstyle
+      - rc dict only contains valid rcParams keys
+      - lists of styles are all valid
+
+    Usage matches plt.style.context.
+    """
+    _validate_style(style)
+    _validate_rc(rc)
+
+    with plt.style.context(style=style, after_reset=reset):
+        if rc:
+            with matplotlib.rc_context(rc):
+                yield
+        else:
+            yield
     
 def _rgb2hex(r, g, b):
     '''

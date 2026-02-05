@@ -708,6 +708,13 @@ class Chart:
             color = self.titlecolor
             if color is None:
                 color = matplotlib.rcParams['axes.titlecolor']
+                # Check whether color is 'auto', if so fall back
+                # on text.color
+                if color == 'auto':
+                    color = matplotlib.rcParams['text.color']
+                    # Fall back further
+                    if color == 'auto':
+                        color = 'black'
                 
         if font is None:
             font = self.titlefont

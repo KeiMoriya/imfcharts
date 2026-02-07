@@ -3143,8 +3143,8 @@ The `imfcharts` package is available with several pre-defined styles which will 
 One of the main purposes of this library is to allow switching between styles to be easy.
 By doing this charts can be customized not just for existing styles but can be reused for any future changes in style.
 
-When the `imfcharts` library is imported, it will automatically copy the available style files where `Matplotlib` can find them.
-To do this copying manually, do
+When the `imfcharts` library is imported, it will automatically copy the available style files to where `Matplotlib` can find them.
+To copy styles manually, do
 
 ```python
 from imfcharts import *
@@ -3156,7 +3156,11 @@ on a Fund laptop.
 
 The command
 
-```python
+```{python}
+#| label: show_styles
+#| code-fold: show
+#| eval: true
+#| output: true
 # This is just returning plt.style.available
 show_styles()
 ```
@@ -3169,6 +3173,7 @@ To switch styles, call the command
 #| eval: false
 #| code-fold: show
 # This is just a wrapper around plt.style.use() with some guardrails
+# and reloading the style file.
 set_style('imf-articleiv')
 ```
 
@@ -3226,11 +3231,151 @@ chart2 = Chart(df, linecols=df.columns,
                xrange='2022-01:', yrange=[-95, 60],
                legend_bottom=0.28, legend_left=0.60, height=4)
 chart2
+
+# Set back to default for subsequent charts
+set_style('imf-articleiv')
 ```
 
-It is also possible to switch styles temporarily for a single chart:
+It is also possible to switch styles temporarily for a single chart with the following:
 
+```{python}
+#| label: style_comparison3
+#| fig-cap: "Switching styles."
+#| code-fold: show
 
+with style('ggplot'):
+    chart2 = Chart(df, linecols=df.columns,
+                   title='Current Account', subtitle='(Billions USD, 12mms)',
+                   xrange='2022-01:', yrange=[-95, 60],
+                   legend_bottom=0.28, legend_left=0.60, height=4)
+    chart2
+```
+
+Here the `style()` function can take on any valid style name and set the style for any chart within the context window.
+The `style()` function can take in any number of styles and also any parameters of a style file that should be customized.
+For example, in the below, the basic style is set to the `"dark_background"` style that is included in `Matplotlib`,
+but the default linestyle is set to "--".
+
+```{python}
+#| label: style_comparison4
+#| fig-cap: "Switching styles."
+#| code-fold: show
+
+with style('dark_background', {'lines.linestyle' : '--'}):
+    chart2 = Chart(df, linecols=df.columns,
+                   title='Current Account', subtitle='(Billions USD, 12mms)',
+                   xrange='2022-01:', yrange=[-95, 60],
+                   legend_bottom=0.28, legend_left=0.60, height=4)
+    chart2
+```
+
+In this way it is possible to customize certain features of an existing style.
+While these features exist for completeness, the original goal of the `imfcharts` library is to set the default style
+in a way that the user does not need to worry about the style and use as-is.
+
+Below is a gallery of using different styles and how to specify them, as well as additional parameters.
+
+```{python}
+#| label: styles_data
+# Read in data
+infilename = 'data/turkey_page5/fig5_chart2_current_account_mms.csv'
+if not os.path.isfile(infilename):
+    print('File ' + infilename + ' does not exist')
+    sys.exit()
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0]).dropna(how='all', axis=0)
+```
+
+::: {.panel-tabset}
+
+### Default
+
+Use default IMF Article IV style.
+
+```{python}
+#| label: gallery_styles_default
+#| fig-cap: "Default IMF Article IV"
+#| code-fold: show
+chart2 = Chart(df, linecols=df.columns,
+               title='Default IMF Article IV',
+               xrange='2022-01:', yrange=[-95, 60],
+               legend_bottom=0.22, legend_left=0.55)
+```
+
+### Specify style
+
+If a style is specified, the style will be used for all charts until changed.
+
+```{python}
+#| label: gallery_styles_change
+#| fig-cap: "Change Style for All Charts"
+#| code-fold: show
+# Use show_styles() to show available styles
+set_style('classic')
+chart2 = Chart(df, linecols=df.columns,
+               title='Set style with set_style()',
+               xrange='2022-01:', yrange=[-95, 60],
+               legend_bottom=0.22, legend_left=0.55)
+# Reset style to default
+set_style('imf-articleiv')
+```
+
+### Use Context Manager
+
+A context manager allows specifying styles for a given figure.
+It can be one or multiple styles, and 
+
+If a style is specified, the style will be used for all charts until changed.
+
+```{python}
+#| label: gallery_styles_context_manager
+#| fig-cap: "Context Manager"
+#| code-fold: show
+# Use show_styles() to show available styles
+with style('dark_background'):
+    chart2 = Chart(df, linecols=df.columns,
+                   title='single style in context manager',
+                   xrange='2022-01:', yrange=[-95, 60],
+                   legend_bottom=0.22, legend_left=0.55)
+```
+
+### Use Context Manager with Multiple Styles
+
+Multiple styles can be specified and they are applied consecutively.
+Note that the styles are applied in the order specified, so that
+in the below the grids from the `ggplot` style are shown but the background
+color is overridden by the `dark_background` style.
+
+```{python}
+#| label: gallery_styles_context_manager_multiple
+#| fig-cap: "Multiple Context Managers"
+#| code-fold: show
+# Use show_styles() to show available styles
+with style(['ggplot', 'dark_background']):
+    chart2 = Chart(df, linecols=df.columns,
+                   title='Multiple styles in context manager',
+                   xrange='2022-01:', yrange=[-95, 60],
+                   legend_bottom=0.22, legend_left=0.55)
+```
+
+### Use Context Manager with Multiple Styles
+
+Besides a specifying style(s), specific `matplotlib.rcParams` can be specified.
+In the below, the 'tableau-colorblind10' style is used but the default line style is set to dashed.
+This can of course be overridden by specifying `attrs` when charting.
+
+```{python}
+#| label: gallery_styles_context_manager_rc
+#| fig-cap: "Context Manager with rcParams"
+#| code-fold: show
+# Use show_styles() to show available styles
+with style('tableau-colorblind10', rc={'lines.linestyle' : '--'}):
+    chart2 = Chart(df, linecols=df.columns,
+                   title='Multiple styles in context manager',
+                   xrange='2022-01:', yrange=[-95, 60],
+                   legend_bottom=0.22, legend_left=0.55)
+```
+
+:::
 
 <!------------------------------------------------------------------------------------------------------------------------------------>
 # Usage in R {#sec-R}

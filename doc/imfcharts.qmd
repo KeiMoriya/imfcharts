@@ -9,7 +9,7 @@ author:
     department: 
       - name: ITD
       - url: http://datatools/
-bibliography: references.bib
+# bibliography: references.bib
 number-sections: true
 code-block-bg: "#F0F0F0"
 format:

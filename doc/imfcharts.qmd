@@ -3377,6 +3377,18 @@ with style('tableau-colorblind10', rc={'lines.linestyle' : '--'}):
 
 :::
 
+## Summary of Commands Related to Styles
+
+| Argument | Description |
+|---|---|
+| show_styles() | Show all available styles |
+| install_styles(force=False) | Copy all .mplstyle files from `imfcharts` to where `Matplotlib` can find them. Use `force=True` to overwrite existing files. |
+| update_style(stylename) | If a style file is edited within the `imfcharts` library, copy and update within `Matplotlib` |
+| set_style(stylename) | Set the current style until it is changed again |
+| style(style=None, rc=None) | Context manager to temporarily change style or rcParams. `style` can be a single existing style name or an iterable of styles. `rc` is a `dict` containing valid `matplotlib.rcParams` as keys. |
+
+: {tbl-colwidths="[22, 78]"}
+
 <!------------------------------------------------------------------------------------------------------------------------------------>
 # Usage in R {#sec-R}
 

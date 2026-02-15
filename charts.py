@@ -104,8 +104,8 @@ class Chart:
     def __init__(self, data=None, indexcol=None,
                  # plotting options
                  linecols=None, barcols=None, rlinecols=None, areacols=None,
-                 # iterable of colors for colorcycle
-                 colorcycle=None,
+                 # iterable of colors used as cycle
+                 colors=None,
                  # lines() options ---------------------------------------------------------
                  # Global linewidth
                  linewidth=None,
@@ -222,13 +222,13 @@ class Chart:
             else:
                 print('WARNING: indexcol specified but data is not DataFrame')
 
-        # Set colorcycle using iterable of colors if specified
-        if colorcycle is not None:
-            self.colorcycle = itertools.cycle([c for c in colorcycle])
+        # Set colors using iterable of colors if specified
+        if colors is not None:
+            self.colors = itertools.cycle([c for c in colors])
         # Otherwise default to style file
         else:
             prop_cycle = [v['color'] for v in plt.rcParams['axes.prop_cycle']]
-            self.colorcycle = itertools.cycle(prop_cycle)
+            self.colors = itertools.cycle(prop_cycle)
 
         # Set global linewidth, default is None.
         self.linewidth = linewidth
@@ -469,28 +469,28 @@ class Chart:
         # ---------------------------------------------------------------------------------------------------
         # Draw area, bars, lines
         if areacols is not None:
-            self.area(self.data, areacols, indexcol=self.indexcol, axis=areaaxis, colorcycle=None, alpha=self.alpha,
+            self.area(self.data, areacols, indexcol=self.indexcol, axis=areaaxis, colors=None, alpha=self.alpha,
                       stack=areastack, linewidth=self.linewidth, edgecolor=self.areaedgecolor,
                       attrs=attrs,
                       xrange=self._xrange,
                       debug=self.debug)
             
         if barcols is not None:
-            self.bars(self.data, barcols, indexcol=self.indexcol, colorcycle=None, stack=barstack, total_barwidth=total_barwidth,
+            self.bars(self.data, barcols, indexcol=self.indexcol, colors=None, stack=barstack, total_barwidth=total_barwidth,
                       axis=baraxis, linewidth=self.barlinewidth, edgecolor=self.baredgecolor,
                       attrs=attrs,
                       xrange=self._xrange,
                       debug=self.debug)
             
         if linecols is not None:
-            self.lines(self.data, linecols, indexcol=self.indexcol, colorcycle=None,
+            self.lines(self.data, linecols, indexcol=self.indexcol, colors=None,
                        linewidth=self.linewidth, linebreaks=self.linebreaks, drawstyle=self.drawstyle,
                        attrs=attrs,
                        xrange=self._xrange,
                        debug=self.debug)
 
         if rlinecols is not None:
-            self.lines(self.data, rlinecols, indexcol=self.indexcol, axis='right', colorcycle=None,
+            self.lines(self.data, rlinecols, indexcol=self.indexcol, axis='right', colors=None,
                        linewidth=self.linewidth, linebreaks=self.linebreaks, drawstyle=self.drawstyle,
                        attrs=attrs, 
                        xrange=self._xrange,
@@ -1558,7 +1558,7 @@ class Chart:
         if formatter is not None:
             self.ax.xaxis.set_major_formatter(formatter)
 
-    def lines(self, data=None, cols=None, indexcol=None, axis='left', colorcycle=None, linewidth=None, linebreaks=False, drawstyle=None,
+    def lines(self, data=None, cols=None, indexcol=None, axis='left', colors=None, linewidth=None, linebreaks=False, drawstyle=None,
               attrs=None,
               xrange=None, margins=None, xformat=None, yrange=None, ryrange=None,
               debug=False):
@@ -1636,11 +1636,11 @@ class Chart:
             print(self.data)
 
         # Create cycle if specified.
-        if colorcycle is not None:
-            cycle = itertools.cycle([c for c in colorcycle])
+        if colors is not None:
+            cycle = itertools.cycle([c for c in colors])
         # Otherwise use defaults
         else:
-            cycle = self.colorcycle
+            cycle = self.colors
             
         for linecol in linecols:
             if debug:
@@ -1856,7 +1856,7 @@ class Chart:
                 self._ryrange = self._parse_yrange(ryrange)
                 self.ryrange(self._ryrange)
 
-    def bars(self, data=None, cols=None, indexcol=None, axis='left', colorcycle=None,
+    def bars(self, data=None, cols=None, indexcol=None, axis='left', colors=None,
              stack=True, total_barwidth=None, linewidth=None, edgecolor=None,
              attrs=None,
              xrange=None, margins=None, xformat=None, yrange=None, ryrange=None,
@@ -1990,11 +1990,11 @@ class Chart:
 
         # Iterate over barcols and plot each bar.
         # Create cycle if specified.
-        if colorcycle is not None:
-            cycle = itertools.cycle([c for c in colorcycle])
+        if colors is not None:
+            cycle = itertools.cycle([c for c in colors])
         # Otherwise use defaults
         else:
-            cycle = self.colorcycle
+            cycle = self.colors
         if debug:
             print('cycle:')
             print(cycle)
@@ -2295,7 +2295,7 @@ class Chart:
                 self._ryrange = self._parse_yrange(ryrange)
                 self.ryrange(self._ryrange)
 
-    def area(self, data=None, cols=None, indexcol=None, axis='left', colorcycle=None, alpha=1,
+    def area(self, data=None, cols=None, indexcol=None, axis='left', colors=None, alpha=1,
              stack=True, linewidth=None, edgecolor=None,
              attrs=None,
              xrange=None, margins=0, xformat=None, yrange=None, ryrange=None,
@@ -2383,11 +2383,11 @@ class Chart:
 
         # Iterate over areacols and plot each area.
         # Create cycle if specified.
-        if colorcycle is not None:
-            cycle = itertools.cycle([c for c in colorcycle])
+        if colors is not None:
+            cycle = itertools.cycle([c for c in colors])
         # Otherwise use defaults
         else:
-            cycle = self.colorcycle
+            cycle = self.colors
         if debug:
             print('cycle:')
             print(cycle)

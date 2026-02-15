@@ -64,7 +64,7 @@ chart2 = Chart(df, linecols=df.columns,
                legend_bottom=0, legend_left=0, legend_width=0.90, ncol_legend=3)
 
 # Save
-chart2.save(outdir + '/legends_2_colorcycle.pdf')
+chart2.save(outdir + '/legends_2_ncol_legend.pdf')
 
 # ---------------------------------------------------------------------------------------------------------
 # 3. legend = False

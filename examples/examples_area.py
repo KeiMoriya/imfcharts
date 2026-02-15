@@ -87,7 +87,7 @@ chart6.save(outdir + '/area_2_right.pdf')
 # Create Chart object
 chart6 = Chart(df, linecols=[bankcol, gircol], rlinecols=corecol,
                areacols=['FX', 'Gold'],
-               colorcycle=['red', 'blue', 'green', 'purple', 'brown', 'black'],
+               colors=['red', 'blue', 'green', 'purple', 'brown', 'black'],
                title='color cycle',
                xrange='2022-01:', yrange=[0, 200], ryrange=[-120, 60])
 

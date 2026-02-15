@@ -59,7 +59,7 @@ chart2.save(outdir + '/lines_1_no_options.pdf')
 # ---------------------------------------------------------------------------------------------------------
 # Create Chart object
 chart2 = Chart(df, linecols=df.columns,
-               colorcycle=['red', 'green', 'blue', 'black'],
+               colors=['red', 'green', 'blue', 'black'],
                title='color cycle',
                xrange='2022-01:', yrange=[-95, 60],
                legend_bottom=0.22, legend_left=0.55)

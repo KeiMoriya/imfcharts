@@ -63,7 +63,7 @@ chart1.save(outdir + '/bars_1_no_options.pdf')
 # ---------------------------------------------------------------------------------------------------------
 # Create Chart object
 chart1 = Chart(df, linecols=linecol, barcols=barcols,
-               colorcycle=['red', 'green', 'blue', 'black'],
+               colors=['red', 'green', 'blue', 'black'],
                title='color cycle',
                xrange='2018-01:', yrange=[0, 30],
                ncol_legend=2)

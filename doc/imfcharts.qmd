@@ -765,7 +765,7 @@ another style sheet like that for WEO would change to the default WEO color sche
 The second level, if available is by specifying a characteristic for a specific chart, typically at creation.
 For example, to keep all of the Article IV style except the default colors used, create a `Chart` with
 ```python
-chart = Chart(colorcycle=['red', 'green', 'blue'], linewidth=3)
+chart = Chart(colors=['red', 'green', 'blue'], linewidth=3)
 ````
 and this will generate a chart that cycles through the specified red, green, blue colors for each object plotted,
 and set all line charts to have a linewidth of 3 instead of the default `axes.linewidth: 1` specified in the Article IV style file.
@@ -797,7 +797,7 @@ the order in which these are drawn is
 
 since this is the natural way these would be shown (i.e., area graphs would be in the background,
 bars would be shown on top, and lines are shown on top of both so they are not obstructed).
-The `colorcycle` argument specifies the colors to cycle through as each component is drawn,
+The `colors` argument specifies the colors to cycle through as each component is drawn,
 and is shared by lines, bars and area graphs. So for example in the following:
 ```python
 chart = Chart(df, linecols='line',
@@ -808,7 +808,7 @@ the first two colors of the color cycle will be used for the area graph columns 
 and the third and fourth colors will be used for the bar columns `'bar1'` and `'bar2'`,
 and lastly the fifth color will be used for the line column `'line'`.
 Since it is a color cycle, if the number of colors specified is less than the total number of columns
-the colors will be recycled. In general the `colorcycle` argument which can be provided when creating
+the colors will be recycled. In general the `colors` argument which can be provided when creating
 the `Chart` object should have at least as many colors as the number of columns to be shown, otherwise colors will be reused.
 The order of plotting for a variable like `linecols` will be as it is specified, regardless of any order
 within the original `pandas.DataFrame` column order.
@@ -929,7 +929,7 @@ Internally, lines are added with the function `Chart.lines()`, options for this 
 | cols | None | The columns in the data to be charted as lines. Note that when calling `Chart()`, this option is `barcols`. An iterable of column names, or if a single column can use a `str`.|
 | indexcol | None | By default the input `pandas.DataFrame`'s index is used as the x-axis. If this is a column in the DataFrame, specify using this option. |
 | axis | 'left' | Specify which y-axis to plot on, choose either 'left' or 'right' |
-| colorcycle | None | Specify an iterable of valid colors to be used as the color cycle, if not specified will default to what is specified in the current style |
+| colors | None | Specify an iterable of valid colors to be used as the color cycle, if not specified will default to what is specified in the current style |
 | linewidth | None | If specified, override what is specified in the current style and apply as default to all lines drawn in this call |
 | linebreaks | False | If `linebreaks=False`, then connect the lines even if there are NA values. |
 | drawstyle | None | Set all lines to use the specified drawstyle for example to create step charts, see example [here](https://matplotlib.org/stable/gallery/lines_bars_and_markers/step_demo.html){target="_blank"} |
@@ -976,7 +976,7 @@ df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 
 chart = Chart(df, linecols=df.columns,
               title='Class-level Options',
-              colorcycle=['red', 'green', 'blue'],
+              colors=['red', 'green', 'blue'],
               linewidth=3,
               xrange='2023-01:', yrange=[0, 90])
 ```
@@ -1228,12 +1228,12 @@ chart1 = Chart(df, linecols=linecol, barcols=barcols,
 ### Color Cycle
 
 ```{python}
-#| label: gallery_bars_colorcycle
+#| label: gallery_bars_colors
 #| fig-cap: "Color cycle."
 #| code-fold: show
 chart1 = Chart(df, linecols=linecol, barcols=barcols,
                title='color cycle',
-               colorcycle=['red', 'green', 'blue', 'black'],
+               colors=['red', 'green', 'blue', 'black'],
                xrange='2018-01:', yrange=[0, 30],
                ncol_legend=2)
 ```
@@ -1586,12 +1586,12 @@ Note that the first two colors are used for the area graphs,
 and the third color blue is then used for the line.
 
 ```{python}
-#| label: gallery_area_colorcycle
+#| label: gallery_area_colors
 #| fig-cap: "Color cycle"
 #| code-fold: show
 # Create Chart object
 chart = Chart(df, linecols=gircol, areacols=areacols,
-              colorcycle=['red', 'green', 'blue'],
+              colors=['red', 'green', 'blue'],
               title='color cycle')
 chart
 ```
@@ -1696,7 +1696,7 @@ To make the area graphs easier to see, `alpha=0.3` is also set for all areas.
 #| fig-cap: "Unstacked."
 #| code-fold: show
 chart1 = Chart(df, linecols=gircol, areacols=areacols,
-              colorcycle=['red', 'yellow'],
+              colors=['red', 'yellow'],
 	       alpha=0.3,
                areastack=False,
                title='stack=False',
@@ -2462,7 +2462,7 @@ df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
 
 chart = Chart(df, linecols=df.columns,
               title='Monetary Policy Rate', subtitle='(Percent)',
-              colorcycle=['red', 'green', 'blue'], linewidth=3,
+              colors=['red', 'green', 'blue'], linewidth=3,
               xrange='2023-01:', yrange=[0, 90])
 ```
 
@@ -3040,7 +3040,7 @@ Using named basic colors, which are simplest and most intuitive to use.
 #| code-fold: show
 
 chart = Chart(df, linecols=df.columns,
-               colorcycle=['red', 'green', 'blue', 'magenta'],
+               colors=['red', 'green', 'blue', 'magenta'],
                title='Basic Named Colors',
                xrange='2022-01:', yrange=[-95, 60],
                legend_bottom=0.22, legend_left=0.55)
@@ -3056,7 +3056,7 @@ Using named CSS colors, which provide more flexibility but are somewhat difficul
 #| code-fold: show
 
 chart = Chart(df, linecols=df.columns,
-               colorcycle=['firebrick', 'lawngreen', 'darkturquoise', 'darkviolet'],
+               colors=['firebrick', 'lawngreen', 'darkturquoise', 'darkviolet'],
                title='CSS Colors',
                xrange='2022-01:', yrange=[-95, 60],
                legend_bottom=0.22, legend_left=0.55)
@@ -3073,7 +3073,7 @@ Note that the names must be preceded by "xkcd:" followed by the name as-is from 
 #| code-fold: show
 
 chart = Chart(df, linecols=df.columns,
-               colorcycle=['xkcd:pea green', 'xkcd:dark brown', 'xkcd:kelly green', 'xkcd:bright purple'],
+               colors=['xkcd:pea green', 'xkcd:dark brown', 'xkcd:kelly green', 'xkcd:bright purple'],
                title='XKCD Colors',
                xrange='2022-01:', yrange=[-95, 60],
                legend_bottom=0.22, legend_left=0.55)
@@ -3090,7 +3090,7 @@ This is not intuitive, but provides a way to implement the color if known from o
 #| code-fold: show
 
 chart = Chart(df, linecols=df.columns,
-               colorcycle=['#EE2222', '#22EF33', '#3232DD', '#DD54DE'],
+               colors=['#EE2222', '#22EF33', '#3232DD', '#DD54DE'],
                title='HEX Colors',
                xrange='2022-01:', yrange=[-95, 60],
                legend_bottom=0.22, legend_left=0.55)
@@ -3108,7 +3108,7 @@ This is not intuitive, but provides a way to implement the color if known from o
 #| code-fold: show
 
 chart = Chart(df, linecols=df.columns,
-               colorcycle=[(0.9, 0.05, 0.1, 0.7), (0.2, 0.85, 0.1, 0.8), (0.25, 0.05, 0.9, 0.6), (0.85, 0.25, 0.85, 0.6)],
+               colors=[(0.9, 0.05, 0.1, 0.7), (0.2, 0.85, 0.1, 0.8), (0.25, 0.05, 0.9, 0.6), (0.85, 0.25, 0.85, 0.6)],
                title='RGBA Colors',
                xrange='2022-01:', yrange=[-95, 60],
                legend_bottom=0.22, legend_left=0.55)
@@ -3128,7 +3128,7 @@ These colors are the following: `AXISGREY` : '#B3B3B3', `AXISGRAY` : '#B3B3B3', 
 #| code-fold: show
 
 chart = Chart(df, linecols=df.columns,
-               colorcycle=[IMFRED, IMFGREEN, IMFBLUE, IMFGREY],
+               colors=[IMFRED, IMFGREEN, IMFBLUE, IMFGREY],
                title='IMF Colors',
                xrange='2022-01:', yrange=[-95, 60],
                legend_bottom=0.22, legend_left=0.55)

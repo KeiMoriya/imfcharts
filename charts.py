@@ -199,7 +199,7 @@ class Chart:
                  # watermark options ----------------------------------------------------------
                  watermark=None,
                  wmx=None, wmy=None,
-                 wmsize=None, wmfont=None, wmcolor=None, wmalpha=None, wmangle=None, wmz=None,
+                 wmsize=None, wmfont=None, wmcolor=None, wmalpha=None, wmangle=None, wmzorder=None,
                  debug=False):
 
         # ------------------------------------------------------------------------------
@@ -566,7 +566,7 @@ class Chart:
         if watermark is not None:
             text = watermark
             self.watermark(text=text,x=wmx, y=wmy,
-                           size=wmsize, font=wmfont, color=wmcolor, alpha=wmalpha, angle=wmangle, z=wmz)
+                           size=wmsize, font=wmfont, color=wmcolor, alpha=wmalpha, angle=wmangle, zorder=wmzorder)
         
 
     def apply(self, style):
@@ -3337,7 +3337,7 @@ class Chart:
         # end of show=True
 
     def watermark(self, text='Confidential',
-                  x=0.5, y=0.5, size=40, font=None, color='gray', alpha=0.3, angle=30, z=10):
+                  x=0.5, y=0.5, size=40, font=None, color='gray', alpha=0.3, angle=30, zorder=10):
                   
         '''
         Add watermark.
@@ -3362,16 +3362,18 @@ class Chart:
             alpha = 0.3
         if angle is None:
             angle = 30
-        if z is None:
+        if zorder is None:
             # This sets the watermark to be in front of everything else.
             # To set behind everything set to 0
-            z = 10
+            zorder = 10
+
+        print(zorder)
 
         self.fig.text(
             x, y,
             text,
             fontsize=size, fontfamily=font, color=color, alpha=alpha,
-            ha='center', va='center', rotation=angle, zorder=z)
+            ha='center', va='center', rotation=angle, zorder=zorder)
         
     def save(self, filename, dpi=250, bbox_inches='tight', pad_inches=0.02):
         '''

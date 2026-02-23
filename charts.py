@@ -3075,17 +3075,54 @@ class Chart:
              hatch=None, # hatchlinewidth=None,
              label='', legend=False,
              zorder=1,
+             xrange=None, margins=None, xformat=None, yrange=None, ryrange=None,
              debug=False, **kwarg):
 
-        # Set data if specified
-        if data is not None:
-            if type(data) != pd.DataFrame:
-                raise RuntimeError('fill(): data must be pd.DataFrame, given ' + str(data) + ' of type ' + str(type(data)))
-            self.data = data
-            if indexcol:
-                if indexcol not in self.data.columns:
-                    raise RuntimeError('indexcol specified as "' + str(indexcol) + '" but not found in data:' + str(data))
-                self.data.set_index(indexcol, inplace=True)
+        # Set data.
+        # If not specified use self.data.
+        if data is None:
+            data = self.data
+
+        if indexcol is not None:
+            if type(data) == pd.DataFrame:
+                # Check if index has already been set for data
+                if data.index.name == indexcol:
+                    pass
+
+                # Otherwise try to set index to indexcol
+                elif indexcol not in data.columns:
+                    error = 'indexcol specified as "' + str(indexcol) + '" but not found in data:\n'
+                    error += str(data)
+                    raise ValueError(error)
+                else:
+                    data.set_index(indexcol, inplace=True)
+                    # If possible, convert to datetime index
+                    try:
+                        data.index = pd.to_datetime(data.index)
+                    except Exception:
+                        pass
+            else:
+                print('WARNING: indexcol specified but data is not DataFrame')
+
+        # Set self.xaxis_type from self.data
+        self.xaxis_type = self._set_xaxis_type()
+        if debug:
+            print('self.xaxis_type = ' + str(self.xaxis_type))
+            
+        # Set x-axis limits if specified, or use default
+        if xrange is not None:
+            xrange = self._parse_xrange(xrange, debug=debug)
+            self._xrange = xrange
+        else:
+            xrange = self._xrange
+        if debug:
+            print('xrange:')
+            print(xrange)
+            
+        # Trim data as needed
+        self._trim_data(xrange, debug=debug)
+        if debug:
+            print(self.data)
 
         # Check lo and hi are valid columns in self.data
         if lo not in self.data.columns:
@@ -3144,7 +3181,50 @@ class Chart:
             self.legend()
             if debug:
                 print('called legend()')
-            
+
+        # Set x-axis range if specified
+        if xrange is not None or margins is not None:
+            if debug:
+                print('before calling xrange()')
+                print(xrange)
+            # If margins is specified, set it for this chart and use it.
+            if margins is not None:
+                self.margins = margins
+            self.xrange(xrange, margins=self.margins, debug=debug)
+            if debug:
+                print('after calling xrange():')
+                print(self._xrange)
+
+        # Set xaxis format.
+        # If xformat was specified use it, otherwise use self.xformat
+        if xformat is None:
+            xformat = self.xformat
+        self.xaxis_format(xformat=xformat, debug=debug)
+        
+        # Set x-axis ticks
+        self.ticks(axis='x')
+
+        # Set which x-axis is drawn on top
+        self.topaxis(self._topaxis)
+
+        # If yrange is specified use it, otherwise use self.yrange
+        if axis == 'left':
+            if yrange is None:
+                if getattr(self, 'yrange', None) is not None:
+                    yrange = self._yrange
+
+            if yrange is not None:
+                self._yrange = self._parse_yrange(yrange)
+                self.yrange(self._yrange)
+        if axis == 'right':
+            if ryrange is None:
+                if getattr(self, 'ryrange', None) is not None:
+                    ryrange = self._ryrange
+                    
+            if ryrange is not None:
+                self._ryrange = self._parse_yrange(ryrange)
+                self.ryrange(self._ryrange)
+                
     def legend(self, show=True,
                ncol_legend=None, legend_spacing=None,
                legend_left=None, legend_bottom=None, legend_width=None, legend_height=None, legend_mode=None,

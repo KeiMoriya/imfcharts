@@ -195,6 +195,11 @@ class Chart:
                  legend_mode='expand', legend_frame=False,
                  legend_color='white', legend_alpha=1, legend_shadow=False, legend_fancybox=False,
                  legend_edge='black', legend_linestyle='-', legend_linewidth=1,
+
+                 # watermark options ----------------------------------------------------------
+                 watermark=None,
+                 wmx=None, wmy=None,
+                 wmsize=None, wmfont=None, wmcolor=None, wmalpha=None, wmangle=None, wmz=None,
                  debug=False):
 
         # ------------------------------------------------------------------------------
@@ -556,6 +561,13 @@ class Chart:
             print(self.legend_labels)
         if self.show_legend:
             self.legend()
+
+        # Add watermark
+        if watermark is not None:
+            text = watermark
+            self.watermark(text=text,x=wmx, y=wmy,
+                           size=wmsize, font=wmfont, color=wmcolor, alpha=wmalpha, angle=wmangle, z=wmz)
+        
 
     def apply(self, style):
         '''
@@ -3323,6 +3335,43 @@ class Chart:
                 self._legend.get_frame().set_linestyle(legend_linestyle)
                 self._legend.get_frame().set_linewidth(legend_linewidth)
         # end of show=True
+
+    def watermark(self, text='Confidential',
+                  x=0.5, y=0.5, size=40, font=None, color='gray', alpha=0.3, angle=30, z=10):
+                  
+        '''
+        Add watermark.
+        Specify position in figure coordinates (0 to 1)
+        as well as text to be shown and other attributes such as
+        color, size, transparency, angle.
+        '''
+
+        # Set up params. If None is given, default to function defaults.
+        if x is None:
+            x = 0.5
+        if y is None:
+            y = 0.5
+        if size is None:
+            size = 40
+        if font is None:
+            # Use default from rcParams
+            matplotlib.rcParams["font.family"]
+        if color is None:
+            color = 'gray'
+        if alpha is None:
+            alpha = 0.3
+        if angle is None:
+            angle = 30
+        if z is None:
+            # This sets the watermark to be in front of everything else.
+            # To set behind everything set to 0
+            z = 10
+
+        self.fig.text(
+            x, y,
+            text,
+            fontsize=size, fontfamily=font, color=color, alpha=alpha,
+            ha='center', va='center', rotation=angle, zorder=z)
         
     def save(self, filename, dpi=250, bbox_inches='tight', pad_inches=0.02):
         '''

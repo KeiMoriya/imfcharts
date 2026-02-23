@@ -2449,6 +2449,73 @@ In most cases the defaults should provide good results.
 There are no further options for `Chart.show()`. It is also possible to use the `Chart.save()` function
 directly and open the resulting image.
 
+### Adding Watermark
+
+Watermarks can be added as semi-transparent text. A quick example is as follows
+
+```{python}
+#| label: watermark
+#| fig-cap: "Adding watermark"
+#| code-fold: show
+infilename = 'data/turkey_page2/fig2_chart1_inflation.csv'
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+
+attrs = {'Inflation' : {'linewidth' : 4, 'color' : IMFBLACK},
+         'Goods' : {'linewidth' : 4, 'color' : IMFBLUE, 'linestyle' : 'imfdash'},
+         'Services' : {'linewidth' : 4, 'color' : IMFRED, 'linestyle' : 'imfdash'}}
+linecols = df.columns
+
+chart1 = Chart(df, linecols=linecols,
+               attrs=attrs,
+               title='Inflation: Goods and Services',
+               subtitle='(Y/y percent change)',
+               xrange='2017-01:', yrange=[0, 120],
+               watermark='Confidential')
+chart1
+```
+
+The watermark appears as semi-transparent text by specifying the parameter `watermark` when calling `Chart()`.
+This is internally implemented with the function `Chart.watermark()` and options to call this from `Chart()` are listed below.
+
+| Argument | Default | Description |
+|---|---|---|
+| watermark | None | The text to show in the watermark. When calling `Chart.watermark()` the argument is `text` and default is "Confidential". |
+| wwx | 0.5 | X coordinates of the text in figure coordinates, that is 0 is the left edge of the `matplotlib.Figure` and 1 is the right edge. When calling `Chart.watermark()` the argument is `x`. |
+| wmy | 0.5 | Y coordinates of the text in figure coordinates, that is 0 is the bottom edge of the `matplotlib.Figure` and 1 is the top edge. When calling `Chart.watermark()` the argument is `x`. |
+| wmsize | 40 | Font size of watermark. When calling `Chart.watermark()` the argument is `size`.  |
+| wmfont | None | Font size of watermark. When calling `Chart.watermark()` the argument is `font`. Defaults to `matplotlib.rcParams["font.family"]` if not specified.  |
+| wmcolor | 'gray' | Font color of watermark. When calling `Chart.watermark()` the argument is `color`. Defaults to 'gray' if not specified.  |
+| wmalpha | 0.3 | Font transparency of watermark. When calling `Chart.watermark()` the argument is `alpha`. |
+| wmangle | 30 | Angle of watermark. When calling `Chart.watermark()` the argument is `angle`. |
+| zorder | 10 | Specify the drawing order, higher values are shown on top of other objects. Set to 0 to show behind all other objects. |
+
+: {tbl-colwidths="[10,10, 80]"}
+
+Watermarks can also be added later, below is an example.
+
+```{python}
+#| label: watermark_later
+#| fig-cap: "Adding watermark later"
+#| code-fold: show
+infilename = 'data/turkey_page2/fig2_chart1_inflation.csv'
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0])
+
+attrs = {'Inflation' : {'linewidth' : 4, 'color' : IMFBLACK},
+         'Goods' : {'linewidth' : 4, 'color' : IMFBLUE, 'linestyle' : 'imfdash'},
+         'Services' : {'linewidth' : 4, 'color' : IMFRED, 'linestyle' : 'imfdash'}}
+linecols = df.columns
+
+chart1 = Chart(df, linecols=linecols,
+               attrs=attrs,
+               title='Inflation: Goods and Services',
+               subtitle='(Y/y percent change)',
+               xrange='2017-01:', yrange=[0, 120])
+chart1.watermark(text='Confidential', x=0.3, y=0.3, angle=45, size=30, color='blue', alpha=0.7, zorder=0)
+
+chart1
+```
+
+
 ### Adding Titles, Subtitles
 
 The `Chart()` function has arguments `title` and `subtitle` which allow specifying titles and subtitles, respectively.

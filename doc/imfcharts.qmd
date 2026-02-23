@@ -2150,6 +2150,11 @@ The options available for `fill` are below.
 | label | '' | When `legend` is `True`, a legend entry is created using this label.  |
 | legend | `False` | If `False`, do not show this entry in the legend |
 | zorder | 0 | Specify the drawing order, higher values are shown on top of other objects. |
+| xrange | None | Specify x-axis range for horizontal line. If `coordinates` is `'data'` for time series data, this converts the passed in `xrange` into coordinates of the chart. Otherwise the values are fractions of the chart from 0 to 1. |
+| margins | None | If specified, set how additional margins are added. Default is 'auto' which will automatically adjust. Can also specify number of days as integers. |
+| xformat | None | Specify how x-axis is formatted for a time series plot. Default is to check the frequency of the data and automatically determine. Otherwise specify a frequency like 'D', 'W', 'M', 'Q', 'A' for daily, weekly, monthly, quarterly or annual frequency. |
+| yrange | None | Override existing `yrange` of this object and set y-axis range |
+| ryrange | None | Override existing `ryrange` of this object and set right y-axis range |
 | debug | False | Show information when running. |
 
 : {tbl-colwidths="[10,10, 80]"}

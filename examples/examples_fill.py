@@ -107,7 +107,7 @@ chart1 = Chart(df, linecols=linecols,
 # Add fill
 chart1.fill(lo, hi, data=df)
 chart1.fill(lo2, lo, data=df,
-                color='blue', linewidth=1.5, linestyle='--', alpha=1)
+                color='blue', linewidth=1.5, linestyle='--', alpha=1, xrange='2017-01:')
 chart1.fill(hi, hi2, data=df,
                 color='orange', linewidth=2.5, linestyle='-', alpha=0.2)
 
@@ -202,7 +202,8 @@ kwargs = {'lo' : lo2, 'hi' : 'lo', 'color' : 'blue', 'edgecolor' : 'orange',
 chart1.fill(**kwargs)
 # No legend for higher band
 kwargs = {'data' : df, 'lo' : hi, 'hi' : 'hi2', 'color' : 'blue', 'edgecolor' : 'orange',
-          'linewidth' : 1.5, 'linestyle' : '--', 'alpha' : 0.2, 'zorder' : 2}
+          'linewidth' : 1.5, 'linestyle' : '--', 'alpha' : 0.2, 'zorder' : 2,
+          'axis' : 'right', 'ryrange' : [0, 120]}
 chart1.fill(**kwargs)
 
 chart1.xrange('2016-01:')
@@ -219,7 +220,7 @@ if os.path.isfile(mergedfilename):
     os.remove(mergedfilename)
     
 merger = PdfWriter()
-filenames = sorted(glob.glob(outdir + '/*fill*.pdf'))
+filenames = sorted(glob.glob(outdir + '/fill*.pdf'))
 for filename in filenames:
     merger.append(filename)
 merger.write(mergedfilename)

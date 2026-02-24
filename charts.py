@@ -3367,8 +3367,6 @@ class Chart:
             # To set behind everything set to 0
             zorder = 10
 
-        print(zorder)
-
         self.fig.text(
             x, y,
             text,

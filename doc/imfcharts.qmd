@@ -2471,7 +2471,6 @@ chart1 = Chart(df, linecols=linecols,
                subtitle='(Y/y percent change)',
                xrange='2017-01:', yrange=[0, 120],
                watermark='Confidential')
-chart1
 ```
 
 The watermark appears as semi-transparent text by specifying the parameter `watermark` when calling `Chart()`.
@@ -2511,8 +2510,6 @@ chart1 = Chart(df, linecols=linecols,
                subtitle='(Y/y percent change)',
                xrange='2017-01:', yrange=[0, 120])
 chart1.watermark(text='Confidential', x=0.3, y=0.3, angle=45, size=30, color='blue', alpha=0.7, zorder=0)
-
-chart1
 ```
 
 
@@ -3204,6 +3201,175 @@ chart = Chart(df, linecols=df.columns,
                title='IMF Colors',
                xrange='2022-01:', yrange=[-95, 60],
                legend_bottom=0.22, legend_left=0.55)
+```
+
+:::
+
+## Non-Western Languages
+
+The library can be used with languages other than those using standard Western fonts.
+The basic way to do this is to specify the internal `Matplotlib` parameter in the following way
+
+```{python}
+#| label: change_lang
+matplotlib.rcParams["font.family"] = "Microsoft YaHei"
+```
+
+so that a font set that has the necessary fonts is used.
+Given that it is not clear which fonts are usable for a given language, an option `lang` is given when
+creating the `Chart` object so that this can be specified with the [2-letter language code](https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes){target="_blank"}. In particular, the options `lang='jp'` and `lang='zh'` for Japanese and Chinese are implemented.
+Otherwise for Western European language families and Arabic, the default will work.
+In cases where a specific language needs to be implemented, search for `Matplotlib` fonts that implement that language and
+use the option `fontname` when creating the `Chart`.
+
+Below are several examples of specifying the `lang` or `fontname` parameter.
+
+```{python}
+#| label: data_lang
+
+# Read in data
+infilename = 'data/turkey_page5/fig5_chart2_current_account_mms.csv'
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0]).dropna(how='all', axis=0)
+```
+
+::: {.panel-tabset}
+
+### Default (Segoe-UI)
+
+
+```{python}
+#| label: gallery_lang_segoeui
+#| fig-cap: "Using Default Segoe UI"
+#| code-fold: show
+title='Current Account'
+subtitle='(Billions USD, 12mms)'
+xtitle = 'date'
+ytitle = 'U.S. $B'
+
+chart2 = Chart(df, linecols=df.columns,
+               title=title,
+               subtitle=subtitle,
+               xtitle=xtitle, ytitle=ytitle,
+               xrange='2022-01:', yrange=[-95, 60],
+               legend_bottom=0.22, legend_left=0.55)
+```
+
+### Specify fontname
+
+
+```{python}
+#| label: gallery_lang_arial
+#| fig-cap: "Using `fontname='Arial'`"
+#| code-fold: show
+chart2 = Chart(df, linecols=df.columns,
+               fontname='Arial',
+               title=title + ' (Arial)',
+               subtitle=subtitle,
+               xtitle=xtitle, ytitle=ytitle,
+               xrange='2022-01:', yrange=[-95, 60],
+               legend_bottom=0.22, legend_left=0.55)
+```
+
+### French
+
+```{python}
+#| label: gallery_lang_fr
+#| fig-cap: "French"
+#| code-fold: show
+title='Face à des forces divergentes, l’économie mondiale reste stable'
+subtitle='La croissance s’avère résiliente'
+xtitle = 'date'
+ytitle = 'L’économie mondiale'
+
+chart2 = Chart(df, linecols=df.columns,
+               title=title,
+               subtitle=subtitle,
+               xtitle=xtitle, ytitle=ytitle,
+               xrange='2022-01:', yrange=[-95, 60],
+               legend_bottom=0.22, legend_left=0.55)
+```
+
+### Arabic
+
+```{python}
+#| label: gallery_lang_ar
+#| fig-cap: "Arabic"
+#| code-fold: show
+title='الاقتصاد العالمي: استقرار وسط قوى متباينة'
+subtitle='يُتَوَقَّع بلوغ النمو العالمي 3,3% في'
+xtitle = 'آخر توقعات النمو 2026'
+ytitle = 'الهيكل التنظيمي للصندوق'
+
+chart2 = Chart(df, linecols=df.columns,
+               title=title,
+               subtitle=subtitle,
+               xtitle=xtitle, ytitle=ytitle,
+               xrange='2022-01:', yrange=[-95, 60],
+               legend_bottom=0.22, legend_left=0.55)
+```
+
+### Chinese
+
+```{python}
+#| label: gallery_lang_zh
+#| fig-cap: "Chinese"
+#| code-fold: show
+
+title = '全球经济：在分化力量中保持平稳'
+subtitle = '经济增长呈现出韧性'
+xtitle = '并实施结构性改革'
+ytitle = '增长率预测'
+
+chart2 = Chart(df, linecols=df.columns,
+               title=title,
+               subtitle=subtitle,
+               xtitle=xtitle, ytitle=ytitle,
+               xrange='2022-01:', yrange=[-95, 60],
+               legend_bottom=0.22, legend_left=0.55,
+	       lang='zh')
+```
+
+### Japanese
+
+```{python}
+#| label: gallery_lang_jp
+#| fig-cap: "Japanese"
+#| code-fold: show
+
+title = '世界経済'
+subtitle = '成長底堅く'
+xtitle = '貿易摩擦の安定化と良好な金融環境'
+ytitle = '輸出の底堅さ'
+
+chart2 = Chart(df, linecols=df.columns,
+               title=title,
+               subtitle=subtitle,
+               xtitle=xtitle, ytitle=ytitle,
+               xrange='2022-01:', yrange=[-95, 60],
+               legend_bottom=0.22, legend_left=0.55,
+	       lang='jp')
+```
+
+### Georgian (specify `fontname`)
+
+```{python}
+#| label: gallery_lang_ka
+#| fig-cap: "Georgian"
+#| code-fold: show
+
+title = "მსოფლიო ეკონომიკური ზრდა"
+subtitle = 'წლიური ზრდის ტემპები'
+xtitle = 'თარიღი'
+ytitle = 'მილიარდი აშშ დოლარი'
+df.columns = ['მიმდინარე ანგარიში', 'საწვავის გამოკლებით', 'საწვავისა და ოქროს გამოკლებით', 'ოქროს გამოკლებით']
+
+chart2 = Chart(df, linecols=df.columns,
+               title=title,
+               subtitle=subtitle,
+               xtitle=xtitle, ytitle=ytitle,
+               xrange='2022-01:', yrange=[-95, 60],
+               legend_bottom=0.22, legend_left=0.55,
+	       fontname='Sylfaen')
 ```
 
 :::

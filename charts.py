@@ -127,14 +127,14 @@ class Chart:
                  title=None,
                  titlecolor=None,
                  titlefontsize=18,
-                 titlefont='Segoe UI',
+                 titlefont=None,
                  titlefontweight='bold',
                  titleloc='left',
                  titley=1.05,
                  
                  subtitle=None,
                  subtitlecolor='#4B82AD',
-                 subtitlefont='Segoe UI',
+                 subtitlefont=None,
                  subtitlefontsize=12,
                  subtitlefontweight='normal',
                  subtitleha='left',
@@ -200,6 +200,11 @@ class Chart:
                  watermark=None,
                  wmx=None, wmy=None,
                  wmsize=None, wmfont=None, wmcolor=None, wmalpha=None, wmangle=None, wmzorder=None,
+
+                 # fontname, lang for special languages ----------------------------------------------------------
+                 fontname=None,
+                 lang=None,
+
                  debug=False):
 
         # ------------------------------------------------------------------------------
@@ -413,6 +418,12 @@ class Chart:
         self.legend_edge = legend_edge
         self.legend_linestyle = legend_linestyle
         self.legend_linewidth = legend_linewidth
+
+        self.fontname = fontname
+
+        # Set language
+        self._lang = lang
+        self.lang(self._lang)
         
         # Set self.xaxis_type based on data
         self.xaxis_type = self._set_xaxis_type()
@@ -567,7 +578,6 @@ class Chart:
             text = watermark
             self.watermark(text=text,x=wmx, y=wmy,
                            size=wmsize, font=wmfont, color=wmcolor, alpha=wmalpha, angle=wmangle, zorder=wmzorder)
-        
 
     def apply(self, style):
         '''
@@ -731,7 +741,8 @@ class Chart:
         if font is None:
             font = self.titlefont
             if font is None:
-                font = matplotlib.rcParams['font.sans-serif']
+                if self.fontname is not None:
+                    font = self.fontname
 
         if fontweight is None:
             fontweight = self.titlefontweight
@@ -753,9 +764,13 @@ class Chart:
         if debug:
             print('title = ' + str(text) + ' color = ' + str(color) + ' loc = ' + str(loc) + ' y = ' + str(y))
             print('fontweight = ' + str(fontweight) + ' fontname = ' + str(font) + ' fontsize = ' + str(fontsize))
-            
-        self.ax.set_title(str(text), color=color, loc=loc, y=y,
-                          fontweight=fontweight, fontname=font, fontsize=fontsize)
+
+        if font is not None:
+            self.ax.set_title(str(text), color=color, loc=loc, y=y,
+                              fontweight=fontweight, fontname=font, fontsize=fontsize)
+        else:
+            self.ax.set_title(str(text), color=color, loc=loc, y=y,
+                              fontweight=fontweight, fontsize=fontsize)
 
     def subtitle(self, text, color=None, fontsize=None, font=None, fontweight=None,
                  ha=None, va=None, y=None,
@@ -783,7 +798,8 @@ class Chart:
         if font is None:
             font = self.subtitlefont
             if font is None:
-                font = matplotlib.rcParams['font.sans-serif']
+                if self.fontname is not None:
+                    font = self.fontname
 
         if fontweight is None:
             fontweight = self.subtitlefontweight
@@ -811,9 +827,14 @@ class Chart:
             print('text = ' + str(text) + ' color = ' + str(color) + ' ha = ' + str(ha) + ' va = ' + str(va) + ' y = ' + str(y))
             print('fontweight = ' + str(fontweight) + ' fontname = ' + str(font) + ' fontsize = ' + str(fontsize))
 
-        self.ax.text(0., y, text,
-                     color=color, fontsize=fontsize, fontweight=fontweight, fontname=font,
-                     horizontalalignment=ha, verticalalignment=va, transform=self.ax.transAxes)
+        if font is not None:
+            self.ax.text(0., y, text,
+                         color=color, fontsize=fontsize, fontweight=fontweight, fontname=font,
+                         horizontalalignment=ha, verticalalignment=va, transform=self.ax.transAxes)
+        else:
+            self.ax.text(0., y, text,
+                         color=color, fontsize=fontsize, fontweight=fontweight,
+                         horizontalalignment=ha, verticalalignment=va, transform=self.ax.transAxes)
         
     def xtitle(self, text, fontsize=None, font=None, fontweight=None, color=None, pad=None, loc=None,
                rotation=None, alpha=1):
@@ -891,8 +912,13 @@ class Chart:
         self.xalpha = alpha
         
         # Set x-axis title
-        self.ax.set_xlabel(text, fontsize=fontsize, font=font, fontweight=fontweight,
-                           color=color, labelpad=pad, loc=loc, rotation=rotation, alpha=alpha)
+        if self.fontname is not None:
+            self.ax.set_xlabel(text, fontsize=fontsize, font=font, fontweight=fontweight,
+                               color=color, labelpad=pad, loc=loc, rotation=rotation, alpha=alpha,
+                               fontname=self.fontname)
+        else:
+            self.ax.set_xlabel(text, fontsize=fontsize, fontweight=fontweight,
+                               color=color, labelpad=pad, loc=loc, rotation=rotation, alpha=alpha)
         
     def ytitle(self, text, fontsize=None, font=None, fontweight=None, color=None, pad=None, loc=None,
                rotation=None, alpha=1):
@@ -970,8 +996,13 @@ class Chart:
         self.yalpha = alpha
         
         # Set y-axis title
-        self.ax.set_ylabel(text, fontsize=fontsize, font=font, fontweight=fontweight,
-                           color=color, labelpad=pad, loc=loc, rotation=rotation, alpha=alpha)
+        if self.fontname is not None:
+            self.ax.set_ylabel(text, fontsize=fontsize, font=font, fontweight=fontweight,
+                               color=color, labelpad=pad, loc=loc, rotation=rotation, alpha=alpha,
+                               fontname=self.fontname)
+        else:
+            self.ax.set_ylabel(text, fontsize=fontsize, fontweight=fontweight,
+                               color=color, labelpad=pad, loc=loc, rotation=rotation, alpha=alpha)
 
     def ticks(self, axis='x', yaxis='left', size=None, length=None, angle=None, pad=None,
               nticks=None, last=None,
@@ -3045,10 +3076,17 @@ class Chart:
             except Exception:
                 print('WARNING: Could not convert ' + str(x) + ' to pd.Timestamp')
 
-        self.ax.text(x, y, text,
-                     color=color,
-                     fontsize=fontsize, fontfamily=fontfamily, fontweight=fontweight,
-                     va=va, ha=ha, zorder=zorder)
+        if self.fontname is not None:
+            self.ax.text(x, y, text,
+                         color=color,
+                         fontsize=fontsize, fontfamily=fontfamily, fontweight=fontweight,
+                         va=va, ha=ha, zorder=zorder,
+                         fontname=self.fontname)
+        else:
+            self.ax.text(x, y, text,
+                         color=color,
+                         fontsize=fontsize, fontfamily=fontfamily, fontweight=fontweight,
+                         va=va, ha=ha, zorder=zorder)
     
     def arrow(self, head=(0, 0), tail=(1, 1), coords='data',
               color='black', edgecolor=None, edgewidth=0,
@@ -3314,20 +3352,35 @@ class Chart:
                 if legend_left + legend_width > 1:
                     legend_width = 1 - legend_left
                     self.legend_width = legend_width
-            
-            self._legend = self.ax.legend(self.legend_entries, self.legend_labels,
-                                          loc='upper left',
-                                          labelspacing=legend_spacing,
-                                          bbox_transform=self.ax.transAxes,
-                                          bbox_to_anchor=(legend_left,legend_bottom,legend_width,legend_height),
-                                          mode=legend_mode, borderaxespad=0,
-                                          ncol=ncol_legend, fontsize=self.legend_fontsize, frameon=legend_frame,
-                                          facecolor=legend_color, framealpha=legend_alpha, shadow=legend_shadow, fancybox=legend_fancybox,
-                                          edgecolor=legend_edge,
-                                          title=self.legend_header, alignment='left', title_fontsize=self.legend_header_fontsize,
-                                          numpoints=1
-                                    )
 
+            if self.fontname is not None:
+                self._legend = self.ax.legend(self.legend_entries, self.legend_labels,
+                                              loc='upper left',
+                                              labelspacing=legend_spacing,
+                                              bbox_transform=self.ax.transAxes,
+                                              bbox_to_anchor=(legend_left,legend_bottom,legend_width,legend_height),
+                                              mode=legend_mode, borderaxespad=0,
+                                              ncol=ncol_legend, fontsize=self.legend_fontsize, frameon=legend_frame,
+                                              facecolor=legend_color, framealpha=legend_alpha, shadow=legend_shadow, fancybox=legend_fancybox,
+                                              edgecolor=legend_edge,
+                                              title=self.legend_header, alignment='left', title_fontsize=self.legend_header_fontsize,
+                                              numpoints=1,
+                                              prop={"family" : self.fontname}
+                                              )
+            else:
+                self._legend = self.ax.legend(self.legend_entries, self.legend_labels,
+                                              loc='upper left',
+                                              labelspacing=legend_spacing,
+                                              bbox_transform=self.ax.transAxes,
+                                              bbox_to_anchor=(legend_left,legend_bottom,legend_width,legend_height),
+                                              mode=legend_mode, borderaxespad=0,
+                                              ncol=ncol_legend, fontsize=self.legend_fontsize, frameon=legend_frame,
+                                              facecolor=legend_color, framealpha=legend_alpha, shadow=legend_shadow, fancybox=legend_fancybox,
+                                              edgecolor=legend_edge,
+                                              title=self.legend_header, alignment='left', title_fontsize=self.legend_header_fontsize,
+                                              numpoints=1
+                                              )
+                
             # Need to set legend title color
             self._legend.get_title().set_color(self.legend_header_color)
             # Need to set legend edge attributes
@@ -3424,6 +3477,22 @@ class Chart:
         
         from PIL import Image
         Image.open(tmpfilename).show()
+
+    def lang(self, lang=None):
+        '''
+        Set up language and corresponding matplotlib.rcParams['font.family']
+        '''
+
+        # Set up so that if None is called, this resets
+        if lang is None:
+            matplotlib.rcParams['font.family'] = 'sans-serif'
+        elif str(lang).strip().lower() == 'jp':
+            matplotlib.rcParams['font.family'] = 'Yu Gothic'
+        elif str(lang).strip().lower() == 'zh':
+            matplotlib.rcParams['font.family'] = 'Microsoft YaHei'
+        else:
+            print('WARNING: lang ' + str(lang) + ' not implemented, defaulting to sans-serif')
+            matplotlib.rcParams['font.family'] = 'sans-serif'
 
 def color_bars(barcolors, patches, dataindex, stack=False, debug=False):
     '''

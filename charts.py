@@ -134,7 +134,7 @@ class Chart:
                  titlefontweight='bold',
                  titleloc='left',
                  titley=1.05,
-                 
+
                  subtitle=None,
                  subtitlecolor='#4B82AD',
                  subtitlefont=None,
@@ -280,6 +280,8 @@ class Chart:
         self.titley = titley
         
         # subtitle options
+        # Keep a handle when a subtitle is added so it can be deleted later
+        self.subtitlehandle = None
         self.subtitletext = subtitle # self.subtitle is reserved for function to set title
         self.subtitlecolor = subtitlecolor
         self.subtitlefont = subtitlefont
@@ -840,13 +842,13 @@ class Chart:
             print('fontweight = ' + str(fontweight) + ' fontname = ' + str(font) + ' fontsize = ' + str(fontsize))
 
         if font is not None:
-            self.ax.text(0., y, text,
-                         color=color, fontsize=fontsize, fontweight=fontweight, fontname=font,
-                         horizontalalignment=ha, verticalalignment=va, transform=self.ax.transAxes)
+            self.subtitlehandle = self.ax.text(0., y, text,
+                                               color=color, fontsize=fontsize, fontweight=fontweight, fontname=font,
+                                               horizontalalignment=ha, verticalalignment=va, transform=self.ax.transAxes)
         else:
-            self.ax.text(0., y, text,
-                         color=color, fontsize=fontsize, fontweight=fontweight,
-                         horizontalalignment=ha, verticalalignment=va, transform=self.ax.transAxes)
+            self.subtitlehandle = self.ax.text(0., y, text,
+                                               color=color, fontsize=fontsize, fontweight=fontweight,
+                                               horizontalalignment=ha, verticalalignment=va, transform=self.ax.transAxes)
         
     def xtitle(self, text, fontsize=None, font=None, fontweight=None, color=None, pad=None, loc=None,
                rotation=None, alpha=1):
@@ -3600,6 +3602,9 @@ class Chart:
             if key == 'title':
                 self.title(val)
             elif key == 'subtitle':
+                # Remove existing subtitle if it exists
+                if self.subtitlehandle:
+                    self.subtitlehandle.remove()
                 self.subtitle(val)
             elif key == 'xtitle':
                 self.xtitle(val)
@@ -3609,6 +3614,8 @@ class Chart:
         # Deal with legend
         if 'legendtitle' in df_attrs.index:
             legendtitle = df_attrs.loc['legendtitle', lang]
+            if pd.isnull(legendtitle):
+                legendtitle = ''
         # Get all legend entries
         legend_keys = sorted(df_attrs.index[df_attrs.index.str.match(r"^legend\d+$")])
         # Make sure length matches

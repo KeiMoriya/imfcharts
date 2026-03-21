@@ -4,10 +4,13 @@
 Generate charts.
 '''
 
+from __future__ import annotations
+
 import os
 import sys
 import itertools
 import warnings
+from collections import OrderedDict
 
 import numpy as np
 import pandas as pd
@@ -573,6 +576,9 @@ class Chart:
         if self.show_legend:
             self.legend()
 
+        # List of text annotation handles so text can be modified later
+        self.texts = []
+
         # Add watermark
         if watermark is not None:
             text = watermark
@@ -719,6 +725,9 @@ class Chart:
             if text is None:
                 return
 
+        # Save as attribute
+        self.ttitletext = text
+
         # For other params use rcParams, if self attributes are set, override.
         # Further override with input params.
         if fontsize is None:
@@ -782,7 +791,10 @@ class Chart:
             text = self.subtitletext
             if text is None:
                 return
-        
+
+        # Save as attribute
+        self.subttitletext = text
+            
         # For other params use rcParams, if self attributes are set, override.
         # Further override with input params.
         if fontsize is None:
@@ -3077,16 +3089,19 @@ class Chart:
                 print('WARNING: Could not convert ' + str(x) + ' to pd.Timestamp')
 
         if self.fontname is not None:
-            self.ax.text(x, y, text,
-                         color=color,
-                         fontsize=fontsize, fontfamily=fontfamily, fontweight=fontweight,
-                         va=va, ha=ha, zorder=zorder,
-                         fontname=self.fontname)
+            handle = self.ax.text(x, y, text,
+                                  color=color,
+                                  fontsize=fontsize, fontfamily=fontfamily, fontweight=fontweight,
+                                  va=va, ha=ha, zorder=zorder,
+                                  fontname=self.fontname)
         else:
-            self.ax.text(x, y, text,
-                         color=color,
-                         fontsize=fontsize, fontfamily=fontfamily, fontweight=fontweight,
-                         va=va, ha=ha, zorder=zorder)
+            handle = self.ax.text(x, y, text,
+                                  color=color,
+                                  fontsize=fontsize, fontfamily=fontfamily, fontweight=fontweight,
+                                  va=va, ha=ha, zorder=zorder)
+
+        # Save the handle so it can be accessed later
+        self.texts.append(handle)
     
     def arrow(self, head=(0, 0), tail=(1, 1), coords='data',
               color='black', edgecolor=None, edgewidth=0,
@@ -3345,6 +3360,9 @@ class Chart:
                 legend_header_color = self.legend_header_color
             if legend_header_fontsize is None:
                 legend_header_fontsize = self.legend_header_fontsize
+
+            # Save attributes
+            self.legend_header = legend_header
     
             # Make sure legend_left + legend_width is less than 1,
             # otherwise we are left with long white margin on right side.
@@ -3455,6 +3473,7 @@ class Chart:
         '''
         Show chart.
         '''
+        import subprocess
 
         if debug:
             print('Calling show')
@@ -3474,9 +3493,12 @@ class Chart:
             print('WARNING: Could not save temporary image ' + tmpfilename + ':')
             print(e)
             return
-        
-        from PIL import Image
-        Image.open(tmpfilename).show()
+
+        code = (
+            "from PIL import Image; "
+            f"Image.open(r'''{tmpfilename}''').show()"
+        )
+        return subprocess.Popen([sys.executable, "-c", code])        
 
     def lang(self, lang=None):
         '''
@@ -3493,6 +3515,119 @@ class Chart:
         else:
             print('WARNING: lang ' + str(lang) + ' not implemented, defaulting to sans-serif')
             matplotlib.rcParams['font.family'] = 'sans-serif'
+
+    def get_translatable_attrs(self):
+        '''
+        Create a DataFrame containing all translatable attributes.
+        '''
+        
+        # Get translatable attributes and put into structure
+        translatables = OrderedDict()
+        translatables['title'] = self.titletext
+        translatables['subtitle'] = self.subtitletext
+        translatables['xtitle'] = self.xtitletext
+        translatables['ytitle'] = self.ytitletext
+
+        # legend
+        translatables['legendtitle'] = self.legend_header
+        translatables['legend'] = self.legend_labels
+
+        # TODO
+        # translatables['caption'] = self.caption
+        
+        translatables['texts'] = [t.get_text() for t in self.texts]
+
+        # Create a list of attributes
+        attrs = []
+        for key in translatables:
+            if type(translatables[key]) is None:
+                attrs.append([key, ''])
+            elif type(translatables[key]) == str:
+                attrs.append([key, translatables[key]])
+            elif type(translatables[key]) == list:
+                for iitem, item in enumerate(translatables[key]):
+                    attrs.append([key + str(iitem), item])
+        # Create DataFrame
+        df_attrs = pd.DataFrame(attrs, columns=['key', 'value']).set_index('key')
+
+        return df_attrs
+
+    def exportxl(self, filename, sheet='Sheet 1', lang='EN'):
+        '''
+        Export the current chart's translatable attributes to an Excel file and sheet.
+        If the sheet exists, try to overwrite.
+        '''
+
+        # Create DataFrame containing all translatable attributes
+        df_attrs = self.get_translatable_attrs()
+
+        write_key_value_excel(
+            filename=filename,
+            sheetname=sheet,
+            df=df_attrs,
+            lang=lang,
+            alternating_colors=True)
+
+    def importxl(self, filename, sheet='Sheet 1', lang='EN'):
+        '''
+        Import the current chart's translatable attributes from an Excel file and sheet.
+        '''
+
+        from openpyxl import load_workbook
+
+        if not os.path.isfile(filename):
+            raise ValueError(f"File {filename} does not exist")
+
+        wb = load_workbook(filename)
+        if sheet in wb.sheetnames:
+            existing_df = pd.read_excel(filename, sheet_name=sheet, index_col=0)
+        else:
+            raise ValueError(f"Sheet {sheet} does not exist in {filename}")
+        wb.close()
+
+        # language column should always be upper case
+        lang = lang.upper()
+
+        # Check if lang exists as a column
+        if lang in existing_df.columns:
+            df_attrs = existing_df[[lang]]
+        else:
+            raise ValueError(f"Column {lang} does not exist in file {filename} sheet {sheet}")
+
+        # Set attributes of each element
+        for key in df_attrs.index:
+            val = df_attrs.loc[key, lang]
+            if key == 'title':
+                self.title(val)
+            elif key == 'subtitle':
+                self.subtitle(val)
+            elif key == 'xtitle':
+                self.xtitle(val)
+            elif key == 'ytitle':
+                self.ytitle(val)
+
+        # Deal with legend
+        if 'legendtitle' in df_attrs.index:
+            legendtitle = df_attrs.loc['legendtitle', lang]
+        # Get all legend entries
+        legend_keys = sorted(df_attrs.index[df_attrs.index.str.match(r"^legend\d+$")])
+        # Make sure length matches
+        if len(self.legend_labels) != len(legend_keys):
+            raise ValueError(f"Number of legend entries in chart is {len(self.legend_entries)} while translated input had {len(legend_keys)} entries")
+        self.legend_labels = list(df_attrs.loc[legend_keys][lang].values)
+        # Recreate legend
+        self.legend(legend_header=legendtitle)
+
+        # Deal with texts
+        # Get all text entries
+        text_keys = sorted(df_attrs.index[df_attrs.index.str.match(r"^texts\d+$")])
+        # Make sure length matches
+        if len(self.texts) != len(text_keys):
+            raise ValueError(f"Number of text entries in chart is {len(self.texts)} while translated input had {len(text_keys)} entries")
+        # Modify text
+        texts = list(df_attrs.loc[text_keys][lang].values)
+        for handle, text in zip(self.texts, texts):
+            handle.set_text(text)
 
 def color_bars(barcolors, patches, dataindex, stack=False, debug=False):
     '''
@@ -3587,6 +3722,162 @@ def color_bars(barcolors, patches, dataindex, stack=False, debug=False):
         # end of loop over barcolors
     # end of stack=False
 
+
+def write_key_value_excel(
+    filename: str,
+    df: pd.DataFrame,
+    sheetname: str = 'Sheet1',
+    lang: str = "EN",
+    alternating_colors: bool = True,
+) -> None:
+    """
+    Utility function used within self.export().
+    
+    Update or create an Excel sheet containing:
+      - a 'key' column
+      - one or more language columns, including `lang`
+
+    Behavior
+    --------
+    - If the Excel file does not exist, create it.
+    - If the file exists and the sheet exists:
+        * read the sheet into a DataFrame
+        * merge/update values for the given `lang` column using `df`
+        * preserve any other language columns already present
+    - If the file exists but the sheet does not exist, create the sheet.
+
+    Input df requirements
+    ---------------------
+    - index name must be 'key'
+    - must contain exactly one column named 'value'
+
+    Output formatting
+    -----------------
+    - bold colored header
+    - auto-sized columns
+    - optional alternating row fills
+    - frozen header row
+    """
+    from pathlib import Path
+    from openpyxl import load_workbook
+    from openpyxl.styles import Font, PatternFill, Alignment
+    from openpyxl.utils import get_column_letter
+
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError("df must be a pandas.DataFrame")
+
+    if df.index.name != "key":
+        raise ValueError("df.index.name must be 'key'")
+
+    if list(df.columns) != ["value"]:
+        raise ValueError("df must contain exactly one column named 'value'")
+
+    # Make sure lang is upper case
+    lang = lang.upper()
+
+    output_path = Path(filename)
+    try:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        raise ValueError('Could not create parent dir for output ' + str(output_path.parent.resolve()))
+
+    # Input data in normalized form: columns ['key', lang]
+    new_lang_df = df.reset_index().rename(columns={"value": lang})
+
+    # ------------------------------------------------------------------
+    # Read existing sheet if file + sheet already exist
+    # ------------------------------------------------------------------
+    existing_df = None
+    if output_path.exists():
+        wb = load_workbook(output_path)
+        if sheetname in wb.sheetnames:
+            existing_df = pd.read_excel(output_path, sheet_name=sheetname)
+        wb.close()
+
+    # ------------------------------------------------------------------
+    # Merge/update
+    # ------------------------------------------------------------------
+    if existing_df is not None:
+        if "key" not in existing_df.columns:
+            raise ValueError(
+                f"Existing sheet '{sheetname}' does not contain a 'key' column."
+            )
+
+        merged_df = existing_df.copy()
+
+        # Ensure all keys from new data exist
+        merged_df = merged_df.merge(
+            new_lang_df[["key"]],
+            on="key",
+            how="outer",
+        )
+
+        # Remove existing lang column if present so we can replace it cleanly
+        if lang in merged_df.columns:
+            merged_df = merged_df.drop(columns=[lang])
+
+        # Add updated lang column
+        merged_df = merged_df.merge(new_lang_df, on="key", how="outer")
+
+        # Put 'key' first, keep all other non-lang columns next, lang last
+        other_cols = [c for c in merged_df.columns if c not in ("key", lang)]
+        merged_df = merged_df[["key", *other_cols, lang]]
+    else:
+        merged_df = new_lang_df.copy()
+
+    # ------------------------------------------------------------------
+    # Write sheet back into workbook
+    # ------------------------------------------------------------------
+    mode = "a" if output_path.exists() else "w"
+
+    try:
+        with pd.ExcelWriter(
+            output_path,
+            engine="openpyxl",
+            mode=mode,
+            if_sheet_exists="replace" if mode == "a" else None,
+        ) as writer:
+            merged_df.to_excel(writer, sheet_name=sheetname, index=False)
+    
+            ws = writer.book[sheetname]
+    
+            # Header styling
+            header_fill = PatternFill(fill_type="solid", fgColor="D9EAF7")
+            header_font = Font(bold=True)
+            for cell in ws[1]:
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+    
+            # Alternating row colors
+            if alternating_colors:
+                fill_odd = PatternFill(fill_type="solid", fgColor="F7FBFF")
+                fill_even = PatternFill(fill_type="solid", fgColor="EAF2F8")
+    
+                for row_idx in range(2, ws.max_row + 1):
+                    fill = fill_odd if (row_idx - 2) % 2 == 0 else fill_even
+                    for col_idx in range(1, ws.max_column + 1):
+                        ws.cell(row=row_idx, column=col_idx).fill = fill
+    
+            # Alignment
+            for row_idx in range(2, ws.max_row + 1):
+                for col_idx in range(1, ws.max_column + 1):
+                    ws.cell(row=row_idx, column=col_idx).alignment = Alignment(
+                        horizontal="left",
+                        vertical="center",
+                    )
+    
+            # Auto-size columns
+            for col_idx, column_cells in enumerate(ws.columns, start=1):
+                max_len = 0
+                for cell in column_cells:
+                    value = "" if cell.value is None else str(cell.value)
+                    max_len = max(max_len, len(value))
+                ws.column_dimensions[get_column_letter(col_idx)].width = min(max_len + 2, 60)
+    
+            ws.freeze_panes = "A2"
+    except PermissionError:
+        raise ValueError('Got PermissionError when trying to write to ' + filename + ', check if Excel file is open') from None
 def main(argv):
     pass
 

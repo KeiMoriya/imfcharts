@@ -1054,8 +1054,6 @@ class Chart:
         # When formatting y-axis, ensure locale is used.
         # This will be set from the lang() function in __init__.py
         self.ax.yaxis.set_major_formatter(ScalarFormatter(useLocale=True))
-        if self.ax_right:
-            self.ax_right.set_major_formatter(ScalarFormatter(useLocale=True))
         
         if nticks is None:
             if axis == 'x':

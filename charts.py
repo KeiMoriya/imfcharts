@@ -19,7 +19,7 @@ import matplotlib
 import matplotlib.colors as mplcolors
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-from matplotlib.ticker import FuncFormatter, MaxNLocator
+from matplotlib.ticker import FuncFormatter, MaxNLocator, ScalarFormatter
 from matplotlib.patches import Patch
 
 def _parse_cols(cols):
@@ -1051,6 +1051,12 @@ class Chart:
         if axis == 'x' and yaxis == 'right':
             raise ValueError('axis given as "x" and yaxis given as "right"')
 
+        # When formatting y-axis, ensure locale is used.
+        # This will be set from the lang() function in __init__.py
+        self.ax.yaxis.set_major_formatter(ScalarFormatter(useLocale=True))
+        if self.ax_right:
+            self.ax_right.set_major_formatter(ScalarFormatter(useLocale=True))
+        
         if nticks is None:
             if axis == 'x':
                 nticks = self.nticksx
@@ -3729,7 +3735,6 @@ def color_bars(barcolors, patches, dataindex, stack=False, debug=False):
         # end of loop over barcolors
     # end of stack=False
 
-
 def write_key_value_excel(
     filename: str,
     df: pd.DataFrame,
@@ -3885,6 +3890,7 @@ def write_key_value_excel(
             ws.freeze_panes = "A2"
     except PermissionError:
         raise ValueError('Got PermissionError when trying to write to ' + filename + ', check if Excel file is open') from None
+    
 def main(argv):
     pass
 

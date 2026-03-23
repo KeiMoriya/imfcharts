@@ -428,7 +428,7 @@ class Chart:
 
         # Set language
         self._lang = lang
-        self.lang(self._lang)
+        self.fontlang(self._lang)
         
         # Set self.xaxis_type based on data
         self.xaxis_type = self._set_xaxis_type()

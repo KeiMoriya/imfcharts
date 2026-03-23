@@ -3474,7 +3474,7 @@ A possible workflow when translating a chart into Japanese or Chinese would ther
 1. Create the `Chart` and call `Chart.exportxl` to export the text into an Excel file.
 2. Have Language Services translate the text and add a new column "jp" or "zh".
 3. Import the tranlsated text with `Chart.importxl`.
-4. Set the language font via `Chart.fontlagn('ja')`.
+4. Set the language font via `Chart.fontlang('ja')`.
 
 <!------------------------------------------------------------------------------------------------------------------------------------>
 # Switching Styles {#sec-styles}

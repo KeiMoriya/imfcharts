@@ -157,9 +157,6 @@ barcols.remove('GDP')
 
 # Create chart
 chart = Chart(df, linecols='GDP', barcols=barcols)
-
-# Show chart
-chart
 ```
 
 As can be seen, the code needed to generate the chart is the single line below:
@@ -184,7 +181,6 @@ chart = Chart(df, linecols='GDP', barcols=barcols,
               title='GDP by Composition', subtitle='(Seasonally Adjusted)',
               yrange=[-3, 5],
               legend_bottom=0.1, ncol_legend=2)
-chart
 ```
 
 The differences with the first chart are:
@@ -323,7 +319,6 @@ chart = Chart(df, linecols=df.columns[0], rlinecols=df.columns[1],
                xrange='2023-01:2025-08',
                yrange=[8, 11],
                )
-chart
 ```
 
 ### Chart with line and bars
@@ -360,7 +355,6 @@ chart1 = Chart(df, linecols=linecol, barcols=barcols,
                subtitle='(Percent of GDP)',
                xrange='2018-01:', yrange=[0, 30],
                ncol_legend=2)
-chart1
 ```
 
 ### Area chart
@@ -457,8 +451,6 @@ chart = Chart(df, barcols='Return to asset', rlinecols='Return to equity',
               subtitle='(Percent, 12M moving average)',
               xrange='2022-01:', yrange=[0, 3], ryrange=[0, 30],
               legend_bottom=0.75, legend_left=0.55)
-
-chart
 ```
 
 ### Scatter chart
@@ -554,7 +546,6 @@ chart4 = Chart(df, linecols=df.columns,
                subtitle='(Percent, end-year inflation)',
                ncol_legend=2, legend_left=0.45, legend_width=0.40,
                yrange=[0, 70])
-chart4
 ```
 
 ### Categorical bar chart
@@ -582,7 +573,6 @@ chart3 = Chart(df, barcols=df.columns, barstack=False, # baraxis='right',
                subtitle='(Percent change from 2023 average)',
                yrange=[-15, 15],
                legend=False)
-chart3
 ```
 
 ### Chart with lines, shading, fill
@@ -637,7 +627,6 @@ chart1 = Chart(df, linecols=gdpcol,
                vrects=[kw_vrect],
                fills=kw_fills,
                )
-chart1
 ```
 
 ### Chart with lines, bars, arrows, text
@@ -697,7 +686,6 @@ chart1.text(pd.Timestamp('2024Q3'), 6.5, text=text, fontweight='bold', color='#0
 chart1.arrow(head=[pd.Timestamp('2025Q1'), 1.5],
              tail=[pd.Timestamp('2025Q1'), 5],
              color='#004C97')
-chart1
 ```
 
 :::
@@ -839,7 +827,6 @@ combined = df.columns[1]
 chart2 = Chart(df, linecols=unemp, rlinecols=combined,
                title='Labor Utilization', subtitle='(Percent)',
                xrange='2023-01:2025-08', yrange=[8, 11])
-chart2
 ```
 
 Note that in the above example, the argument `linecols` and `rlinecols` are used
@@ -861,7 +848,6 @@ chart2 = Chart(df, linecols=unemp, rlinecols=combined,
                       combined : {'color' : 'orange'}},
                title='Labor Utilization', subtitle='(Percent)',
                xrange='2023-01:2025-08', yrange=[8, 11])
-chart2
 ```
 
 In the above the variable `attrs` is a `dict` with keys corresponding to the line columns.
@@ -918,7 +904,6 @@ chart2 = Chart(df, linecols=unemp, rlinecols=combined,
                attrs=attrs,
                title='Labor Utilization', subtitle='(Percent)',
                xrange='2023-01:2025-08', yrange=[8, 11])
-chart2
 ```
 
 Internally, lines are added with the function `Chart.lines()`, options for this function are the following.
@@ -1109,7 +1094,6 @@ chart1 = Chart(df, linecols=linecol, barcols=barcols,
                subtitle='(Percent, q/q)',
                xrange='2023Q1:', yrange=[-5, 9.5], ryrange=[-5, 9.5],
                ncol_legend=2)
-chart1
 ```
 
 Similar to plotting lines, an option `attrs` can be passed in to specify the attributes of each bar.
@@ -1170,7 +1154,6 @@ chart1 = Chart(df, linecols=linecol, barcols=barcols,
                subtitle='(Percent, q/q)',
                xrange='2023Q1:', yrange=[-5, 9.5], ryrange=[-5, 9.5],
                ncol_legend=2)
-chart1
 ```
 
 Internally, bar charts are created with the function `chart.bars()`.
@@ -1447,7 +1430,6 @@ chart1 = Chart(df, linecols=linecol, areacols=areacols,
                subtitle='(Percent of GDP)',
                xrange='2018-01:', yrange=[0, 30],
                ncol_legend=2)
-chart1
 ```
 
 The chart is identical to that of the chart for no options in the Bar chart gallery (@sec-basics-bars),
@@ -1576,7 +1558,6 @@ For area charts the margins are by default set to 0 so there is no space outside
 # Create Chart object
 chart = Chart(df, areacols=areacols,
               title='no options')
-chart	      
 ```
 
 ### Color cycle
@@ -1593,7 +1574,6 @@ and the third color blue is then used for the line.
 chart = Chart(df, linecols=gircol, areacols=areacols,
               colors=['red', 'green', 'blue'],
               title='color cycle')
-chart
 ```
 
 ### Axis Right
@@ -2931,7 +2911,6 @@ The `chart.ticks()` function will take in the above options but the parameters a
 | nticks | None | Number of ticks. For x-axis, defaults to `'auto'` while for y-axis uses `Matplotlib` defaults. Specified as `nxticks` or `nyticks` within `Chart()` |
 | ticks | None | Iterable speciying location of ticks. |
 | labels | None | Iterable speciying labels of ticks. |
-
 : {tbl-colwidths="[10,10, 80]"}
 
 For charts where the x-axis is a datetime, which is the case for time series charts, the positioning of the ticks
@@ -3205,13 +3184,124 @@ chart = Chart(df, linecols=df.columns,
 
 :::
 
-## Non-Western Languages
+<!------------------------------------------------------------------------------------------------------------------------------------>
+# Translations {#sec-translations}
 
+As the Fund is a multilingual organization, there will be times when charts need to be translated to languages other than English.
+The following section first describes how to export a created `Chart` object's text attributes into an Excel file, and once
+this is translated by Language Services, how this can be imported back into the `Chart`. Next, a function is introduced which will
+change the locale settings to a different language so that both numeric and datetime axis tick marks are displayed. Finally,
+in edge cases where the defualt fonts do not work, methods are shown on how to change the fonts so that text is correctly displayed.
+
+## Exporting Translatable Attributes to Excel and Importing Back
+
+The `imfcharts` can be used for multilingual purposes, and specifically for translation with Language Services.
+For each `Chart` object that is created, the translatable attributes, such as title, axis titles, legend entries and
+text annotations can be exported to an Excel file via the function `Chart.exportxl()`.
+This will create an Excel file containing these under the column "EN".
+
+```{python}
+#| label: exportxl
+#| fig-cap: "Exporting a Chart to Excel"
+#| code-fold: show
+
+infilename = 'data/turkey_page5/fig5_chart2_current_account_mms.csv'
+df = pd.read_csv(infilename, index_col=0, parse_dates=[0]).dropna(how='all', axis=0)
+df *= 1000 # multiply by 1,000 so large numbers show on y-axis
+
+# Create Chart object in English
+title='Current Account'
+subtitle='(Billions USD, 12mms)'
+xtitle = 'date'
+ytitle = 'U.S. $B'
+chart2 = Chart(df, linecols=df.columns,
+               title=title, subtitle=subtitle,
+               xtitle=xtitle, ytitle=ytitle,
+               xrange='2022-01:', yrange=[-95 * 1000, 60 * 1000],
+               legend_bottom=0.22, legend_left=0.55)
+# Add text with text()
+text = '''Lowest value'''
+chart2.text(pd.Timestamp('2023-05'), -60, text=text, ha='right')
+text = '''Neutral value'''
+chart2.text(pd.Timestamp('2024-10'), 10, text=text, ha='right', va='bottom')
+
+# Export the translatable attributes to Excel
+
+outfilename = 'turkey_page5.xlsx'
+chart2.exportxl(outfilename, sheet='Chart 2')
+```
+
+The resulting Excel file will look like the following:
+
+![Exported Excel file before translation](pretransxl.png){width=40%}
+
+This file can then be sent to Language Services, where additional columns can be added
+for different languages like in the following:
+
+![Exported Excel file after translation](posttransxl.png){width=50%}
+
+Re-importing the translated attributes is done with the following:
+
+```{python}
+#| label: importxl
+#| fig-cap: "Importing a Chart's Translated Text from Excel"
+#| code-fold: show
+
+# Import the translatable attributes from Excel to the Chart
+outfilename = 'turkey_page5_trans.xlsx'
+sheet='Chart 2'
+# Specify the Excel file name, sheet, and language column to import
+chart2.importxl(outfilename, sheet=sheet, lang='FR')
+chart2
+```
+
+Note that the library assumes that in between translation no changes have been made to the number of legend entries
+and text annotations, so additional changes to the chart should be avoided during translation.
+
+The arguments for `exportxl` and `importxl` are below:
+
+| Argument | Default | Description |
+|---|---|---|
+| filename | | Path to Excel file. For `exportxl`, if it exists, it will be modified. |
+| sheet |'Sheet1' | Sheet name to write out to or read in from. |
+| lang | 'EN' | Column specifying the language being exported. Should use valid 2-letter language code. |
+: {tbl-colwidths="[10,10, 80]"}
+
+## Changing Locale
+
+Once a chart has been translated, it may also be of interest to format the axis ticks so that they
+follow convention for that language. For this purpose, a global function `lang` is introcued which
+will modify the underlying `Matplotlib` library's locale. What this does is format both dates and numbers
+that is consistent with the specified language. Note that this is a global change to your Python session,
+so will affect all charts created by `Matploblib`.
+
+Below is an example of using the translated chart and setting the locale to French:
+
+```{python}
+#| label: lang-fr
+#| fig-cap: "Changing the locale to French"
+#| code-fold: show
+lang('fr')
+chart2
+```
+
+As can be seen, the chart dates and numbers are formatted in a way consistent with French locale
+(spaces as thousands separator). To set locales back to English, do
+
+```{python}
+#| label: lang-en
+#| fig-cap: "Changing the locale back to English"
+#| code-fold: show
+lang('en')
+```
+
+## Changing Fonts
 The library can be used with languages other than those using standard Western fonts.
-The basic way to do this is to specify the internal `Matplotlib` parameter in the following way
+The way to do this is to specify the internal `Matplotlib` parameter in the following way
 
 ```{python}
 #| label: change_lang
+#| code-fold: show
 matplotlib.rcParams["font.family"] = "Microsoft YaHei"
 ```
 
@@ -3221,6 +3311,11 @@ creating the `Chart` object so that this can be specified with the [2-letter lan
 Otherwise for Western European language families and Arabic, the default will work.
 In cases where a specific language needs to be implemented, search for `Matplotlib` fonts that implement that language and
 use the option `fontname` when creating the `Chart`.
+The option `lang` is implemented as a function `Chart.fontlang` and this can be called at any time:
+
+```{python}
+chart.fontlang('jp')
+```
 
 Below are several examples of specifying the `lang` or `fontname` parameter.
 
@@ -3326,7 +3421,7 @@ chart2 = Chart(df, linecols=df.columns,
                xtitle=xtitle, ytitle=ytitle,
                xrange='2022-01:', yrange=[-95, 60],
                legend_bottom=0.22, legend_left=0.55,
-	       lang='zh')
+               lang='zh')
 ```
 
 ### Japanese
@@ -3347,7 +3442,7 @@ chart2 = Chart(df, linecols=df.columns,
                xtitle=xtitle, ytitle=ytitle,
                xrange='2022-01:', yrange=[-95, 60],
                legend_bottom=0.22, legend_left=0.55,
-	       lang='jp')
+               lang='jp')
 ```
 
 ### Georgian (specify `fontname`)
@@ -3369,10 +3464,17 @@ chart2 = Chart(df, linecols=df.columns,
                xtitle=xtitle, ytitle=ytitle,
                xrange='2022-01:', yrange=[-95, 60],
                legend_bottom=0.22, legend_left=0.55,
-	       fontname='Sylfaen')
+               fontname='Sylfaen')
 ```
 
 :::
+
+A possible workflow when translating a chart into Japanese or Chinese would therefore be:
+
+1. Create the `Chart` and call `Chart.exportxl` to export the text into an Excel file.
+2. Have Language Services translate the text and add a new column "jp" or "zh".
+3. Import the tranlsated text with `Chart.importxl`.
+4. Set the language font via `Chart.fontlagn('ja')`.
 
 <!------------------------------------------------------------------------------------------------------------------------------------>
 # Switching Styles {#sec-styles}
@@ -3455,7 +3557,6 @@ chart = Chart(df, linecols=df.columns,
               title='Current Account', subtitle='(Billions USD, 12mms)',
               xrange='2022-01:', yrange=[-95, 60],
               legend_bottom=0.28, legend_left=0.60, height=4)
-chart
 ```
 
 ```{python}
@@ -3468,7 +3569,6 @@ chart2 = Chart(df, linecols=df.columns,
                title='Current Account', subtitle='(Billions USD, 12mms)',
                xrange='2022-01:', yrange=[-95, 60],
                legend_bottom=0.28, legend_left=0.60, height=4)
-chart2
 
 # Set back to default for subsequent charts
 set_style('imf-articleiv')

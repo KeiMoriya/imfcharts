@@ -587,6 +587,12 @@ class Chart:
             self.watermark(text=text,x=wmx, y=wmy,
                            size=wmsize, font=wmfont, color=wmcolor, alpha=wmalpha, angle=wmangle, zorder=wmzorder)
 
+    def _repr_png_(self):
+        return self.fig._repr_png_()
+
+    def _ipython_display_(self):
+        display(self.fig)
+    
     def apply(self, style):
         '''
         Apply style to this Chart.

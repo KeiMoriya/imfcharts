@@ -486,7 +486,10 @@ class Chart:
 
         # Set which x-axis is drawn on top
         self.topaxis(self._topaxis)
-                
+
+        # List of text annotation handles so text can be modified later
+        self.texts = []
+
         # ---------------------------------------------------------------------------------------------------
         # Draw area, bars, lines
         if areacols is not None:
@@ -577,9 +580,6 @@ class Chart:
             print(self.legend_labels)
         if self.show_legend:
             self.legend()
-
-        # List of text annotation handles so text can be modified later
-        self.texts = []
 
         # Add watermark
         if watermark is not None:
@@ -3506,7 +3506,7 @@ class Chart:
         )
         return subprocess.Popen([sys.executable, "-c", code])        
 
-    def lang(self, lang=None):
+    def fontlang(self, lang=None):
         '''
         Set up language and corresponding matplotlib.rcParams['font.family']
         '''

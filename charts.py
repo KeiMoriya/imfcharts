@@ -3520,7 +3520,7 @@ class Chart:
         # Set up so that if None is called, this resets
         if lang is None:
             matplotlib.rcParams['font.family'] = 'sans-serif'
-        elif str(lang).strip().lower() == 'jp':
+        elif str(lang).strip().lower() in ['jp', 'ja']:
             matplotlib.rcParams['font.family'] = 'Yu Gothic'
         elif str(lang).strip().lower() == 'zh':
             matplotlib.rcParams['font.family'] = 'Microsoft YaHei'

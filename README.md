@@ -17,6 +17,28 @@ Run the smoke tests:
 python -m pytest
 ```
 
+## Declarative Chart Specs
+
+Charts can be created directly with keyword arguments or from a JSON-like spec.
+The spec format is useful when chart definitions come from R, YAML, JSON, a UI,
+or another reporting system.
+
+```python
+spec = {
+    "data": {"indexcol": "date"},
+    "marks": [
+        {"type": "line", "cols": "GDP", "style": {"color": "#004C97"}},
+        {"type": "bar", "cols": "Inflation", "axis": "right", "style": {"color": "#B1B3B3"}},
+    ],
+    "text": {"title": "Output and Prices", "subtitle": "(Index)"},
+    "axes": {"x": {"range": "2024-01:"}, "y": {"range": [0, 4]}},
+    "legend": {"left": 0.35, "bottom": 0.82, "ncol": 2},
+}
+
+chart = Chart.from_spec(spec, data=df)
+Chart.validate_spec(spec)
+```
+
 ## Goal
 
 The goal of this project is to allow easy creation of charts styled for IMF publications.

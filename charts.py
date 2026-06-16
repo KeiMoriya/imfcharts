@@ -104,6 +104,376 @@ class Chart:
     Able to save internal figure object.
     '''
 
+    _SPEC_SECTIONS = {
+        "data",
+        "marks",
+        "text",
+        "axes",
+        "legend",
+        "annotations",
+        "layout",
+        "watermark",
+        "debug",
+    }
+    _MARK_TYPES = {"line", "bar", "area"}
+    _MARK_AXES = {"left", "right"}
+    _LINE_STYLE_KEYS = {
+        "marker",
+        "markersize",
+        "markerfacecolor",
+        "markeredgecolor",
+        "markeredgewidth",
+        "linewidth",
+        "linestyle",
+        "color",
+        "drawstyle",
+        "dashes",
+        "dash_capstyle",
+        "legend",
+    }
+    _BAR_STYLE_KEYS = {
+        "color",
+        "hatchcolor",
+        "hatch",
+        "hatchwidth",
+        "edgecolor",
+        "offset",
+        "width",
+        "legend",
+        "barcolors",
+    }
+    _AREA_STYLE_KEYS = {
+        "color",
+        "hatchcolor",
+        "hatch",
+        "hatchwidth",
+        "edgecolor",
+        "alpha",
+        "legend",
+    }
+    _STYLE_KEYS_BY_MARK = {
+        "line": _LINE_STYLE_KEYS,
+        "bar": _BAR_STYLE_KEYS,
+        "area": _AREA_STYLE_KEYS,
+    }
+    _ANNOTATION_TYPES = {"hlines", "vlines", "hrects", "vrects", "fills", "texts", "arrows"}
+
+    @staticmethod
+    def _copy_data(data):
+        if isinstance(data, pd.DataFrame):
+            return data.copy()
+        return data
+
+    @staticmethod
+    def _as_list(value):
+        if value is None:
+            return []
+        if isinstance(value, str):
+            return [value]
+        try:
+            return list(value)
+        except TypeError:
+            return [value]
+
+    @staticmethod
+    def _merge_attrs(base_attrs, cols, style):
+        attrs = {}
+        if base_attrs:
+            attrs.update({key: value.copy() for key, value in base_attrs.items()})
+        if style:
+            for col in Chart._as_list(cols):
+                attrs.setdefault(col, {})
+                attrs[col].update(style)
+        return attrs or None
+
+    @classmethod
+    def _validate_mark_style(cls, mark_type, style):
+        if style is None:
+            return
+        if not isinstance(style, dict):
+            raise TypeError(f"mark style must be a dict, got {type(style)!r}")
+        allowed = cls._STYLE_KEYS_BY_MARK[mark_type]
+        unknown = set(style) - allowed
+        if unknown:
+            raise ValueError(
+                f"Unknown {mark_type} style keys: {sorted(unknown)}. "
+                f"Allowed keys are: {sorted(allowed)}"
+            )
+
+    @classmethod
+    def _validate_attrs(cls, mark_type, attrs):
+        if attrs is None:
+            return
+        if not isinstance(attrs, dict):
+            raise TypeError(f"attrs must be a dict, got {type(attrs)!r}")
+        for series, style in attrs.items():
+            try:
+                cls._validate_mark_style(mark_type, style)
+            except Exception as exc:
+                raise type(exc)(f"Invalid attrs for series {series!r}: {exc}") from exc
+
+    @classmethod
+    def validate_spec(cls, spec):
+        """
+        Validate a declarative chart specification.
+
+        The spec format is intentionally close to JSON/YAML so external systems
+        can generate chart requests without knowing the long Chart constructor
+        signature.
+        """
+
+        if not isinstance(spec, dict):
+            raise TypeError(f"spec must be a dict, got {type(spec)!r}")
+
+        unknown_sections = set(spec) - cls._SPEC_SECTIONS
+        if unknown_sections:
+            raise ValueError(f"Unknown spec sections: {sorted(unknown_sections)}")
+
+        marks = spec.get("marks", [])
+        if marks is None:
+            marks = []
+        if not isinstance(marks, list):
+            raise TypeError("spec['marks'] must be a list")
+
+        for i, mark in enumerate(marks):
+            if not isinstance(mark, dict):
+                raise TypeError(f"mark {i} must be a dict")
+
+            mark_type = mark.get("type")
+            if mark_type not in cls._MARK_TYPES:
+                raise ValueError(f"mark {i} has unsupported type {mark_type!r}; use one of {sorted(cls._MARK_TYPES)}")
+
+            if "cols" not in mark:
+                raise ValueError(f"mark {i} is missing required key 'cols'")
+
+            axis = mark.get("axis", "left")
+            if axis not in cls._MARK_AXES:
+                raise ValueError(f"mark {i} has unsupported axis {axis!r}; use 'left' or 'right'")
+
+            allowed_mark_keys = {
+                "type",
+                "cols",
+                "axis",
+                "style",
+                "attrs",
+                "data",
+                "indexcol",
+                "stack",
+                "colors",
+                "linewidth",
+                "linebreaks",
+                "drawstyle",
+                "total_barwidth",
+                "edgecolor",
+                "alpha",
+                "xrange",
+                "margins",
+                "xformat",
+                "yrange",
+                "ryrange",
+                "debug",
+            }
+            unknown_mark_keys = set(mark) - allowed_mark_keys
+            if unknown_mark_keys:
+                raise ValueError(f"mark {i} has unknown keys: {sorted(unknown_mark_keys)}")
+
+            cls._validate_mark_style(mark_type, mark.get("style"))
+            cls._validate_attrs(mark_type, mark.get("attrs"))
+
+        annotations = spec.get("annotations", {})
+        if annotations is None:
+            annotations = {}
+        if not isinstance(annotations, dict):
+            raise TypeError("spec['annotations'] must be a dict")
+        unknown_annotations = set(annotations) - cls._ANNOTATION_TYPES
+        if unknown_annotations:
+            raise ValueError(f"Unknown annotation groups: {sorted(unknown_annotations)}")
+        for key, values in annotations.items():
+            if values is not None and not isinstance(values, list):
+                raise TypeError(f"annotations[{key!r}] must be a list of dicts")
+
+        return True
+
+    @classmethod
+    def from_spec(cls, spec, data=None):
+        """
+        Build a Chart from a JSON-like specification.
+
+        Data can be passed separately with the `data` argument, which is the
+        preferred integration path. If spec['data'] is a DataFrame, it is also
+        accepted for Python-only usage.
+        """
+
+        cls.validate_spec(spec)
+
+        data_spec = spec.get("data", {}) or {}
+        if isinstance(data_spec, pd.DataFrame):
+            chart_data = data_spec
+            data_options = {}
+        elif isinstance(data_spec, dict):
+            chart_data = data if data is not None else data_spec.get("frame")
+            data_options = data_spec
+        else:
+            raise TypeError("spec['data'] must be a dict or pandas DataFrame")
+
+        chart_data = cls._copy_data(chart_data)
+        original_data = cls._copy_data(chart_data)
+        indexcol = data_options.get("indexcol")
+
+        text = spec.get("text", {}) or {}
+        axes = spec.get("axes", {}) or {}
+        xaxis = axes.get("x", {}) or {}
+        yaxis = axes.get("y", {}) or {}
+        right_yaxis = axes.get("right_y", axes.get("righty", {})) or {}
+        legend = spec.get("legend", {}) or {}
+        annotations = spec.get("annotations", {}) or {}
+        layout = spec.get("layout", {}) or {}
+        watermark = spec.get("watermark", {}) or {}
+
+        chart = cls(
+            data=chart_data,
+            indexcol=indexcol,
+            title=text.get("title"),
+            subtitle=text.get("subtitle"),
+            xtitle=text.get("xtitle", ""),
+            ytitle=text.get("ytitle", ""),
+            xrange=xaxis.get("range"),
+            xformat=xaxis.get("format", "auto"),
+            margins=xaxis.get("margins", "auto"),
+            yrange=yaxis.get("range"),
+            ryrange=right_yaxis.get("range"),
+            width=layout.get("width", 10),
+            height=layout.get("height", 6),
+            topaxis=layout.get("topaxis", "left"),
+            legend=legend.get("show", True),
+            ncol_legend=legend.get("ncol", legend.get("ncol_legend", 1)),
+            legend_left=legend.get("left", legend.get("legend_left", 0.04)),
+            legend_bottom=legend.get("bottom", legend.get("legend_bottom", 0.85)),
+            legend_width=legend.get("width", legend.get("legend_width", 0.70)),
+            legend_height=legend.get("height", legend.get("legend_height", 0.15)),
+            legend_header=legend.get("header", legend.get("legend_header", "")),
+            watermark=watermark.get("text") if isinstance(watermark, dict) else None,
+            wmx=watermark.get("x") if isinstance(watermark, dict) else None,
+            wmy=watermark.get("y") if isinstance(watermark, dict) else None,
+            wmsize=watermark.get("size") if isinstance(watermark, dict) else None,
+            wmfont=watermark.get("font") if isinstance(watermark, dict) else None,
+            wmcolor=watermark.get("color") if isinstance(watermark, dict) else None,
+            wmalpha=watermark.get("alpha") if isinstance(watermark, dict) else None,
+            wmangle=watermark.get("angle") if isinstance(watermark, dict) else None,
+            wmzorder=watermark.get("zorder") if isinstance(watermark, dict) else None,
+            debug=spec.get("debug", False),
+        )
+
+        for mark in spec.get("marks", []) or []:
+            mark_type = mark["type"]
+            cols = mark["cols"]
+            attrs = cls._merge_attrs(mark.get("attrs"), cols, mark.get("style"))
+            mark_data = cls._copy_data(mark.get("data", original_data))
+            mark_indexcol = mark.get("indexcol", indexcol)
+
+            common = {
+                "data": mark_data,
+                "cols": cols,
+                "indexcol": mark_indexcol,
+                "axis": mark.get("axis", "left"),
+                "colors": mark.get("colors"),
+                "attrs": attrs,
+                "xrange": mark.get("xrange"),
+                "margins": mark.get("margins"),
+                "xformat": mark.get("xformat"),
+                "yrange": mark.get("yrange"),
+                "ryrange": mark.get("ryrange"),
+                "debug": mark.get("debug", spec.get("debug", False)),
+            }
+
+            if mark_type == "line":
+                chart.lines(
+                    linewidth=mark.get("linewidth"),
+                    linebreaks=mark.get("linebreaks", False),
+                    drawstyle=mark.get("drawstyle"),
+                    **common,
+                )
+            elif mark_type == "bar":
+                chart.bars(
+                    stack=mark.get("stack", True),
+                    total_barwidth=mark.get("total_barwidth"),
+                    linewidth=mark.get("linewidth"),
+                    edgecolor=mark.get("edgecolor"),
+                    **common,
+                )
+            elif mark_type == "area":
+                chart.area(
+                    stack=mark.get("stack", True),
+                    linewidth=mark.get("linewidth"),
+                    edgecolor=mark.get("edgecolor"),
+                    alpha=mark.get("alpha", 1),
+                    **common,
+                )
+
+        for hline in annotations.get("hlines", []) or []:
+            chart.hline(**hline)
+        for vline in annotations.get("vlines", []) or []:
+            chart.vline(**vline)
+        for hrect in annotations.get("hrects", []) or []:
+            chart.hrect(**hrect)
+        for vrect in annotations.get("vrects", []) or []:
+            chart.vrect(**vrect)
+        for fill in annotations.get("fills", []) or []:
+            chart.fill(**fill)
+        for text_annotation in annotations.get("texts", []) or []:
+            chart.text(**text_annotation)
+        for arrow in annotations.get("arrows", []) or []:
+            chart.arrow(**arrow)
+
+        chart._spec = spec.copy()
+        return chart
+
+    def to_spec(self):
+        """
+        Return a JSON-like chart specification for the current chart.
+
+        For charts created with from_spec(), this preserves the original spec.
+        For charts created imperatively, it reports the stable chart-level
+        settings that can be inferred from the object.
+        """
+
+        if hasattr(self, "_spec"):
+            return self._spec.copy()
+
+        return {
+            "data": {"indexcol": self.indexcol},
+            "marks": [],
+            "text": {
+                "title": self.titletext,
+                "subtitle": self.subtitletext,
+                "xtitle": self.xtitletext,
+                "ytitle": self.ytitletext,
+            },
+            "axes": {
+                "x": {
+                    "range": getattr(self, "_xrange", None),
+                    "format": self.xformat,
+                    "margins": self.margins,
+                },
+                "y": {"range": getattr(self, "_yrange", None)},
+                "right_y": {"range": getattr(self, "_ryrange", None)},
+            },
+            "legend": {
+                "show": self.show_legend,
+                "ncol": self.ncol_legend,
+                "left": self.legend_left,
+                "bottom": self.legend_bottom,
+                "width": self.legend_width,
+                "height": self.legend_height,
+                "header": self.legend_header,
+            },
+            "layout": {
+                "width": self.width,
+                "height": self.height,
+                "topaxis": self._topaxis,
+            },
+        }
+
     def __init__(self, data=None, indexcol=None,
                  # plotting options
                  linecols=None, barcols=None, rlinecols=None, areacols=None,

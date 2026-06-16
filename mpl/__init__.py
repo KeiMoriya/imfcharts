@@ -24,8 +24,7 @@ stylefiles = glob.glob(os.path.abspath(os.path.dirname(__file__) + '/*.mplstyle'
 
 # This is where mplstyle files need to be for matplotlib to find them
 STYLEDIR = os.path.abspath(matplotlib.get_configdir() + '/stylelib')
-if not os.path.isdir(STYLEDIR):
-    os.makedirs(STYLEDIR)
+os.makedirs(STYLEDIR, exist_ok=True)
 
 def show_styles():
     '''

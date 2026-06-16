@@ -1,6 +1,22 @@
 
 # IMF Charts
 
+## Setup
+
+Create a local environment and install the package in editable mode:
+
+```sh
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ".[dev]"
+```
+
+Run the smoke tests:
+
+```sh
+python -m pytest
+```
+
 ## Goal
 
 The goal of this project is to allow easy creation of charts styled for IMF publications.

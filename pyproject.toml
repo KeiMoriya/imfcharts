@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "imfcharts"
+version = "0.1.0"
+description = "Tools for creating charts styled for IMF publications."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Proprietary" }
+authors = [
+  { name = "Kei Moriya" }
+]
+dependencies = [
+  "matplotlib>=3.8",
+  "numpy>=1.24",
+  "openpyxl>=3.1",
+  "pandas>=2.0",
+  "Pillow>=10"
+]
+
+[project.optional-dependencies]
+dev = [
+  "build>=1.2",
+  "pytest>=8.0"
+]
+examples = [
+  "PyPDF2>=3.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/KeiMoriya/imfcharts"
+Repository = "https://github.com/KeiMoriya/imfcharts"
+
+[tool.setuptools]
+packages = ["imfcharts", "imfcharts.mpl"]
+package-dir = { "imfcharts" = "." }
+include-package-data = true
+
+[tool.setuptools.package-data]
+imfcharts = [
+  "data/**/*.csv",
+  "doc/data/**/*.csv",
+  "mpl/*.mplstyle"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
